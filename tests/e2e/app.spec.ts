@@ -317,3 +317,42 @@ for (const width of [1440, 390]) {
     ).toBe(true);
   });
 }
+
+test("phone hero letters are not covered by the mascot in any language", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  for (const width of [320, 360, 390, 430]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const locale of ["de", "en", "ro"]) {
+      await page.locator("#language").selectOption(locale);
+      await page.evaluate(() => document.fonts.ready);
+      const hidden = await page.locator("#hero-title").evaluate((heading) => {
+        const text = heading.firstChild!;
+        const range = document.createRange();
+        const covered = [];
+        for (let i = 0; i < (text.textContent?.length || 0); i++) {
+          if (!text.textContent![i].trim()) continue;
+          range.setStart(text, i);
+          range.setEnd(text, i + 1);
+          const r = range.getBoundingClientRect();
+          const top = document.elementFromPoint(
+            r.x + r.width / 2,
+            r.y + r.height / 2,
+          );
+          if (!top || !heading.contains(top))
+            covered.push(text.textContent![i]);
+        }
+        return covered;
+      });
+      expect(hidden, `${locale} ${width}px`).toEqual([]);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+  }
+});

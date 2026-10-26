@@ -204,6 +204,11 @@ a svg:not([aria-label]) {
   padding-bottom: 48px;
   position: relative;
 }
+.hero-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
 .country-tag {
   display: inline-flex;
   align-items: center;
@@ -253,6 +258,7 @@ a svg:not([aria-label]) {
   display: grid;
   place-items: center;
   isolation: isolate;
+  z-index: 0;
 }
 .hero-art::before {
   content: "";
@@ -1429,6 +1435,7 @@ a svg:not([aria-label]) {
   }
   .hero {
     grid-template-columns: 1fr 110px;
+    overflow: clip;
     min-height: unset;
     padding-top: 29px;
     padding-bottom: 30px;
@@ -1774,11 +1781,5 @@ a svg:not([aria-label]) {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
-  }
-}
-
-@media (max-width: 760px) {
-  .hero-art {
-    margin-left: -45px;
   }
 }
