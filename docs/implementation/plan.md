@@ -11,7 +11,7 @@
 - German, English and Romanian; saved locale, supported browser language, then German.
 - Public OSM tiles only for interactive viewport requests; local toilet/settlement data.
 - Free means confirmed fee=no, Paid means confirmed fee=yes. Ambiguous fees remain unknown.
-- Default 2 km radius, maximum 50 km, bounded results and explicit straight-line distance.
+- Default 0.5 km radius, choices 0.5/1/2/3/5 km, maximum 5 km, bounded results and explicit straight-line distance.
 - No host modifications; all deployment work is prepared locally.
 - User additions: Lucide icons, distinctive design, playful short transitions, branded header/footer, reduced-motion support.
 

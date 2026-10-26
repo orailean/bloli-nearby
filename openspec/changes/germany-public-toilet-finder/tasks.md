@@ -20,7 +20,7 @@
 
 ## 4. Implement discovery APIs
 
-- [x] 4.1 Add validated spatial search with default 2 km radius, explicit expansion up to 50 km, bounded results, stable distance ordering, and truncation metadata.
+- [x] 4.1 Add validated spatial search with default 0.5 km radius, explicit 0.5/1/2/3/5 km choices, bounded results, stable distance ordering, and truncation metadata.
 - [x] 4.2 Add All/Free/Paid filtering and facility detail fields with conservative unknown states.
 - [x] 4.3 Add local settlement/postcode lookup and dataset readiness/freshness metadata; avoid routine coordinate logging and location history.
 

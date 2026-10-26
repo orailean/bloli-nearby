@@ -12,7 +12,7 @@ The system SHALL support user-initiated browser geolocation, map selection, and 
 - **THEN** the app shows distinguishing region or postcode information, labeled nearby-city context, or coordinates as a fallback and searches only after selection
 
 ### Requirement: Bounded nearby results
-The system SHALL search within 2 km by default, allow explicit expansion up to 50 km, and return at most 100 results by default ordered by straight-line distance with stable ties. It MUST label the distance basis, disclose truncation, validate search parameters, and distinguish failures from zero results.
+The system SHALL search within 0.5 km by default, offer 0.5/1/2/3/5 km choices up to a maximum of 5 km, and return at most 100 results by default ordered by straight-line distance with stable ties. It MUST label the distance basis, disclose truncation, validate search parameters, and distinguish failures from zero results.
 
 #### Scenario: Nearby search succeeds
 - **WHEN** facilities exist within the chosen radius
