@@ -1,0 +1,14 @@
+[Unit]
+Description=Refresh Germany toilet and settlement dataset for Find a Loo
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=oliver
+WorkingDirectory=/home/oliver/stack/find-a-loo
+ExecStart=/usr/bin/docker compose --profile tools run --rm importer
+TimeoutStartSec=6h
+Nice=10
+UMask=0077

@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily database backup for Find a Loo
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=find-a-loo-backup.service
+
+[Install]
+WantedBy=timers.target

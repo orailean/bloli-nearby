@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly Germany dataset refresh for Find a Loo
+
+[Timer]
+OnCalendar=Sun *-*-* 03:15:00
+RandomizedDelaySec=30m
+Persistent=true
+Unit=find-a-loo-refresh.service
+
+[Install]
+WantedBy=timers.target

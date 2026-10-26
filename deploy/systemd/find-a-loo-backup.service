@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up Find a Loo PostgreSQL database
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=oliver
+WorkingDirectory=/home/oliver/stack/find-a-loo
+ExecStart=/home/oliver/stack/find-a-loo/scripts/backup.sh
+TimeoutStartSec=1h
+Nice=10
+UMask=0077
