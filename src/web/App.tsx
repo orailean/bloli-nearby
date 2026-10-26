@@ -75,6 +75,7 @@ export default function App() {
   const [origin, setOrigin] = useState<Origin | null>(null),
     [fee, setFee] = useState<FeeFilter>("all"),
     [radius, setRadius] = useState(2000),
+    [openNow, setOpenNow] = useState(false),
     [items, setItems] = useState<Facility[]>([]),
     [selected, setSelected] = useState<string | null>(null),
     [truncated, setTruncated] = useState(false);
@@ -89,6 +90,14 @@ export default function App() {
     [sheetOpen, setSheetOpen] = useState(true),
     [retry, setRetry] = useState(0),
     [dialog, setDialog] = useState<"how" | "privacy" | null>(null);
+  useEffect(() => {
+    if (!openNow || !origin) return;
+    const timer = window.setInterval(
+      () => setRetry((value) => value + 1),
+      60000,
+    );
+    return () => window.clearInterval(timer);
+  }, [openNow, origin?.lat, origin?.lon]);
   const locationRequest = useRef(0);
   const mapCenter = useRef({ lat: 51.15, lon: 10.45 }),
     placeRequest = useRef<AbortController | null>(null),
@@ -126,7 +135,7 @@ export default function App() {
     setSelected(null);
     setTruncated(false);
     request<SearchResponse>(
-      `/api/toilets?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), fee, radius: String(radius) })}`,
+      `/api/toilets?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), fee, radius: String(radius), openNow: String(openNow) })}`,
       c.signal,
     )
       .then((r) => {
@@ -144,7 +153,7 @@ export default function App() {
         if (!c.signal.aborted) setLoading(false);
       });
     return () => c.abort();
-  }, [origin?.lat, origin?.lon, fee, radius, retry]);
+  }, [origin?.lat, origin?.lon, fee, radius, openNow, retry]);
   useEffect(() => {
     const d = dialogRef.current;
     if (!d) return;
@@ -459,6 +468,20 @@ export default function App() {
                   </button>
                 ))}
               </div>
+              <label className="open-now-control" title={t.openNowHint}>
+                <input
+                  type="checkbox"
+                  aria-label={t.openNow}
+                  checked={openNow}
+                  onChange={(event) => setOpenNow(event.target.checked)}
+                  aria-describedby="open-now-hint"
+                />
+                <Clock size={17} aria-hidden="true" />
+                <span>{t.openNow}</span>
+                <span id="open-now-hint" className="sr-only">
+                  {t.openNowHint}
+                </span>
+              </label>
               <label className="radius-control">
                 {t.radius}
                 <select
@@ -621,6 +644,7 @@ export default function App() {
                     config={config}
                     items={items}
                     origin={origin}
+                    radius={radius}
                     selected={selected}
                     locale={locale}
                     onSelect={select}

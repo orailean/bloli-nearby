@@ -7,6 +7,7 @@ interface Props {
   config: AppConfig;
   items: Facility[];
   origin: { lat: number; lon: number } | null;
+  radius: number;
   selected: string | null;
   locale: Locale;
   onSelect: (id: string) => void;
@@ -18,6 +19,7 @@ export default function MapView({
   config,
   items,
   origin,
+  radius,
   selected,
   locale,
   onSelect,
@@ -145,14 +147,28 @@ export default function MapView({
       fillColor: "#287aab",
       fillOpacity: 1,
     }).addTo(m);
-    const reduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    m.setView([origin.lat, origin.lon], Math.max(m.getZoom(), 14), {
-      animate: !reduce,
-      duration: 0.35,
-    });
   }, [origin?.lat, origin?.lon]);
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !origin) return;
+    const boundary = L.circle([origin.lat, origin.lon], {
+      radius,
+      color: "#287aab",
+      weight: 2,
+      dashArray: "6 6",
+      fillOpacity: 0.04,
+      interactive: false,
+      className: "search-boundary",
+    }).addTo(m);
+    m.fitBounds(boundary.getBounds(), {
+      padding: [24, 24],
+      maxZoom: 16,
+      animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    });
+    return () => {
+      boundary.remove();
+    };
+  }, [origin?.lat, origin?.lon, radius]);
   useEffect(() => {
     const group = markers.current,
       m = map.current;

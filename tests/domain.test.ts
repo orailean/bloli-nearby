@@ -93,6 +93,7 @@ test("search defaults and limits cannot be bypassed with malformed values", () =
     radius: 2000,
     limit: 100,
     fee: "all",
+    openNow: false,
   });
   for (const extra of [
     { radius: "50001" },

@@ -1,0 +1,49 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { isOpenNow } from "../src/server/opening-hours.js";
+const facility = (openingHours: string | null) => ({
+  openingHours,
+  lat: 48.137,
+  lon: 11.576,
+  tags: {},
+});
+test("open now excludes closed, missing, malformed and uncertain schedules", () => {
+  const at = new Date("2026-10-26T11:00:00Z");
+  for (const hours of [
+    null,
+    "",
+    "off",
+    "not valid hours",
+    "unknown",
+    '"by appointment"',
+  ])
+    assert.equal(isOpenNow(facility(hours), at), false, String(hours));
+  assert.equal(isOpenNow(facility("24/7"), at), true);
+});
+test("German local time handles winter, summer and overnight opening", () => {
+  assert.equal(
+    isOpenNow(facility("Mo 12:00-13:00"), new Date("2026-10-26T11:30:00Z")),
+    true,
+  );
+  assert.equal(
+    isOpenNow(facility("Mo 12:00-13:00"), new Date("2026-10-26T12:30:00Z")),
+    false,
+  );
+  assert.equal(
+    isOpenNow(facility("Mo 12:00-13:00"), new Date("2026-07-06T10:30:00Z")),
+    true,
+  );
+  assert.equal(
+    isOpenNow(facility("Mo 22:00-02:00"), new Date("2026-10-26T23:30:00Z")),
+    true,
+  );
+});
+test("holiday-dependent schedules without state context remain uncertain", () => {
+  assert.equal(
+    isOpenNow(
+      facility("Mo-Su 00:00-24:00; PH off"),
+      new Date("2026-10-26T11:00:00Z"),
+    ),
+    false,
+  );
+});

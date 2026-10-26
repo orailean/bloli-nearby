@@ -87,6 +87,7 @@ export function parseSearch(p: URLSearchParams): SearchQuery {
     limit = number("limit", 100);
   coordinates(lat, lon);
   const fee = p.get("fee") ?? "all";
+  const openNow = p.get("openNow") ?? "false";
   if (
     radius < 1 ||
     radius > 50000 ||
@@ -94,10 +95,19 @@ export function parseSearch(p: URLSearchParams): SearchQuery {
     limit < 1 ||
     limit > 100 ||
     !["all", "free", "paid"].includes(fee) ||
-    p.getAll("fee").length > 1
+    p.getAll("fee").length > 1 ||
+    !["true", "false"].includes(openNow) ||
+    p.getAll("openNow").length > 1
   )
     throw new AppError("INVALID_QUERY");
-  return { lat, lon, radius, limit, fee: fee as SearchQuery["fee"] };
+  return {
+    lat,
+    lon,
+    radius,
+    limit,
+    fee: fee as SearchQuery["fee"],
+    openNow: openNow === "true",
+  };
 }
 export function directionsUrl(lat: number, lon: number): string {
   coordinates(lat, lon);

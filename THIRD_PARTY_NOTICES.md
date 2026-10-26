@@ -9,6 +9,7 @@ The app bundles open-source software and self-hosted fonts. Preserve the license
 | React / React DOM | MIT; https://github.com/facebook/react/blob/main/LICENSE |
 | Vite | MIT; https://github.com/vitejs/vite/blob/main/LICENSE |
 | node-postgres (pg) | MIT; https://github.com/brianc/node-postgres/blob/master/LICENSE |
+| opening_hours.js | LGPL-3.0-only; https://github.com/opening-hours/opening_hours.js |
 | tsx | MIT; https://github.com/privatenumber/tsx/blob/master/LICENSE |
 | TypeScript | Apache-2.0; https://github.com/microsoft/TypeScript/blob/main/LICENSE.txt |
 | Bricolage Grotesque | SIL OFL 1.1; https://github.com/ateliertriay/bricolage/blob/main/OFL.txt |

@@ -212,3 +212,108 @@ test("selecting a map marker scrolls its result into the results pane", async ({
     )
     .toBe(true);
 });
+
+test("changing search radius fits the map to the new search area", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Bremen", exact: true }).click();
+  await expect(page.locator(".result-select").first()).toBeVisible();
+  const zoom = () =>
+    page
+      .locator(".leaflet-tile")
+      .first()
+      .getAttribute("src")
+      .then((src) => Number(src?.match(/openstreetmap\.org\/(\d+)\//)?.[1]));
+  const initialZoom = await zoom();
+  await page.locator(".radius-control select").selectOption("10000");
+  await expect.poll(zoom).toBeLessThan(initialZoom);
+  const wideZoom = await zoom();
+  await page.locator(".radius-control select").selectOption("2000");
+  await expect.poll(zoom).toBeGreaterThan(wideZoom);
+});
+
+for (const width of [1440, 390]) {
+  test(`radius and Open now update both list and map at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const dataset = {
+      ready: true,
+      count: 2,
+      datasetAt: "2026-10-25T00:00:00Z",
+      importedAt: "2026-10-26T00:00:00Z",
+      source: "fixture",
+      stale: false,
+      latestJob: null,
+    };
+    const facility = (
+      id: string,
+      lon: number,
+      hours: string,
+      distance: number,
+    ) => ({
+      id,
+      sourceType: "node",
+      sourceId: id,
+      lat: 53.0758,
+      lon,
+      name: id,
+      names: {},
+      fee: "free",
+      charge: null,
+      feeText: null,
+      access: "public",
+      wheelchair: "unknown",
+      openingHours: hours,
+      operator: null,
+      notes: null,
+      tags: {},
+      distance,
+    });
+    await page.route("**/api/status", (r) => r.fulfill({ json: dataset }));
+    await page.route("**/api/toilets?*", (r) => {
+      const q = new URL(r.request().url()).searchParams;
+      const items = [
+        facility("Near closed", 8.81, "off", 500),
+        facility("Far open", 8.85, "24/7", 4000),
+      ].filter(
+        (f) =>
+          f.distance <= Number(q.get("radius")) &&
+          (q.get("openNow") !== "true" || f.openingHours === "24/7"),
+      );
+      return r.fulfill({ json: { items, truncated: false, dataset } });
+    });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Bremen", exact: true }).click();
+    await expect(page.locator(".result-row")).toHaveCount(1);
+    const zoom = () =>
+      page
+        .locator(".leaflet-tile")
+        .first()
+        .getAttribute("src")
+        .then((src) => Number(src?.match(/openstreetmap\.org\/(\d+)\//)?.[1]));
+    const narrow = await zoom();
+    await page.locator(".radius-control select").selectOption("10000");
+    await expect(page.locator(".result-row")).toHaveCount(2);
+    await expect.poll(zoom).toBeLessThan(narrow);
+    await expect(page.locator(".search-boundary")).toHaveCount(1);
+    await page.getByRole("checkbox", { name: "Open now", exact: true }).check();
+    await expect(page.locator(".result-row")).toHaveCount(1);
+    await expect(page.locator(".result-row")).toContainText("Far open");
+    await page.locator(".radius-control select").selectOption("2000");
+    await expect(page.locator(".result-row")).toHaveCount(0);
+    await expect.poll(zoom).toBe(narrow);
+    await page
+      .getByRole("checkbox", { name: "Open now", exact: true })
+      .uncheck();
+    await expect(page.locator(".result-row")).toHaveCount(1);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  });
+}

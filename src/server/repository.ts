@@ -5,6 +5,7 @@ import type {
   Facility,
   Settlement,
 } from "../shared/types.js";
+import { isOpenNow } from "./opening-hours.js";
 import { AppError } from "../shared/domain.js";
 export async function datasetStatus(pool: pg.Pool): Promise<Dataset> {
   const row = (
@@ -45,14 +46,34 @@ export async function searchToilets(pool: pg.Pool, q: SearchQuery) {
     ).rows[0];
     if (!meta) throw new AppError("DATA_NOT_READY", 503);
     if (!meta.covered) throw new AppError("OUTSIDE_COVERAGE", 400);
-    const rows = (
-      await db.query(
-        `SELECT data,ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) AS distance
+    const sql = `SELECT data,ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) AS distance
       FROM facilities WHERE ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3)
-      AND ($4='all' OR fee=$4) ORDER BY distance,id LIMIT $5`,
-        [q.lon, q.lat, q.radius, q.fee, q.limit + 1],
-      )
-    ).rows;
+      AND ($4='all' OR fee=$4) ORDER BY distance,id`;
+    const parameters = [q.lon, q.lat, q.radius, q.fee];
+    let rows: Array<{ data: Facility; distance: number }>;
+    if (q.openNow) {
+      // Evaluate every candidate before applying the result cap. A cursor bounds
+      // memory even when many closer locations are closed or lack known hours.
+      await db.query(
+        `DECLARE open_candidates NO SCROLL CURSOR FOR ${sql}`,
+        parameters,
+      );
+      rows = [];
+      const now = new Date();
+      while (rows.length <= q.limit) {
+        const batch = (await db.query("FETCH FORWARD 250 FROM open_candidates"))
+          .rows;
+        if (!batch.length) break;
+        for (const candidate of batch) {
+          if (isOpenNow(candidate.data, now)) rows.push(candidate);
+          if (rows.length > q.limit) break;
+        }
+      }
+      await db.query("CLOSE open_candidates");
+    } else {
+      rows = (await db.query(`${sql} LIMIT $5`, [...parameters, q.limit + 1]))
+        .rows;
+    }
     await db.query("COMMIT");
     return {
       items: rows

@@ -607,6 +607,30 @@ a svg:not([aria-label]) {
   color: #fff;
   animation: filter-squish 0.28s ease-out;
 }
+.open-now-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.open-now-control:has(input:checked) {
+  background: #e2f1e7;
+  border-color: var(--ink);
+}
+.open-now-control input {
+  accent-color: var(--ink);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
 .radius-control {
   display: flex;
   align-items: center;

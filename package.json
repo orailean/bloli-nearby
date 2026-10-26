@@ -23,6 +23,7 @@
     "@fontsource-variable/dm-sans": "5.3.0",
     "leaflet": "1.9.4",
     "lucide-react": "1.61.0",
+    "opening_hours": "3.15.0",
     "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",

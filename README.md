@@ -129,3 +129,9 @@ This attaches the app gateway to `nginx_default` as `find-a-loo-web` and removes
 - The tile provider receives the user's IP and viewed tile coordinates. Local search coordinates are used transiently and aren't stored as location history. The browser stores only the explicit language preference. Opening directions sends the destination to Google Maps.
 - Toilet and settlement data are from OpenStreetMap via Geofabrik under ODbL. Display attribution, retain source information, and provide the applicable database offer under ODbL when publicly distributing a derived database. [OSM copyright](https://www.openstreetmap.org/copyright), [Geofabrik downloads](https://www.geofabrik.de/data/download.html).
 - Lucide icons: ISC. Leaflet: BSD-2-Clause. React, Vite, pg and tsx: MIT; TypeScript: Apache-2.0. DM Sans and Bricolage Grotesque: SIL Open Font License. pyosmium: BSD-2-Clause; Shapely: BSD-3-Clause. Container images include additional packages with their own notices. See `package-lock.json`, importer requirements, and [notices](THIRD_PARTY_NOTICES.md).
+
+### Search area and Open now
+
+Changing the radius updates the results and fits the map to a visible search boundary on desktop and mobile. Results are capped at 100 nearest matching toilets, so increasing an already crowded search can keep the same first 100 results; the interface indicates truncation.
+
+**Open now** evaluates recorded OSM hours on the server in `Europe/Berlin`, including daylight saving time. It combines with price and radius filters before applying the result cap. Missing, invalid or uncertain schedules are excluded; holiday-dependent schedules also require state context. Results refresh every minute while this filter is active. Opening status reflects mapped schedules, not a live confirmation from the operator.

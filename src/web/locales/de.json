@@ -99,5 +99,7 @@
   "privacyLink": "OpenStreetMap-Datenschutz",
   "sourceDate": "Quelldatenstand",
   "mapLabels": "Kartenbeschriftungen folgen der Quellsprache.",
-  "nearCity": "Bei"
+  "nearCity": "Bei",
+  "openNow": "Jetzt geöffnet",
+  "openNowHint": "Nur laut erfassten Öffnungszeiten geöffnet. Fehlende oder unklare Zeiten werden ausgeblendet."
 }

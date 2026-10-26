@@ -99,5 +99,7 @@
   "privacyLink": "Confidențialitate OpenStreetMap",
   "sourceDate": "Data sursei",
   "mapLabels": "Etichetele hărții urmează limba sursei.",
-  "nearCity": "Lângă"
+  "nearCity": "Lângă",
+  "openNow": "Deschise acum",
+  "openNowHint": "Deschise conform programului înregistrat. Programul lipsă sau incert este exclus."
 }

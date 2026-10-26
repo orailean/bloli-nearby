@@ -39,3 +39,9 @@ The system SHALL show available name, distance, fee, access, source opening-hour
 #### Scenario: Incomplete details
 - **WHEN** a selected toilet lacks hours, price, or accessibility information
 - **THEN** the app identifies the missing information without claiming it is open, free, or accessible
+
+### Requirement: Search area follows radius changes
+The map SHALL display the chosen radius around the search origin and fit its viewport when the origin or radius changes, respecting reduced motion preferences on desktop and mobile.
+
+### Requirement: Open now filter
+The user MAY restrict results to toilets open according to recorded OSM schedules evaluated in Europe/Berlin. Missing, invalid, uncertain and unresolved holiday-dependent hours SHALL be excluded while enabled. Fee, radius, stable distance ordering and result limits SHALL apply to matching open results. The interface SHALL explain that this uses recorded hours and refresh the active search every minute.

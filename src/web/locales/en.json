@@ -99,5 +99,7 @@
   "privacyLink": "OpenStreetMap privacy policy",
   "sourceDate": "Source dataset",
   "mapLabels": "Map labels follow the source language.",
-  "nearCity": "Near"
+  "nearCity": "Near",
+  "openNow": "Open now",
+  "openNowHint": "Open according to recorded hours. Missing or uncertain hours are excluded."
 }

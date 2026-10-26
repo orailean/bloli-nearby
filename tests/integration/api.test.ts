@@ -45,6 +45,11 @@ async function* records(count = 3) {
         amenity: "toilets",
         name: `Test WC ${i + 1}`,
         ...(i === 0
+          ? { opening_hours: "off" }
+          : i === 1
+            ? { opening_hours: "24/7" }
+            : {}),
+        ...(i === 0
           ? { fee: "no" }
           : i === 1
             ? { fee: "yes", charge: "0.50 EUR" }
@@ -129,6 +134,41 @@ test(
           );
           const empty = await get("/api/toilets?lat=53&lon=13&radius=1");
           assert.deepEqual(empty.body.items, []);
+        },
+      );
+      await t.test(
+        "open now filters before limiting and preserves fee/radius constraints",
+        async () => {
+          const r = await get(
+            "/api/toilets?lat=52.52&lon=13.405&openNow=true&limit=1",
+          );
+          assert.equal(r.status, 200);
+          assert.deepEqual(
+            r.body.items.map((item: { id: string }) => item.id),
+            ["node/2"],
+          );
+          assert.equal(r.body.truncated, false);
+          assert.deepEqual(
+            (
+              await get(
+                "/api/toilets?lat=52.52&lon=13.405&openNow=true&fee=free",
+              )
+            ).body.items,
+            [],
+          );
+          assert.deepEqual(
+            (
+              await get(
+                "/api/toilets?lat=52.52&lon=13.405&openNow=true&radius=1",
+              )
+            ).body.items,
+            [],
+          );
+          assert.equal(
+            (await get("/api/toilets?lat=52.52&lon=13.405&openNow=maybe"))
+              .status,
+            400,
+          );
         },
       );
       await t.test("query validation and country coverage", async () => {

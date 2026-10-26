@@ -43,6 +43,7 @@ export interface SearchQuery {
   radius: number;
   limit: number;
   fee: FeeFilter;
+  openNow: boolean;
 }
 export interface Dataset {
   ready: boolean;
