@@ -1,0 +1,83 @@
+name: find-a-loo
+services:
+  db:
+    image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: loo
+      POSTGRES_USER: loo
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    networks: [default]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U loo -d loo']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    cpus: '1.5'
+    mem_limit: 1536m
+    shm_size: 256m
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      TILE_URL: ${TILE_URL:-https://tile.openstreetmap.org/{z}/{x}/{y}.png}
+      TILE_ATTRIBUTION: ${TILE_ATTRIBUTION:-© OpenStreetMap contributors}
+      TILE_MAX_ZOOM: ${TILE_MAX_ZOOM:-19}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+    secrets: [db_password]
+    depends_on:
+      db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3100/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    cpus: '0.75'
+    mem_limit: 384m
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    ports: ['127.0.0.1:${WEB_PORT:-8088}:80']
+    depends_on:
+      api: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1/healthz]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    cpus: '0.5'
+    mem_limit: 128m
+  importer:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: docker/importer.Dockerfile
+    environment:
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      DATA_URL: ${DATA_URL:-https://download.geofabrik.de/europe/germany-latest.osm.pbf}
+      POLY_URL: ${POLY_URL:-https://download.geofabrik.de/europe/germany.poly}
+      MIN_FACILITIES: ${MIN_FACILITIES:-1000}
+      MIN_SETTLEMENTS: ${MIN_SETTLEMENTS:-1000}
+      MIN_IMPORT_RATIO: ${MIN_IMPORT_RATIO:-0.75}
+    secrets: [db_password]
+    volumes: [import_data:/data]
+    depends_on:
+      db: {condition: service_healthy}
+    cpus: '2'
+    mem_limit: 4g
+    restart: 'no'
+secrets:
+  db_password:
+    file: ${DB_PASSWORD_FILE:-./.secrets/db_password}
+volumes:
+  postgres_data:
+  import_data:

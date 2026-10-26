@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+.env
+.env.*
+data
+backups
+test-results
+playwright-report
+.idea
+
+.secrets
+.venv
+.agents
+.codex
+.claude

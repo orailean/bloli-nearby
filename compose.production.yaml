@@ -1,0 +1,12 @@
+# Used later on Contabo only, after deployment is authorized.
+services:
+  web:
+    ports: !reset []
+    networks:
+      default: {}
+      edge:
+        aliases: [find-a-loo-web]
+networks:
+  edge:
+    external: true
+    name: nginx_default

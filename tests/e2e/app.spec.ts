@@ -1,0 +1,214 @@
+import { test, expect } from "@playwright/test";
+test.beforeEach(async ({ page }) => {
+  await page.route("https://tile.openstreetmap.org/**", (r) => r.abort());
+});
+test("search, filters, details, language switching and directions work without tiles", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Nature calls.",
+  );
+  await page.getByRole("button", { name: "Bremen", exact: true }).click();
+  await expect(page.locator(".result-select").first()).toBeVisible();
+  await expect(page.locator(".leaflet-control-attribution")).toContainText(
+    "OpenStreetMap",
+  );
+  await page.locator(".result-select").first().click();
+  const selected = await page
+    .locator(".result-row.selected")
+    .getAttribute("data-id");
+  await expect(
+    page.getByRole("link", { name: "Walk there", exact: true }),
+  ).toHaveAttribute("href", /travelmode=walking/);
+  await page.getByLabel("Language", { exact: true }).selectOption("ro");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ro");
+  await expect(page.locator(".result-row.selected")).toHaveAttribute(
+    "data-id",
+    selected!,
+  );
+  await page.getByRole("button", { name: "Gratuite", exact: true }).click();
+  await expect(page.locator(".result-row").first()).toBeVisible();
+  await expect(page.locator(".result-row .fee-badge").first()).toHaveText(
+    "Gratuită",
+  );
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ro");
+  await page.getByLabel("Limbă", { exact: true }).selectOption("de");
+  await expect(
+    page.getByPlaceholder("Zum Beispiel München oder 81243…"),
+  ).toBeVisible();
+  await expect(page.locator("footer")).toContainText("Weniger suchen.");
+});
+test("mobile has a real header/footer, usable controls and no horizontal overflow", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.locator("header")).toBeVisible();
+  await page.getByRole("button", { name: "Bremen", exact: true }).click();
+  await expect(page.locator(".result-select").first()).toBeVisible();
+  await page.locator(".result-select").first().click();
+  await expect(
+    page.getByRole("link", { name: "Walk there", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Privacy & map credits", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+});
+test("denied location and unavailable storage leave manual lookup usable", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "geolocation", {
+      value: {
+        getCurrentPosition: (_ok: unknown, fail: (error: object) => void) =>
+          fail({ code: 1 }),
+      },
+    });
+    Storage.prototype.setItem = () => {
+      throw new Error("blocked");
+    };
+  });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Find me a loo", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText("Location unavailable");
+  await page.getByLabel("Language", { exact: true }).selectOption("ro");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ro");
+  await page
+    .getByLabel("Localitate sau cod poștal", { exact: true })
+    .fill("Bremen");
+  await page.getByRole("button", { name: "Caută", exact: true }).click();
+  await expect(page.locator(".place-option").first()).toBeVisible();
+  await page.locator(".place-option").first().click();
+  await expect(page.locator(".result-select").first()).toBeVisible();
+});
+test("a missing bootstrap dataset shows an actionable state rather than no toilets", async ({
+  page,
+}) => {
+  await page.route("**/api/status", (r) =>
+    r.fulfill({
+      json: {
+        ready: false,
+        count: 0,
+        datasetAt: null,
+        importedAt: null,
+        source: null,
+        stale: false,
+        latestJob: null,
+      },
+    }),
+  );
+  await page.goto("/");
+  await expect(
+    page.getByText("The toilet dataset is not ready yet.", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("No pit stops here yet.", { exact: true }),
+  ).not.toBeVisible();
+});
+
+test("late geolocation cannot replace a newer manual location", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "geolocation", {
+      value: {
+        getCurrentPosition: (success: unknown) => {
+          (window as unknown as { resolveGeo: unknown }).resolveGeo = success;
+        },
+      },
+    });
+  });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Find me a loo", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Bremen", exact: true }).click();
+  await expect(page.locator(".results-heading p")).toHaveText("Bremen");
+  await page.evaluate(() => {
+    (window as unknown as { resolveGeo: (p: unknown) => void }).resolveGeo({
+      coords: { latitude: 48.137, longitude: 11.576 },
+    });
+  });
+  await expect(page.locator(".results-heading p")).toHaveText("Bremen");
+});
+test("map position and marker keyboard focus survive selection and translation", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Bremen", exact: true }).click();
+  const marker = page.locator('.leaflet-marker-icon[tabindex="0"]').first();
+  await marker.waitFor();
+  await marker.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.locator('.leaflet-marker-icon[aria-label^="Selected toilet:"]'),
+  ).toBeFocused();
+  await page.locator(".leaflet-map").focus();
+  for (let i = 0; i < 12; i++) await page.keyboard.press("ArrowRight");
+  const transform = await page
+    .locator(".leaflet-map-pane")
+    .evaluate((e) => (e as HTMLElement).style.transform);
+  await page.getByLabel("Language", { exact: true }).selectOption("ro");
+  await expect(
+    page.locator('.leaflet-marker-icon[aria-label^="Toaleta selectată:"]'),
+  ).toBeVisible();
+  expect(
+    await page
+      .locator(".leaflet-map-pane")
+      .evaluate((e) => (e as HTMLElement).style.transform),
+  ).toBe(transform);
+});
+
+test("browser language detection does not create an explicit saved preference", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("loo.language")),
+  ).toBeNull();
+  await page.getByLabel("Language", { exact: true }).selectOption("ro");
+  expect(await page.evaluate(() => localStorage.getItem("loo.language"))).toBe(
+    "ro",
+  );
+});
+
+test("selecting a map marker scrolls its result into the results pane", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Bremen", exact: true }).click();
+  const markers = page.locator('.leaflet-marker-icon[tabindex="0"]');
+  await expect(markers.first()).toBeVisible();
+  const marker = markers.last();
+  const id = await marker.getAttribute("data-facility-id");
+  await marker.focus();
+  await marker.press("Enter");
+  const selected = page.locator(`.result-row[data-id="${id}"]`);
+  await expect(selected).toHaveClass(/selected/);
+  await expect
+    .poll(() =>
+      selected.evaluate((row) => {
+        const pane = document.querySelector(".results-content")!;
+        const r = row.getBoundingClientRect(),
+          p = pane.getBoundingClientRect();
+        return r.top >= p.top - 1 && r.top < p.bottom - 50;
+      }),
+    )
+    .toBe(true);
+});

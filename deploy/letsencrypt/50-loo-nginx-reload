@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+# Scope this new hook to the app certificate, leaving other lineages alone.
+case " ${RENEWED_DOMAINS:-} " in
+    *" loo.bloli.com "*) ;;
+    *) exit 0 ;;
+esac
+
+/usr/bin/docker exec nginx nginx -t
+/usr/bin/docker exec nginx nginx -s reload
