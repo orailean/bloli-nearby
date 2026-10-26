@@ -13,7 +13,7 @@ docker volume inspect find-a-loo_postgres_data find-a-loo_import_data --format '
 docker compose ps
 ```
 
-The VM `.env` selects `COMPOSE_FILE=compose.yaml:compose.production.yaml`. The base Compose project name is `bloli-nearby`; the override preserves the migration identity. Development PostGIS intentionally retains its existing `find-a-loo-dev` identity/volume.
+The VM `.env` selects `COMPOSE_FILE=compose.yaml:compose.production.yaml`. The base Compose project name is `bloli-nearby`; the override preserves the migration identity. Development PostGIS uses project `bloli-nearby-dev`, database `bloli_nearby_dev`, role `bloli_dev` and volume `bloli-nearby-dev-postgres-data`; see the local development guide.
 
 ## Deployment sequence
 

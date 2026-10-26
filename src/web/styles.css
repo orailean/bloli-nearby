@@ -2010,12 +2010,3 @@ html[data-site="kippe"] {
     margin-left: 4px;
   }
 }
-.sales-unconfirmed {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 600;
-  color: #765417;
-  background: #fff4d3;
-  border-radius: 5px;
-  padding: 3px 6px;
-}

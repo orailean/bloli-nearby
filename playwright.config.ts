@@ -17,7 +17,8 @@ export default defineConfig({
       env: {
         DATABASE_URL:
           process.env.TEST_DATABASE_URL ||
-          "postgres://postgres:loo-local-test@127.0.0.1:55439/loo",
+          process.env.DATABASE_URL ||
+          "postgres://bloli_dev:bloli-dev-only@127.0.0.1:55432/bloli_nearby_dev",
       },
     },
     {

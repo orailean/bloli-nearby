@@ -107,9 +107,10 @@ for (const id of ["loo", "kippe"] as const) {
         await page
           .getByRole("button", { name: "Petrol station", exact: true })
           .click();
-        await expect(page.locator(".result-row")).toContainText(
-          "Tobacco sales unconfirmed",
-        );
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await expect(page.locator(".result-row")).not.toContainText("unconfirmed");
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel")).not.toContainText("Tobacco sales");
         await page
           .getByRole("button", { name: "Machine", exact: true })
           .click();

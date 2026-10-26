@@ -46,6 +46,8 @@
 ## 7. Owner refinements during rollout
 
 - [x] 7.1 Add labelled assumed 24/7 hours for machines without source hours, preserving explicit schedules and existing-data behavior.
-- [ ] 7.2 Include mapped fuel stations with unconfirmed tobacco-sales labels and reimport/verify the expanded Germany dataset.
+- [x] 7.2 Include mapped fuel stations, reimport the expanded Germany dataset, and apply the owner’s final assumption of cigarette sales without special labels.
 - [x] 7.3 Rename production database/login to bloli_nearby/bloli, retain password/ownership and verify all operational commands.
-- [ ] 7.4 Rename the local checkout folder to bloli-nearby and verify local/GitHub/VM synchronization after final checks.
+- [x] 7.4 Rename the local checkout folder to bloli-nearby and verify local/GitHub/VM synchronization after final checks.
+
+- [x] 7.5 Rename local development database/login/project/volume and examples, preserving existing sample data.

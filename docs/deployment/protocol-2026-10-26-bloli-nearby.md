@@ -71,3 +71,13 @@ Rename VM checkout/remotes and timer paths, pin/reuse source for combined import
 - VM `.env` now selects `DB_USER=bloli`, `DB_NAME=bloli_nearby`, `MIN_SELLERS=15000`. Recreated shared DB/API/web with explicit generic names and configurable health/connections; all healthy. Counts remained 25,954 toilets and 31,018 sellers. Both public sites passed live browser/API checks after reconnecting; old source data remained available during the next refresh.
 - New backup service ran successfully against the renamed database (`Result=success`, `ExecMainStatus=0`), producing `backups/bloli-nearby-20261026T213431Z.dump`. Started `bloli-nearby-germany-fuel-import` with generic importer image/settings and the retained dated source to include unconfirmed petrol stations.
 - Installed the common Nginx proxy include and both corrected virtual hosts on the VM, validated configuration and gracefully reloaded. Both hosts route through the same generic upstream; public site identities remained correct. No unrelated service/proxy container restart was performed.
+
+- Renamed the local checkout from `/Users/oliver.raileanu/_work/private/github/orailean/find-a-loo` to `/Users/oliver.raileanu/_work/private/github/orailean/bloli-nearby` after local browser checks finished. Verified Git status clean, origin points to `orailean/bloli-nearby`, and OpenSpec resolves the renamed planning home. Final source commands run from the new directory.
+- Verified the deployed Open now query returns machines with `openingHours=24/7` and `hoursAssumed=true` where source hours are absent. Generic container/image names are now consistent; the new fuel-import container also uses `bloli-nearby-importer:latest`.
+
+### Final expanded import and local development cleanup
+
+- Expanded fuel-inclusive import completed with exit 0: 25,954 toilets, 48,514 sellers, 196,951 settlements; source PBF reused, filtered file approximately 54 MiB. Saved `logs/germany-fuel-import.log`, then removed the exited importer container.
+- Final VM backup: `backups/bloli-nearby-20261026T215026Z.dump`.
+- Renamed local development database/login to `bloli_nearby_dev` / `bloli_dev`, integration database to `bloli_nearby_integration`, and Docker project/container/volume to generic Bloli Nearby names. Preserved existing password and verified the 246-toilet sample. Old local volume retained for rollback; private SQL backup is outside Git.
+- Owner’s final petrol-station policy: assume cigarette sales and omit special sales labels in list/details; source evidence remains internal and explicit negative tags still exclude stations.

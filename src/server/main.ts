@@ -11,7 +11,7 @@ const server = createApi(pool, {
 server.listen(
   Number(process.env.PORT || 3100),
   process.env.HOST || "0.0.0.0",
-  () => console.log("Find a Loo API listening"),
+  () => console.log("Bloli Nearby API listening"),
 );
 for (const signal of ["SIGTERM", "SIGINT"])
   process.on(signal, () =>

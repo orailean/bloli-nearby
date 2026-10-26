@@ -2,7 +2,7 @@
 
 For the current two-site setup and small mixed-category sample, start with [Bloli Nearby local development](multi-site.md). The regional workflows below remain available for source-level debugging.
 
-Run only PostgreSQL/PostGIS in Docker. Run the Node API and Vite on your machine, where your IDE can set breakpoints normally. `compose.dev.yaml` is an independent database-only project named `find-a-loo-dev`; it does not start the app, importer, shared Nginx, or any production service.
+Run only PostgreSQL/PostGIS in Docker. Run the Node API and Vite on your machine, where your IDE can set breakpoints normally. `compose.dev.yaml` is an independent database-only project named `bloli-nearby-dev`; it does not start the app, importer, shared Nginx, or any production service.
 
 ## 1. Start the development database
 
@@ -16,7 +16,7 @@ docker compose --env-file .env.local -f compose.dev.yaml ps
 npm ci
 ```
 
-The default connection is `postgres://loo_dev:loo-dev-only@127.0.0.1:55432/loo_dev`. That password is a local development example, not a production credential. Docker publishes the port on loopback only. `.env.local` is ignored by Git. If you change `DEV_DB_PORT`, update `DATABASE_URL` to match; percent-encode special password characters in the URL.
+The default connection is `postgres://bloli_nearby_dev:bloli-dev-only@127.0.0.1:55432/bloli_nearby_dev`. That password is a local development example, not a production credential. Docker publishes the port on loopback only. `.env.local` is ignored by Git. If you change `DEV_DB_PORT`, update `DATABASE_URL` to match; percent-encode special password characters in the URL.
 
 Changing the password environment variable does not change an existing PostgreSQL role in a persistent volume. Use SQL to change that role password or create a separate disposable development database; do not delete a volume containing data you want to keep.
 

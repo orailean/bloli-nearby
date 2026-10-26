@@ -77,9 +77,6 @@ export function Summary({ item, t }: ItemProps) {
         <TypeIcon size={14} />
         {type ? t[type] : t.fallbackName}
       </span>
-      {item.tobaccoSales === "unconfirmed" && (
-        <span className="sales-unconfirmed">{t.tobaccoSalesUnconfirmed}</span>
-      )}
     </>
   );
 }
@@ -117,14 +114,12 @@ export function DetailFields({ item, t }: ItemProps) {
         <dt>{t.brand}</dt>
         <dd>{item.brand || t.unknown}</dd>
       </div>
-      <div>
-        <dt>{t.tobaccoAvailability}</dt>
-        <dd>
-          {item.tobaccoSales === "unconfirmed"
-            ? t.tobaccoSalesUnconfirmed
-            : t.tobaccoSalesMapped}
-        </dd>
-      </div>
+      {item.sellerType !== "fuel" && (
+        <div>
+          <dt>{t.tobaccoAvailability}</dt>
+          <dd>{t.tobaccoSalesMapped}</dd>
+        </div>
+      )}
       <div className="availability-note">
         <dd>{t.availability}</dd>
       </div>
