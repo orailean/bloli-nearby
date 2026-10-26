@@ -4,7 +4,7 @@ The public sites are `loo.bloli.com` (Find a Loo) and `kippe.bloli.com` (Kippe).
 
 ## Resource identities that deliberately stay unchanged
 
-The production Compose override pins project **`find-a-loo`** and explicitly attaches the external volumes **`find-a-loo_postgres_data`** and **`find-a-loo_import_data`**. These are existing data resources, not application branding. Database role/database `loo` and the secret file are retained. The gateway adds `bloli-nearby-web` on `nginx_default` and retains `find-a-loo-web` for old proxy configuration. No new host ports are published. Never rename the checkout/project without verifying these bindings: Docker could otherwise create an empty replacement DB.
+Running service containers are **`bloli-nearby-web`**, **`bloli-nearby-api`** and **`bloli-nearby-db`**. The production Compose override pins project **`find-a-loo`** and explicitly attaches the external volumes **`find-a-loo_postgres_data`** and **`find-a-loo_import_data`**. These are existing data resources, not application branding. Database role/database `loo` and the secret file are retained. The gateway adds `bloli-nearby-web` on `nginx_default` and retains `find-a-loo-web` for old proxy configuration. No new host ports are published. Never rename the checkout/project without verifying these bindings: Docker could otherwise create an empty replacement DB.
 
 ```bash
 cd /home/oliver/stack/bloli-nearby

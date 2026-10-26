@@ -11,8 +11,16 @@ import kippeRo from "./sites/kippe/locales/ro.json";
 import type { SiteId } from "../shared/sites.js";
 type Dictionary = Record<keyof typeof commonEn | keyof typeof looEn, string>;
 export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
-  loo: { en: {...commonDe, ...commonEn, ...looDe, ...looEn}, de: {...commonDe, ...looDe}, ro: {...commonDe, ...commonRo, ...looDe, ...looRo} },
-  kippe: { en: {...commonDe, ...commonEn, ...kippeDe, ...kippeEn}, de: {...commonDe, ...kippeDe}, ro: {...commonDe, ...commonRo, ...kippeDe, ...kippeRo} },
+  loo: {
+    en: { ...commonDe, ...commonEn, ...looDe, ...looEn },
+    de: { ...commonDe, ...looDe },
+    ro: { ...commonDe, ...commonRo, ...looDe, ...looRo },
+  },
+  kippe: {
+    en: { ...commonDe, ...commonEn, ...kippeDe, ...kippeEn },
+    de: { ...commonDe, ...kippeDe },
+    ro: { ...commonDe, ...commonRo, ...kippeDe, ...kippeRo },
+  },
 };
 export const dictionaries = siteDictionaries.loo;
 export type TranslationKey = keyof Dictionary;

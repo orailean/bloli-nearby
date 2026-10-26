@@ -71,7 +71,7 @@ Set `TEST_DATABASE_URL` for integration tests; they truncate app tables. Never u
 ```bash
 scripts/backup.sh
 # Explicitly replaces this app's DB; take a backup first and follow the guide:
-scripts/restore.sh --replace-database backups/loo-TIMESTAMP.dump
+scripts/restore.sh --replace-database backups/bloli-nearby-TIMESTAMP.dump
 ```
 
 Custom-format dumps include all location/category data, shared settlements, legacy toilets, coverage and job history. Back up `.env` and `.secrets` securely outside Git. Scripts preserve the active Compose file set through `scripts/compose.sh`. Restore stops only this app's API/web, uses transactional pg_restore and keeps shared Nginx running. Rehearse with a disposable database. Application rollback uses the recorded pre-migration commit/configuration; retain persistent volumes and use the verified backup when schema restoration is needed.

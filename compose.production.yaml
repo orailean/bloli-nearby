@@ -1,12 +1,21 @@
 # Contabo migration keeps the original Compose identity and explicit data mounts.
 name: find-a-loo
 services:
+  db:
+    container_name: bloli-nearby-db
+  api:
+    image: bloli-nearby-api:latest
+    container_name: bloli-nearby-api
   web:
+    image: bloli-nearby-web:latest
+    container_name: bloli-nearby-web
     ports: !reset []
     networks:
       default: {}
       edge:
         aliases: [bloli-nearby-web, find-a-loo-web]
+  importer:
+    image: bloli-nearby-importer:latest
 networks:
   edge:
     external: true

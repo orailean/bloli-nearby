@@ -36,8 +36,8 @@
 
 ## 6. Production migration and verification
 
-- [ ] 6.1 Back up and inventory the VM, verify actual source checksum/date and database/volume counts, then rename the GitHub repository/remotes and canonical VM checkout with pinned resource identities.
-- [ ] 6.2 Update backup/refresh paths and generic gateway alias; verify only one application stack and one active set of timers remain and no additional host ports are published.
+- [x] 6.1 Back up and inventory the VM, verify actual source checksum/date and database/volume counts, then rename the GitHub repository/remotes and canonical VM checkout with pinned resource identities.
+- [x] 6.2 Update backup/refresh paths and generic gateway alias; verify only one application stack and one active set of timers remain and no additional host ports are published.
 - [ ] 6.3 Import the expanded Germany snapshot from retained source and verify category counts/readiness plus WC data retention; record resource use and source reuse.
 - [ ] 6.4 Verify kippe DNS and add its virtual host/certificate using existing Docker Nginx and Certbot webroot; validate configuration and gracefully reload, then verify renewal for both domains.
 - [ ] 6.5 Deploy shared API/web and verify both public domains' initial metadata, correct categories, searches, filters, map images, directions, translations, phone widths and HTTPS.

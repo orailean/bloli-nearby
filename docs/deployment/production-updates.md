@@ -1,13 +1,15 @@
 # Updating Find a Loo in production
 
-Production path: `/home/oliver/stack/find-a-loo` on `ssh-contabo`. Public URL: https://loo.bloli.com. The existing Docker Nginx owns ports 80/443; this app publishes no host ports. The production `.env` persists `COMPOSE_FILE=compose.yaml:compose.production.yaml` so operational commands retain the external `nginx_default` network and alias `find-a-loo-web`.
+Current multi-site deployment: see [Bloli Nearby migration and updates](bloli-nearby-migration.md) for both domains, category imports and preserved resource identities.
+
+Production path: `/home/oliver/stack/bloli-nearby` on `ssh-contabo`. Public URL: https://loo.bloli.com. The existing Docker Nginx owns ports 80/443; this app publishes no host ports. The production `.env` persists `COMPOSE_FILE=compose.yaml:compose.production.yaml` so operational commands retain the external `nginx_default` network and alias `find-a-loo-web`.
 
 ## Update application code
 
 Run on the VM:
 
 ```bash
-cd /home/oliver/stack/find-a-loo
+cd /home/oliver/stack/bloli-nearby
 git status --short
 git rev-parse HEAD
 scripts/backup.sh
@@ -40,7 +42,7 @@ docker ps -a --filter name=find-a-loo-germany-import
 For a manually attached refresh instead of systemd:
 
 ```bash
-cd /home/oliver/stack/find-a-loo
+cd /home/oliver/stack/bloli-nearby
 scripts/update.sh
 ```
 
@@ -63,7 +65,7 @@ The daily backup timer runs around 04:30–04:45 Europe/Berlin. Dumps are in the
 Use the recorded previous commit, replacing `PREVIOUS_COMMIT` below. Keep the current database unless the code change requires a matching pre-update schema/data snapshot.
 
 ```bash
-cd /home/oliver/stack/find-a-loo
+cd /home/oliver/stack/bloli-nearby
 git switch --detach PREVIOUS_COMMIT
 scripts/compose.sh build api web importer
 scripts/compose.sh up -d --wait --wait-timeout 180 api web
@@ -83,7 +85,7 @@ This replaces this app's database and stops/restarts only its API and gateway, p
 Application updates normally do not require editing the shared proxy. If a release intentionally changes `deploy/nginx/loo.bloli.com.https.conf`, back up the current dedicated virtual host, copy only that file, then validate and gracefully reload:
 
 ```bash
-cd /home/oliver/stack/find-a-loo
+cd /home/oliver/stack/bloli-nearby
 mkdir -p backups/nginx-before-update
 docker cp nginx:/etc/nginx/conf.d/loo.bloli.com.conf backups/nginx-before-update/
 docker cp deploy/nginx/loo.bloli.com.https.conf nginx:/etc/nginx/conf.d/loo.bloli.com.conf

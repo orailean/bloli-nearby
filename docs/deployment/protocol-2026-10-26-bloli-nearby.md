@@ -34,3 +34,17 @@ The owner approved the Bloli Nearby platform/repository name, the two-domain sha
 ## Remaining rollout steps
 
 Rename VM checkout/remotes and timer paths, pin/reuse source for combined import, install Kippe TLS/renewal, deploy shared build/API, verify public sites and counts, record final backup/status, and rename the local checkout after active work completes. Append actual results below; this section does not claim those steps are complete.
+
+## Actual rollout
+
+- Implementation commit `3430e5b` pushed to the renamed repository, including the Bloli Nearby README.
+- Disabled the legacy `find-a-loo-{refresh,backup}.timer` pair, moved the VM checkout to `/home/oliver/stack/bloli-nearby`, updated its remote and pulled the new implementation. Verified Compose identity stays `find-a-loo` and existing volume bindings remain intact. `.env`, secrets, backups and logs moved with the checkout.
+- Built API/web/importer on the VM (`logs/build-bloli-nearby.log`), deployed API/web with health checks and retained the existing DB container. Additive backfill preserved all 25,954 WC records and original source metadata. Kippe correctly reported not ready until its new import finishes.
+- Installed/verified/enabled new `bloli-nearby-{backup,refresh}` units using the new working directory; old timer pair stays disabled. No new host application ports were published. Gateway has both generic and legacy aliases on `nginx_default`.
+- Started `bloli-nearby-germany-import` with the retained dated source URL. Log confirms `[checksum] Reusing verified source: /data/source.osm.pbf`; filtering includes both categories. No second full Germany download was needed.
+- Installed Kippe HTTP bootstrap in shared Nginx, verified a public ACME challenge and issued `/etc/letsencrypt/live/kippe.bloli.com/` certificate through existing Snap Certbot/account/webroot; expiry 2027-01-24. Installed final HTTPS virtual host and validated/gracefully reloaded Nginx, leaving unrelated configurations running.
+- Installed executable `/etc/letsencrypt/renewal-hooks/deploy/50-bloli-nearby-nginx-reload` for both domains. Moved the old Loo-only hook into project backups to avoid duplicate reloads. Domain-specific renewal dry runs are in progress and logs are kept in the project.
+- Stopped the isolated local Compose smoke stack after verification, preserving disposable volumes. Sample backup/restore rehearsal retained 6 WC and 8 seller records.
+
+- Both certificate renewal simulations succeeded with deploy hooks. The first dry run entered Certbot's normal 369-second random delay; stopped only that test process and reran both tests using `--no-random-sleep-on-renew`. Automatic timer configuration was not changed. Logs: `certbot-kippe-renewal-dry-run.log` and `certbot-loo-multisite-renewal-dry-run.log`.
+- At the owner's explicit request, production service names are changing to `bloli-nearby-web`, `bloli-nearby-api` and `bloli-nearby-db`, with matching production Compose declarations. Running containers can be renamed in place during import; data volumes and service DNS aliases are unchanged. The legacy Compose project identity remains pinned solely for migration/resource tracking.

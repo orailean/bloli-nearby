@@ -1,5 +1,7 @@
 # Local debugging: Docker database, native app processes
 
+For the current two-site setup and small mixed-category sample, start with [Bloli Nearby local development](multi-site.md). The regional workflows below remain available for source-level debugging.
+
 Run only PostgreSQL/PostGIS in Docker. Run the Node API and Vite on your machine, where your IDE can set breakpoints normally. `compose.dev.yaml` is an independent database-only project named `find-a-loo-dev`; it does not start the app, importer, shared Nginx, or any production service.
 
 ## 1. Start the development database

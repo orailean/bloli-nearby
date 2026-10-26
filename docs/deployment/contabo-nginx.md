@@ -1,5 +1,7 @@
 # loo.bloli.com: existing Docker Nginx and Let's Encrypt
 
+The current deployment serves both Loo and Kippe from the renamed Bloli Nearby checkout. Use [the multi-site migration/update guide](bloli-nearby-migration.md) for current paths and timers; this original Loo integration guide remains a reference for the existing proxy and certificate setup.
+
 ## Status and scope
 
 Host inspected read-only on 2026-10-26 via `ssh-contabo` (`ssh oliver@173.212.194.159`). No host configuration, DNS, containers, certificates, timers, or cron entries were changed. All configuration below is a future operator procedure, not an applied deployment. The app is still at the OpenSpec proposal stage.

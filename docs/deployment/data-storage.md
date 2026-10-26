@@ -1,6 +1,6 @@
 # Production data locations
 
-There is intentionally no `data/` folder in `/home/oliver/stack/find-a-loo` for the production deployment. The Compose configuration stores persistent data in **Docker named volumes**, independently of the Git checkout. A local `data/` folder is used only by the optional native-development examples.
+There is intentionally no `data/` folder in `/home/oliver/stack/bloli-nearby` for the production deployment. The Compose configuration stores persistent data in **Docker named volumes**, independently of the Git checkout. A local `data/` folder is used only by the optional native-development examples.
 
 ## What is downloaded
 
@@ -16,8 +16,8 @@ Verified using `docker volume inspect` on this VM:
 | --- | --- | --- | --- |
 | Downloaded source and import staging | `find-a-loo_import_data` | `/data` in importer | `/var/lib/docker/volumes/find-a-loo_import_data/_data` |
 | PostgreSQL/PostGIS files | `find-a-loo_postgres_data` | `/var/lib/postgresql/data` in db | `/var/lib/docker/volumes/find-a-loo_postgres_data/_data` |
-| Application database dumps | Project `backups/` directory | Not a DB data directory | `/home/oliver/stack/find-a-loo/backups/` |
-| Deployment/build logs | Project `logs/` directory and systemd journal | N/A | `/home/oliver/stack/find-a-loo/logs/` |
+| Application database dumps | Project `backups/` directory | Not a DB data directory | `/home/oliver/stack/bloli-nearby/backups/` |
+| Deployment/build logs | Project `logs/` directory and systemd journal | N/A | `/home/oliver/stack/bloli-nearby/logs/` |
 
 Docker's storage root can differ on another host. Discover the current paths rather than assuming them:
 
@@ -38,7 +38,7 @@ docker stats --no-stream find-a-loo-germany-import
 After it exits, or for scheduled imports with another container name, inspect the same persistent volume through a one-shot helper. Overriding the entrypoint avoids starting a download or import:
 
 ```bash
-cd /home/oliver/stack/find-a-loo
+cd /home/oliver/stack/bloli-nearby
 scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -c 'ls -lh /data'
 ```
 
@@ -64,7 +64,7 @@ The current filename stays `source.osm.pbf` even if a dated upstream snapshot is
 
 ```bash
 curl --fail --silent --show-error https://loo.bloli.com/api/status
-cd /home/oliver/stack/find-a-loo
+cd /home/oliver/stack/bloli-nearby
 scripts/compose.sh exec -T db psql -U loo -d loo -c 'SELECT source,dataset_at,imported_at,facility_count,settlement_count FROM dataset;'
 scripts/compose.sh exec -T db psql -U loo -d loo -c 'SELECT id,status,started_at,finished_at,facility_count,settlement_count,error FROM import_jobs ORDER BY id DESC LIMIT 10;'
 ```
