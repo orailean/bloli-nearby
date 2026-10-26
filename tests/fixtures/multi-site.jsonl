@@ -1,0 +1,18 @@
+{"kind": "metadata", "source": "development-fixture-not-live-data", "datasetAt": "2026-10-25T00:00:00Z", "categories": ["toilets", "tobacco"], "coverage": {"type": "MultiPolygon", "coordinates": [[[[5, 47], [16, 47], [16, 56], [5, 56], [5, 47]]]]}}
+{"kind": "facility", "sourceType": "node", "sourceId": "900000", "lat": 48.1391, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 1", "fee": "no", "opening_hours": "24/7"}}
+{"kind": "facility", "sourceType": "node", "sourceId": "900001", "lat": 48.1396, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 2", "fee": "yes", "opening_hours": "off"}}
+{"kind": "facility", "sourceType": "node", "sourceId": "900002", "lat": 48.1401, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 3", "fee": "no", "opening_hours": "\"by appointment\""}}
+{"kind": "seller", "sourceType": "node", "sourceId": "900010", "lat": 48.1391, "lon": 11.4729, "tags": {"amenity": "vending_machine", "vending": "cigarettes", "payment:cash": "yes", "name": "Sample seller München 1"}}
+{"kind": "seller", "sourceType": "node", "sourceId": "900011", "lat": 48.1395, "lon": 11.4729, "tags": {"shop": "tobacco", "opening_hours": "24/7", "payment:credit_cards": "yes", "name": "Sample seller München 2"}}
+{"kind": "seller", "sourceType": "node", "sourceId": "900012", "lat": 48.1399, "lon": 11.4729, "tags": {"amenity": "fuel", "tobacco": "yes", "opening_hours": "24/7", "name": "Sample seller München 3"}}
+{"kind": "seller", "sourceType": "node", "sourceId": "900013", "lat": 48.140299999999996, "lon": 11.4729, "tags": {"shop": "kiosk", "sells:tobacco": "yes", "access": "customers", "name": "Sample seller München 4"}}
+{"kind": "settlement", "sourceType": "node", "sourceId": "900099", "lat": 48.1391, "lon": 11.4729, "tags": {"place": "city", "name": "München", "addr:postcode": "81243"}}
+{"kind": "facility", "sourceType": "node", "sourceId": "900100", "lat": 53.0758, "lon": 8.8072, "tags": {"amenity": "toilets", "name": "Sample WC Bremen 1", "fee": "no", "opening_hours": "24/7"}}
+{"kind": "facility", "sourceType": "node", "sourceId": "900101", "lat": 53.0763, "lon": 8.8072, "tags": {"amenity": "toilets", "name": "Sample WC Bremen 2", "fee": "yes", "opening_hours": "off"}}
+{"kind": "facility", "sourceType": "node", "sourceId": "900102", "lat": 53.0768, "lon": 8.8072, "tags": {"amenity": "toilets", "name": "Sample WC Bremen 3", "fee": "no", "opening_hours": "\"by appointment\""}}
+{"kind": "seller", "sourceType": "node", "sourceId": "900110", "lat": 53.0758, "lon": 8.8072, "tags": {"amenity": "vending_machine", "vending": "cigarettes", "payment:cash": "yes", "name": "Sample seller Bremen 1"}}
+{"kind": "seller", "sourceType": "node", "sourceId": "900111", "lat": 53.0762, "lon": 8.8072, "tags": {"shop": "tobacco", "opening_hours": "24/7", "payment:credit_cards": "yes", "name": "Sample seller Bremen 2"}}
+{"kind": "seller", "sourceType": "node", "sourceId": "900112", "lat": 53.0766, "lon": 8.8072, "tags": {"amenity": "fuel", "tobacco": "yes", "opening_hours": "24/7", "name": "Sample seller Bremen 3"}}
+{"kind": "seller", "sourceType": "node", "sourceId": "900113", "lat": 53.077, "lon": 8.8072, "tags": {"shop": "kiosk", "sells:tobacco": "yes", "access": "customers", "name": "Sample seller Bremen 4"}}
+{"kind": "settlement", "sourceType": "node", "sourceId": "900199", "lat": 53.0758, "lon": 8.8072, "tags": {"place": "city", "name": "Bremen", "addr:postcode": "28195"}}
+{"kind": "complete", "records": 16}

@@ -9,18 +9,25 @@ import {
   Info,
 } from "lucide-react";
 import type { Facility, Locale } from "../shared/types.js";
-import { dictionaries, formatDistance, formatCharge } from "./i18n.js";
+import type { ComponentType } from "react";
+import type { SiteId } from "../shared/sites.js";
+import type { ItemProps } from "./sites/types.js";
+import { siteDictionaries } from "./i18n.js";
 import { directionsUrl } from "../shared/domain.js";
 export default function Details({
   item,
   locale,
   datasetAt,
+  siteId,
+  DetailFields,
 }: {
   item: Facility;
   locale: Locale;
   datasetAt: string | null;
+  siteId: SiteId;
+  DetailFields: ComponentType<ItemProps & { locale: Locale }>;
 }) {
-  const t = dictionaries[locale];
+  const t = siteDictionaries[siteId][locale];
   return (
     <section className="detail-panel" aria-label={t.details}>
       <div className="detail-heading">
@@ -28,28 +35,7 @@ export default function Details({
         <span>{t.details}</span>
       </div>
       <dl>
-        <div>
-          <dt>
-            <Coins size={16} />
-            {t.fee}
-          </dt>
-          <dd>
-            {(item.charge ? formatCharge(item.charge, locale) : null) ||
-              t[
-                item.fee === "unknown"
-                  ? "unknown"
-                  : item.fee === "free"
-                    ? "freeBadge"
-                    : "paidBadge"
-              ]}
-          </dd>
-        </div>
-        {item.feeText && (
-          <div>
-            <dt>{t.priceInfo}</dt>
-            <dd>{item.feeText}</dd>
-          </div>
-        )}
+        <DetailFields item={item} t={t} locale={locale} />
         <div>
           <dt>
             <Clock size={16} />
@@ -62,7 +48,13 @@ export default function Details({
             <DoorOpen size={16} />
             {t.access}
           </dt>
-          <dd>{item.access === "public" ? t.public : t.accessUnknown}</dd>
+          <dd>
+            {item.access === "customers"
+              ? t.customers
+              : item.access === "public"
+                ? t.public
+                : t.accessUnknown}
+          </dd>
         </div>
         <div>
           <dt>

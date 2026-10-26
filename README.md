@@ -1,137 +1,85 @@
-# Find a Loo
+# Bloli Nearby
 
-A public-toilet finder for Germany, with German, English and Romanian interfaces. React, Leaflet, Lucide icons, Node.js and PostGIS. The browser loads public OpenStreetMap tiles directly; toilet searches and town/postcode lookup use your own database. No Google API key or paid map subscription is required.
+One self-hosted OpenStreetMap discovery platform, two focused sites across Germany:
 
-The interface includes free/paid filters, unknown-price labels, straight-line distances, accessible details, external Google Maps walking directions, and a playful visual identity with reduced-motion support. Translation dictionaries live separately in `src/web/locales/en.json`, `de.json`, and `ro.json`.
+- **[Find a Loo](https://loo.bloli.com)** — public toilets, free/paid filters and mapped opening hours.
+- **[Kippe](https://kippe.bloli.com)** — cigarette machines, tobacco shops and stores/petrol stations explicitly mapped as selling tobacco. Machine/shop/petrol-station filters, recorded payment methods and hours; no stock guarantees.
 
-## Run locally with Docker Compose
+Both share one React/Leaflet frontend build, Node API, PostGIS database and Germany importer. Site profiles select distinct branding, artwork, translations, metadata, filters and details by hostname. No paid API or Google Maps key is needed; directions open externally in Google Maps. Browser map backgrounds load normal public OSM tiles directly. Downloaded Germany data supplies local location and postcode searches, not self-hosted map tiles.
 
-Requires Docker Engine/Desktop and Compose v2.24.4 or newer (the production override uses `!reset`). PostGIS's pinned image runs as amd64; Apple Silicon uses emulation. Commands run only against your current Docker context: check it before use. Nothing in this repository automatically connects to Contabo.
+## Native local development
+
+Use [the two-site debugging guide](docs/development/multi-site.md). Only PostGIS needs Docker; frontend/API run natively with IDE breakpoints. Small synthetic München/Bremen fixtures are included; no Germany download is required.
 
 ```bash
-scripts/setup-local.sh
-# Edit .env and set CONTACT_EMAIL to your real public contact address.
-docker compose up -d --build
+npm ci
+# Copy .env.local.example to .env.local only if it does not already exist.
+docker compose --env-file .env.local -f compose.dev.yaml up -d --wait
+npm run dev:api # terminal 1
+npm run dev     # terminal 2
 ```
 
-Open <http://localhost:8088>. Before importing, the interface explicitly reports that data is not ready. Container health checks indicate service liveness; `/api/ready` also checks whether the initial dataset is present. Starting/restarting the application does not trigger a download.
+Open `http://loo.localhost:5173` and `http://kippe.localhost:5173`. Both use the same services. For a fresh mixed sample database and `npm run seed:sample`, follow the guide; the seed command refuses to overwrite existing data. The [detailed local debugging guide](docs/development/local-debugging.md) also retains optional regional source workflows.
 
-## Import Germany data
+Translation JSON is separate under `src/web/locales/common/{de,en,ro}.json` and `src/web/sites/{loo,kippe}/locales/{de,en,ro}.json`. Unsupported browser languages fall back to German; an explicit language choice persists per origin. Site modules compose artwork, filters and details around common search/map behavior.
 
-The full Germany PBF is a substantial download. Initial runtime and disk usage depend on the host. The measured small-region trial is recorded in [verification](docs/verification/implementation.md); full-country import has not been benchmarked on the production host. Start with at least 30 GB free for downloads, filtered data and staging, and keep additional database backup space. This is conservative initial guidance, not a measured full-country guarantee.
+## Containers and production
+
+Node >=22.12, Docker and Compose >=2.24.4 are required; the pinned PostGIS image uses amd64 emulation on Apple Silicon. `scripts/setup-local.sh` creates ignored local credentials when absent. `docker compose up -d --build` starts a fresh base stack; its strict gateway can be previewed with a public Host header, e.g. `curl -H 'Host: kippe.bloli.com' http://127.0.0.1:8088/`. Use native local hostnames for browser debugging.
+
+For Contabo, use [the multi-site migration/update guide](docs/deployment/bloli-nearby-migration.md). Existing Docker Nginx remains the shared TLS proxy. The production override preserves the legacy Compose project identity and explicitly binds existing data/import volumes, while the package/repository is named `bloli-nearby`. No new application host ports are published. The canonical VM checkout is `/home/oliver/stack/bloli-nearby`.
+
+Do not remove volumes or assume renaming a directory migrates Docker resources. Existing database role `loo`, development Compose identity and legacy volume names are retained intentionally. [Data locations](docs/deployment/data-storage.md) explain the host paths; historical deployment protocols retain original names as an audit record.
+
+## Import and refresh
 
 ```bash
 docker compose --profile tools build importer
 scripts/update.sh
 ```
 
-The importer resolves a dated Germany PBF snapshot, fetches its published MD5 first, reuses matching verified cached files or downloads and verifies the source, downloads the coverage polygon, filters relevant OSM entities with osmium, reconstructs areas with pyosmium, and publishes a validated snapshot transactionally. MD5 is used for comparison with Geofabrik's provided checksum; transport uses HTTPS. Incomplete toilet geometry, missing completion records, malformed records, timestamp regression, fewer than the configured minimum counts, or a count drop below 75% of the previous snapshot fail publication. The old snapshot stays available.
+The importer resolves one immutable Germany snapshot and its published checksum, reuses matching retained files, filters both categories and settlements, reconstructs fixed geometries and atomically publishes validated data. For the initial multi-site extension, the [migration guide](docs/deployment/bloli-nearby-migration.md) pins the already-downloaded snapshot to avoid downloading Germany again. Subsequent weekly refreshes use one latest source for both sites.
 
-The importer has a filesystem lock covering the download and a database advisory lock covering publication. Source identities are deduplicated, and private/customer/key-only toilets are excluded. Missing or conditional fees remain unknown. Restricted venues are not presented as unrestricted public toilets. Incomplete settlement boundaries clipped at extract borders are reported in the completion record; incomplete toilet geometry is a hard failure.
+Tag rules are documented in [tobacco classification](docs/implementation/tobacco-tagging.md). Generic kiosks, supermarkets and petrol stations are not assumed to sell cigarettes. Customer/private restrictions, inactive places and explicit negative product tags are preserved or excluded appropriately. Unknown prices/hours/payments remain unknown. Missing fixed toilet/seller geometry or a suspicious count/drop aborts publication and preserves the old active data. After both categories are active, WC-only imports are rejected rather than mixing shared source snapshots.
 
-`DATA_URL`, `POLY_URL`, `MIN_FACILITIES`, `MIN_SETTLEMENTS`, and `MIN_IMPORT_RATIO` are configurable in `.env`. Lower minimum counts are only for explicitly regional development samples. Do not replace an existing Germany dataset with a small sample or lower validation thresholds simply to bypass a failing update. Same-named settlements include source region/postcode when available, with a clearly labeled nearby-city context or coordinates as fallback.
+`DATA_URL`, `POLY_URL`, `MIN_FACILITIES`, `MIN_SETTLEMENTS`, `MIN_SELLERS` and `MIN_IMPORT_RATIO` are configurable. Regional/sample thresholds are for fresh development databases, not bypassing production validation. Importer resource limits are 2 CPUs/4 GiB; database 1.5 CPUs/1536 MiB, API 0.75 CPU/384 MiB, gateway 0.5 CPU/128 MiB. Check actual logs and measurements before adjusting them.
 
-### Optional small regional development sample
+## Discovery behavior
 
-Use a fresh local database/Compose project for a sample, not an existing production dataset. In that project's `.env`, set:
+Radius choices are **0.5, 1, 2, 3 and 5 km**, with **0.5 km default**. Radius changes update the list and fit a visible map boundary. Results are straight-line distance ordered and capped at 100 nearest matches with truncation indicated. Phones use natural page scrolling; desktops use a scrollable side panel. Tile failure leaves local search/list usable.
 
-```dotenv
-DATA_URL=https://download.geofabrik.de/europe/germany/bremen-latest.osm.pbf
-POLY_URL=https://download.geofabrik.de/europe/germany/bremen.poly
-MIN_FACILITIES=1
-MIN_SETTLEMENTS=1
-```
+**Open now** evaluates mapped schedules in Europe/Berlin, including daylight saving time, before applying the result cap. Missing/invalid/uncertain schedules and unresolved regional-holiday schedules are excluded. Active filtered searches refresh every minute. Opening status is based on recorded schedules, not operator confirmation or current inventory.
 
-Then run `scripts/update.sh`. Regional coverage is intentionally limited; importing a Bremen extract does not create Munich results. The production defaults cover Germany. The UI's chosen example is München / 81243.
+`/api/site`, `/api/status` and `/api/ready` resolve the request hostname. `/api/health` checks liveness only. `/api/locations` is site-scoped discovery; `/api/settlements` shares town/postcode search. The legacy `/api/toilets` route remains available only on Loo during migration. Unknown production hosts, cross-category overrides and unsupported filters are rejected.
 
-## Local debugging (only the database in Docker)
-
-Use [the local debugging guide](docs/development/local-debugging.md) with `compose.dev.yaml`: PostGIS runs in Docker, and the API/Vite run directly on your machine with IDE breakpoints. It also documents optional Bremen and München/81243 samples. The optional Munich download is documentation only; local verification used Bremen.
-
-## Development and tests
-
-Node.js >=22.12 is required; the pinned container runtime is Node 22.22.0. Use an isolated PostGIS database for tests: integration tests truncate the app tables. Never point `TEST_DATABASE_URL` at production.
+## Verification
 
 ```bash
-npm ci
-# In one terminal, point DATABASE_URL at a local PostGIS database and run:
-npm run dev:api
-# Or npm run debug:api to expose the inspector on localhost:9229.
-# In another terminal:
-npm run dev
 npm test
 npm run build
-# Set TEST_DATABASE_URL to a separate disposable PostGIS database:
-npm run test:integration
-npm exec playwright -- install chromium
+npm exec playwright -- install chromium webkit
 npm run test:e2e
+# Only against an isolated disposable PostGIS database:
+npm run test:integration
+.venv/bin/python -m unittest discover -s importer
 ```
 
-The browser suite uses its local PostGIS dataset and blocks public map tiles for repeatable tests without loading the shared tile service. Populate that isolated database with the Bremen development extract before browser tests. See [verification](docs/verification/implementation.md) for the exact local run and results.
+Set `TEST_DATABASE_URL` for integration tests; they truncate app tables. Never use production. Browser regressions cover both local hostnames, all languages, radius, map/list selection, Open now, filters, payment/access details and phone layouts. Tests block public tiles; live release verification separately requires actual tile images to load.
 
-Python extractor tests:
-
-```bash
-python3 -m venv .venv
-.venv/bin/pip install -r importer/requirements.txt
-.venv/bin/python -m unittest discover -s importer -p 'test_*.py'
-```
-
-## Production updates and data locations
-
-- [Update, verify, and roll back production](docs/deployment/production-updates.md).
-- [Downloaded Germany data, Docker volumes, and progress inspection](docs/deployment/data-storage.md).
-- [VM deployment protocol](docs/deployment/protocol-2026-10-26.md).
-
-## Operations
-
-Defaults cap the importer at 2 CPUs / 4 GiB RAM, the database at 1.5 CPUs / 1536 MiB, the API at 0.75 CPU / 384 MiB, and the gateway at 0.5 CPU / 128 MiB. Limits constrain a shared host; they are initial settings to measure during the full-country import. If an import exceeds its limit, the transaction rolls back; inspect resource usage, retain the previous dataset, and increase limits deliberately before retrying. The import volume retains downloaded/extracted input for diagnosis; ensure adequate disk space and do not start overlapping heavy jobs.
-
-Check dataset date, counts and the latest import outcome at `/api/status`. Dataset age greater than 14 days is marked stale; displayed source hours do not claim live availability. The refresh supervisor records job status before download/extraction, so preparation failures are visible in the latest job as well as logs. On the next lock-owning run, abandoned running jobs are marked interrupted. Review container logs and monitor the command’s exit status for details. Never log search query URLs or user coordinates routinely.
-
-Schedule weekly updates with a host timer/cron later, after a successful manual import. For example, using the real deployment path:
-
-```cron
-15 3 * * 0 cd /absolute/path/to/find-a-loo && ./scripts/update.sh >> /var/log/find-a-loo-import.log 2>&1
-```
-
-The importer lock makes overlapping invocations fail rather than overlap. Monitor nonzero exit codes; rotate the log. No scheduler is installed automatically.
-
-### Backup and restore
+## Operations, backups and rollback
 
 ```bash
 scripts/backup.sh
-# Explicitly replaces this app's current database; take a backup first:
+# Explicitly replaces this app's DB; take a backup first and follow the guide:
 scripts/restore.sh --replace-database backups/loo-TIMESTAMP.dump
 ```
 
-The custom-format dump includes the active dataset, coverage, facilities, settlements and job metadata. Operational scripts use `scripts/compose.sh` to preserve the active deployment’s Compose files, including the production proxy network override; an explicit `COMPOSE_FILE` takes precedence. Back up `.env` and `.secrets/db_password` separately in secure storage, and retain the exact application image/version. Never commit credentials. A restore stops only this app's API/gateway, runs a transactional `pg_restore`, then restarts them on success. The shared Docker Nginx is untouched. Rehearse restores against a separate local deployment before relying on backups.
+Custom-format dumps include all location/category data, shared settlements, legacy toilets, coverage and job history. Back up `.env` and `.secrets` securely outside Git. Scripts preserve the active Compose file set through `scripts/compose.sh`. Restore stops only this app's API/web, uses transactional pg_restore and keeps shared Nginx running. Rehearse with a disposable database. Application rollback uses the recorded pre-migration commit/configuration; retain persistent volumes and use the verified backup when schema restoration is needed.
 
-Map-provider rollback is configuration-only: restore prior `TILE_URL`, `TILE_ATTRIBUTION`, and `TILE_MAX_ZOOM` in `.env`, then recreate only the API (`docker compose up -d api`); reload the browser to receive the updated map settings. For app rollback, use prior pinned images/configuration and restore a pre-migration dump when schema compatibility requires it. Do not delete volumes as a routine rollback step.
-
-## Contabo deployment and HTTPS
-
-Use the existing Docker Nginx and the prepared [Contabo Nginx/Let's Encrypt guide](docs/deployment/contabo-nginx.md) for `loo.bloli.com`. It includes all virtual-host configuration, HTTP bootstrap, webroot issuance, automatic renewal, Docker reload hook, and rollback commands. It also documents the observed duplicate renewal schedulers and unrelated renewal failures.
-
-The app's production network override is ready:
-
-```bash
-docker compose -f compose.yaml -f compose.production.yaml config --quiet
-# Run on the host only after deployment is authorized:
-docker compose -f compose.yaml -f compose.production.yaml up -d --build
-```
-
-This attaches the app gateway to `nginx_default` as `find-a-loo-web` and removes its local host-port mapping. It does not create or reconfigure the shared Nginx. Use the same production file arguments for subsequent operations on that deployment. Full host deployment and certificate issuance have not been performed; the owner explicitly requested no host changes.
+Production uses one weekly `bloli-nearby-refresh.timer` and one daily `bloli-nearby-backup.timer`, plus existing Certbot renewal with a deploy hook scoped to both domains. [Migration/update instructions](docs/deployment/bloli-nearby-migration.md) cover paths, DNS, certificate bootstrap/renewal, verification and rollback. Host operations are recorded in dated protocol files under `docs/deployment/`.
 
 ## Map policy, privacy and licenses
 
-- Normal interactive OSM raster tiles: attribution stays visible, browser caching is honored, Referer is preserved, and there is no tile proxy, bulk download, offline pack, or prefetch. Public tiles have no availability guarantee; configure another permitted provider if usage grows. [OSM tile policy](https://operations.osmfoundation.org/policies/tiles/).
-- The tile provider receives the user's IP and viewed tile coordinates. Local search coordinates are used transiently and aren't stored as location history. The browser stores only the explicit language preference. Opening directions sends the destination to Google Maps.
-- Toilet and settlement data are from OpenStreetMap via Geofabrik under ODbL. Display attribution, retain source information, and provide the applicable database offer under ODbL when publicly distributing a derived database. [OSM copyright](https://www.openstreetmap.org/copyright), [Geofabrik downloads](https://www.geofabrik.de/data/download.html).
-- Lucide icons: ISC. Leaflet: BSD-2-Clause. React, Vite, pg and tsx: MIT; TypeScript: Apache-2.0. DM Sans and Bricolage Grotesque: SIL Open Font License. pyosmium: BSD-2-Clause; Shapely: BSD-3-Clause. Container images include additional packages with their own notices. See `package-lock.json`, importer requirements, and [notices](THIRD_PARTY_NOTICES.md).
+Normal interactive OSM raster tiles retain attribution, browser caching and Referer; there is no bulk tile download, proxy, offline pack or prefetch. Public tiles have no availability guarantee; a permitted alternative provider remains configurable. The provider receives IP/viewed tile coordinates. Searches do not store location history and query URLs are not logged routinely. Explicit language preference is stored locally; opening directions sends the destination to Google Maps.
 
-### Search area and Open now
-
-Radius choices are 0.5, 1, 2, 3 and 5 km, with 0.5 km selected initially and a 5 km API maximum. Changing the radius updates the results and fits the map to a visible search boundary on desktop and mobile. On phones, results use normal page scrolling so all matches remain easy to reach; desktop retains its independently scrollable results pane. Results are capped at 100 nearest matching toilets, so increasing an already crowded search can keep the same first 100 results; the interface indicates truncation.
-
-**Open now** evaluates recorded OSM hours on the server in `Europe/Berlin`, including daylight saving time. It combines with price and radius filters before applying the result cap. Missing, invalid or uncertain schedules are excluded; holiday-dependent schedules also require state context. Results refresh every minute while this filter is active. Opening status reflects mapped schedules, not a live confirmation from the operator.
+Map/location data is © OpenStreetMap contributors under ODbL, via Geofabrik. Preserve source attribution and applicable database-sharing obligations. See [OSM copyright](https://www.openstreetmap.org/copyright), [tile policy](https://operations.osmfoundation.org/policies/tiles/) and [third-party notices](THIRD_PARTY_NOTICES.md). Downloaded PBFs, databases, dumps, screenshots, built assets and secrets remain outside Git. The repository is `git@github.com:orailean/bloli-nearby.git`.

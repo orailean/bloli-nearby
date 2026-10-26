@@ -73,7 +73,10 @@ export function normalizeFacility(r: SourceRecord): Facility | null {
 }
 export const SEARCH_RADII = [500, 1000, 2000, 3000, 5000] as const;
 
-export function parseSearch(p: URLSearchParams): SearchQuery {
+export function parseSearch(
+  p: URLSearchParams,
+  category: "toilets" | "tobacco" = "toilets",
+): SearchQuery {
   const number = (key: string, fallback?: number) => {
     const raw = p.get(key);
     if (raw === null && fallback !== undefined) return fallback;
@@ -88,6 +91,22 @@ export function parseSearch(p: URLSearchParams): SearchQuery {
     radius = number("radius", SEARCH_RADII[0]),
     limit = number("limit", 100);
   coordinates(lat, lon);
+  if (
+    p.has("category") &&
+    (p.get("category") !== category || p.getAll("category").length !== 1)
+  )
+    throw new AppError("INVALID_QUERY");
+  if (
+    (category === "tobacco" && p.has("fee")) ||
+    (category === "toilets" && p.has("sellerType"))
+  )
+    throw new AppError("INVALID_QUERY");
+  const sellerType = p.get("sellerType") ?? "all";
+  if (
+    !["all", "machine", "shop", "fuel"].includes(sellerType) ||
+    p.getAll("sellerType").length > 1
+  )
+    throw new AppError("INVALID_QUERY");
   const fee = p.get("fee") ?? "all";
   const openNow = p.get("openNow") ?? "false";
   if (
@@ -109,6 +128,9 @@ export function parseSearch(p: URLSearchParams): SearchQuery {
     limit,
     fee: fee as SearchQuery["fee"],
     openNow: openNow === "true",
+    ...(category === "tobacco"
+      ? { sellerType: sellerType as SearchQuery["sellerType"] }
+      : {}),
   };
 }
 export function directionsUrl(lat: number, lon: number): string {

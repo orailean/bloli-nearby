@@ -36,6 +36,21 @@ def poly_geojson(text):
     return result
 
 
+def tokens(value):
+    return {token.strip().lower() for token in value.split(';') if token.strip()}
+
+
+def seller_candidate(tags):
+    """Retain mapped sales evidence; normalization applies access/lifecycle rules."""
+    if tags.get('amenity') == 'vending_machine' and 'cigarettes' in tokens(tags.get('vending', '')):
+        return True
+    if tags.get('shop') == 'tobacco':
+        return True
+    positive = tags.get('tobacco', '').strip().lower() == 'yes' or bool(
+        tokens(tags.get('sells:tobacco', '')) & {'yes', 'tobacco', 'cigarette', 'cigarettes'})
+    return positive and (bool(tags.get('shop')) or tags.get('amenity') == 'fuel')
+
+
 def kinds(tags):
     # Routes describe onboard toilets; collections group separate locations.
     if tags.get('type') in ('route', 'route_master', 'collection'):
@@ -43,6 +58,8 @@ def kinds(tags):
     result = []
     if tags.get('amenity') == 'toilets' or tags.get('toilets') == 'yes':
         result.append('facility')
+    if seller_candidate(tags):
+        result.append('seller')
     if tags.get('place') in ('city', 'town', 'village', 'hamlet', 'suburb', 'borough', 'quarter', 'locality') or tags.get('boundary') == 'postal_code':
         result.append('settlement')
     return result
@@ -59,7 +76,8 @@ def extract(filename, coverage, output, source, dataset_at=None):
         raise ValueError('Missing source dataset timestamp')
     def emit(record):
         output.write(json.dumps(record, ensure_ascii=False) + '\n')
-    emit({'kind': 'metadata', 'source': source, 'datasetAt': dataset_at, 'coverage': coverage})
+    emit({'kind': 'metadata', 'source': source, 'datasetAt': dataset_at, 'coverage': coverage,
+          'categories': ['toilets', 'tobacco']})
     factory = osmium.geom.GeoJSONFactory()
     sites = {}
     member_keys = set()
@@ -140,6 +158,9 @@ def extract(filename, coverage, output, source, dataset_at=None):
     broken_facilities = [key for key in missing if 'facility' in handler.expected[key]]
     if broken_facilities:
         raise ValueError(f'Incomplete toilet geometries: {len(broken_facilities)}; sources: {sorted(broken_facilities)[:30]}')
+    broken_sellers = [key for key in missing if 'seller' in handler.expected[key]]
+    if broken_sellers:
+        raise ValueError(f'Incomplete seller geometries: {len(broken_sellers)}; sources: {sorted(broken_sellers)[:30]}')
     emit({'kind': 'complete', 'records': handler.count, 'skippedSettlementGeometries': len(missing)})
     return handler.count
 

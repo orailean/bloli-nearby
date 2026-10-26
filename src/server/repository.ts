@@ -1,3 +1,4 @@
+import type { Category } from "../shared/sites.js";
 import type pg from "pg";
 import type {
   Dataset,
@@ -7,10 +8,14 @@ import type {
 } from "../shared/types.js";
 import { isOpenNow } from "./opening-hours.js";
 import { AppError } from "../shared/domain.js";
-export async function datasetStatus(pool: pg.Pool): Promise<Dataset> {
+export async function datasetStatus(
+  pool: pg.Pool,
+  category: Category = "toilets",
+): Promise<Dataset> {
   const row = (
     await pool.query(
-      "SELECT dataset_at,imported_at,source,facility_count FROM dataset",
+      "SELECT dataset_at,imported_at,source,location_count AS facility_count FROM category_datasets WHERE category=$1",
+      [category],
     )
   ).rows[0];
   const job = (
@@ -33,23 +38,38 @@ export async function datasetStatus(pool: pg.Pool): Promise<Dataset> {
       : null,
   };
 }
-export async function searchToilets(pool: pg.Pool, q: SearchQuery) {
+export const searchToilets = (pool: pg.Pool, q: SearchQuery) =>
+  searchLocations(pool, q, "toilets");
+export async function searchLocations(
+  pool: pg.Pool,
+  q: SearchQuery,
+  category: Category,
+) {
   // Read the snapshot and dataset metadata consistently across concurrent imports.
   const db = await pool.connect();
   try {
     await db.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
     const meta = (
       await db.query(
-        "SELECT *,ST_Covers(coverage,ST_SetSRID(ST_MakePoint($1,$2),4326)) AS covered FROM dataset",
-        [q.lon, q.lat],
+        "SELECT *,location_count AS facility_count,ST_Covers(coverage,ST_SetSRID(ST_MakePoint($1,$2),4326)) AS covered FROM category_datasets WHERE category=$3",
+        [q.lon, q.lat, category],
       )
     ).rows[0];
     if (!meta) throw new AppError("DATA_NOT_READY", 503);
     if (!meta.covered) throw new AppError("OUTSIDE_COVERAGE", 400);
-    const sql = `SELECT data,ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) AS distance
-      FROM facilities WHERE ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3)
-      AND ($4='all' OR fee=$4) ORDER BY distance,id`;
-    const parameters = [q.lon, q.lat, q.radius, q.fee];
+    const sql = `SELECT c.data,ST_Distance(l.location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) AS distance
+      FROM locations l JOIN location_categories c ON c.location_id=l.id
+      WHERE ST_DWithin(l.location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3)
+      AND c.category=$4 AND ($5='all' OR c.fee=$5) AND ($6='all' OR c.seller_type=$6)
+      ORDER BY distance,l.id`;
+    const parameters = [
+      q.lon,
+      q.lat,
+      q.radius,
+      category,
+      q.fee,
+      q.sellerType ?? "all",
+    ];
     let rows: Array<{ data: Facility; distance: number }>;
     if (q.openNow) {
       // Evaluate every candidate before applying the result cap. A cursor bounds
@@ -71,7 +91,7 @@ export async function searchToilets(pool: pg.Pool, q: SearchQuery) {
       }
       await db.query("CLOSE open_candidates");
     } else {
-      rows = (await db.query(`${sql} LIMIT $5`, [...parameters, q.limit + 1]))
+      rows = (await db.query(`${sql} LIMIT $7`, [...parameters, q.limit + 1]))
         .rows;
     }
     await db.query("COMMIT");
@@ -100,8 +120,9 @@ export async function searchToilets(pool: pg.Pool, q: SearchQuery) {
 export async function searchSettlements(
   pool: pg.Pool,
   query: string,
+  category: Category = "toilets",
 ): Promise<Settlement[]> {
-  if (!(await datasetStatus(pool)).ready)
+  if (!(await datasetStatus(pool, category)).ready)
     throw new AppError("DATA_NOT_READY", 503);
   if (query.length < 2 || query.length > 80)
     throw new AppError("INVALID_QUERY");

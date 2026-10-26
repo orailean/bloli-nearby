@@ -42,6 +42,7 @@ export async function importFile(
         ...meta,
         minimumFacilities: Number(process.env.MIN_FACILITIES || 1000),
         minimumSettlements: Number(process.env.MIN_SETTLEMENTS || 1000),
+        minimumSellers: Number(process.env.MIN_SELLERS || 100),
         minimumRatio: Number(process.env.MIN_IMPORT_RATIO || 0.75),
       },
       context,

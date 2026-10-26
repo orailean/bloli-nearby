@@ -1,9 +1,20 @@
 import type { Locale } from "../shared/types.js";
-import en from "./locales/en.json";
-import de from "./locales/de.json";
-import ro from "./locales/ro.json";
-type Dictionary = Record<keyof typeof en, string>;
-export const dictionaries: Record<Locale, Dictionary> = { en, de, ro };
+import commonEn from "./locales/common/en.json";
+import commonDe from "./locales/common/de.json";
+import commonRo from "./locales/common/ro.json";
+import looEn from "./sites/loo/locales/en.json";
+import looDe from "./sites/loo/locales/de.json";
+import looRo from "./sites/loo/locales/ro.json";
+import kippeEn from "./sites/kippe/locales/en.json";
+import kippeDe from "./sites/kippe/locales/de.json";
+import kippeRo from "./sites/kippe/locales/ro.json";
+import type { SiteId } from "../shared/sites.js";
+type Dictionary = Record<keyof typeof commonEn | keyof typeof looEn, string>;
+export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
+  loo: { en: {...commonDe, ...commonEn, ...looDe, ...looEn}, de: {...commonDe, ...looDe}, ro: {...commonDe, ...commonRo, ...looDe, ...looRo} },
+  kippe: { en: {...commonDe, ...commonEn, ...kippeDe, ...kippeEn}, de: {...commonDe, ...kippeDe}, ro: {...commonDe, ...commonRo, ...kippeDe, ...kippeRo} },
+};
+export const dictionaries = siteDictionaries.loo;
 export type TranslationKey = keyof Dictionary;
 export function chooseLocale(
   saved: string | null,

@@ -1,3 +1,4 @@
+import type { Category, SiteProfile, SellerType } from "./sites.js";
 export type Locale = "en" | "de" | "ro";
 export type Fee = "free" | "paid" | "unknown";
 export type FeeFilter = "all" | "free" | "paid";
@@ -19,13 +20,17 @@ export interface Facility {
   fee: Fee;
   charge: string | null;
   feeText: string | null;
-  access: "public" | "unknown";
+  access: "public" | "customers" | "unknown";
   wheelchair: "yes" | "no" | "limited" | "unknown";
   openingHours: string | null;
   operator: string | null;
   notes: string | null;
   tags: Record<string, string>;
   distance?: number;
+  category?: Category;
+  sellerType?: SellerType;
+  paymentMethods?: Record<string, string>;
+  brand?: string | null;
 }
 export interface Settlement {
   nearCity: string | null;
@@ -44,6 +49,7 @@ export interface SearchQuery {
   limit: number;
   fee: FeeFilter;
   openNow: boolean;
+  sellerType?: SellerType | "all";
 }
 export interface Dataset {
   ready: boolean;
@@ -60,6 +66,7 @@ export interface SearchResponse {
   dataset: Dataset;
 }
 export interface AppConfig {
+  site?: SiteProfile;
   tileUrl: string;
   tileAttribution: string;
   tileMaxZoom: number;

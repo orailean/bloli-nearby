@@ -282,7 +282,7 @@ for (const width of [1440, 390]) {
       distance,
     });
     await page.route("**/api/status", (r) => r.fulfill({ json: dataset }));
-    await page.route("**/api/toilets?*", (r) => {
+    await page.route("**/api/locations?*", (r) => {
       const q = new URL(r.request().url()).searchParams;
       const items = [
         facility("Near closed", 8.81, "off", 500),
@@ -380,7 +380,7 @@ test("all ten phone results are reachable through normal page scrolling", async 
     latestJob: null,
   };
   await page.route("**/api/status", (r) => r.fulfill({ json: dataset }));
-  await page.route("**/api/toilets?*", (r) =>
+  await page.route("**/api/locations?*", (r) =>
     r.fulfill({
       json: {
         dataset,

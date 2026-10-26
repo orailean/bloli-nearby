@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly Germany dataset refresh for Bloli Nearby
+
+[Timer]
+OnCalendar=Sun *-*-* 03:15:00
+RandomizedDelaySec=30m
+Persistent=true
+Unit=bloli-nearby-refresh.service
+
+[Install]
+WantedBy=timers.target

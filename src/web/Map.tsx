@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { AppConfig, Facility, Locale } from "../shared/types.js";
-import { dictionaries } from "./i18n.js";
+import { site } from "./sites/index.js";
+import { siteDictionaries } from "./i18n.js";
 interface Props {
   config: AppConfig;
   items: Facility[];
@@ -34,7 +35,7 @@ export default function MapView({
   const callbacks = useRef({ onSelect, onPoint, onMove, onError });
   callbacks.current = { onSelect, onPoint, onMove, onError };
   const previousSelection = useRef<string | null>(null);
-  const t = dictionaries[locale];
+  const t = siteDictionaries[site.id][locale];
   useEffect(() => {
     if (!element.current) return;
     const reduce = window.matchMedia(
@@ -181,7 +182,7 @@ export default function MapView({
     group.clearLayers();
     items.forEach((item, index) => {
       const pin = document.createElement("span");
-      pin.className = `map-pin ${item.fee} ${item.id === selected ? "active" : ""}`;
+      pin.className = `map-pin ${item.sellerType || item.fee} ${item.id === selected ? "active" : ""}`;
       pin.textContent = String(index + 1);
       const marker = L.marker([item.lat, item.lon], {
         icon: L.divIcon({

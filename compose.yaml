@@ -1,4 +1,4 @@
-name: find-a-loo
+name: bloli-nearby
 services:
   db:
     image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
@@ -68,6 +68,7 @@ services:
       POLY_URL: ${POLY_URL:-https://download.geofabrik.de/europe/germany.poly}
       MIN_FACILITIES: ${MIN_FACILITIES:-1000}
       MIN_SETTLEMENTS: ${MIN_SETTLEMENTS:-1000}
+      MIN_SELLERS: ${MIN_SELLERS:-100}
       MIN_IMPORT_RATIO: ${MIN_IMPORT_RATIO:-0.75}
     secrets: [db_password]
     volumes: [import_data:/data]

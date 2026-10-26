@@ -2,6 +2,7 @@ import { runRefresh } from "../../src/server/refresh.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { once } from "node:events";
+import { get as httpGet } from "node:http";
 import { createPool, migrate } from "../../src/server/db.js";
 import { importDataset } from "../../src/server/import.js";
 import { createApi } from "../../src/server/api.js";
@@ -75,7 +76,9 @@ test(
   { timeout: 30000 },
   async (t) => {
     await migrate(pool);
-    await pool.query("TRUNCATE facilities,settlements,dataset,import_jobs");
+    await pool.query(
+      "TRUNCATE location_categories,locations,category_datasets,facilities,settlements,dataset,import_jobs",
+    );
     const server = createApi(pool);
     server.listen(0, "127.0.0.1");
     await once(server, "listening");
@@ -305,6 +308,172 @@ test(
           assert.deepEqual(
             matches.map((x: { nearCity: string }) => x.nearCity),
             ["Bremen", "Bremerhaven"],
+          );
+        },
+      );
+      await t.test(
+        "two hosts isolate categories, filters and metadata and retain failed snapshots",
+        async () => {
+          const byHost = async (host: string, path: string) => {
+            return new Promise<{ status: number; body: any }>(
+              (resolve, reject) => {
+                httpGet(
+                  `http://127.0.0.1:${address.port}${path}`,
+                  { headers: { Host: host } },
+                  (response) => {
+                    let body = "";
+                    response.on("data", (chunk) => (body += chunk));
+                    response.on("end", () =>
+                      resolve({
+                        status: response.statusCode!,
+                        body: JSON.parse(body),
+                      }),
+                    );
+                  },
+                ).on("error", reject);
+              },
+            );
+          };
+          assert.equal(
+            (await byHost("kippe.bloli.com", "/api/status")).body.ready,
+            false,
+          );
+          async function* mixed() {
+            yield* records();
+            for (let i = 0; i < 4; i++)
+              yield {
+                kind: "settlement",
+                sourceType: "node",
+                sourceId: String(700 + i),
+                lat: 52.52,
+                lon: 13.405,
+                tags: { place: "village", name: `Fixture ${i}` },
+              };
+            for (const [id, tags] of [
+              ["1", { shop: "tobacco", opening_hours: "24/7" }],
+              [
+                "501",
+                {
+                  amenity: "vending_machine",
+                  vending: "cigarettes",
+                  opening_hours: "off",
+                },
+              ],
+              [
+                "502",
+                { amenity: "fuel", tobacco: "yes", opening_hours: "24/7" },
+              ],
+            ] as const)
+              yield {
+                kind: "seller",
+                sourceType: "node",
+                sourceId: id,
+                lat: 52.52,
+                lon: 13.405,
+                tags,
+              };
+          }
+          const multiOpts = {
+            ...opts,
+            categories: ["toilets", "tobacco"] as Array<"toilets" | "tobacco">,
+            minimumSellers: 1,
+            minimumRatio: 0.5,
+          };
+          await importDataset(pool, mixed(), multiOpts);
+          for (const host of ["loo.bloli.com", "kippe.bloli.com"]) {
+            const profile = await byHost(host, "/api/site");
+            assert.equal(profile.status, 200);
+            assert.equal(profile.body.id, host.split(".")[0]);
+            assert.equal((await byHost(host, "/api/status")).body.ready, true);
+          }
+          assert.equal(
+            (
+              await byHost(
+                "kippe.bloli.com",
+                "/api/locations?lat=52.52&lon=13.405",
+              )
+            ).body.items.length,
+            3,
+          );
+          assert.equal(
+            (
+              await byHost(
+                "loo.bloli.com",
+                "/api/locations?lat=52.52&lon=13.405",
+              )
+            ).body.items.length,
+            3,
+          );
+          const machines = await byHost(
+            "kippe.bloli.com",
+            "/api/locations?lat=52.52&lon=13.405&sellerType=machine",
+          );
+          assert.equal(machines.body.items[0].id, "node/501");
+          assert.equal(machines.body.items.length, 1);
+          const open = await byHost(
+            "kippe.bloli.com",
+            "/api/locations?lat=52.52&lon=13.405&openNow=true&limit=1",
+          );
+          assert.equal(open.body.items.length, 1);
+          assert.equal(open.body.truncated, true);
+          assert.equal(
+            (
+              await byHost(
+                "kippe.bloli.com",
+                "/api/toilets?lat=52.52&lon=13.405",
+              )
+            ).status,
+            404,
+          );
+          for (const path of [
+            "/api/locations?lat=52.52&lon=13.405&fee=all",
+            "/api/locations?lat=52.52&lon=13.405&category=toilets",
+          ])
+            assert.equal((await byHost("kippe.bloli.com", path)).status, 400);
+          assert.equal(
+            (await byHost("untrusted.example", "/api/site")).status,
+            421,
+          );
+          assert.equal(
+            (
+              await byHost(
+                "loo.bloli.com",
+                "/api/locations?lat=52.52&lon=13.405&sellerType=machine",
+              )
+            ).status,
+            400,
+          );
+          assert.equal(
+            (
+              await pool.query(
+                "SELECT count(*)::int AS n FROM location_categories WHERE location_id='node/1'",
+              )
+            ).rows[0].n,
+            2,
+          );
+          await assert.rejects(
+            importDataset(pool, records(), opts),
+            (error: any) => error.code === "PARTIAL_CATEGORY_IMPORT",
+          );
+          await assert.rejects(
+            importDataset(pool, mixed(), { ...multiOpts, minimumSellers: 999 }),
+          );
+          assert.equal(
+            (await byHost("kippe.bloli.com", "/api/status")).body.count,
+            3,
+          );
+          assert.equal(
+            (await byHost("loo.bloli.com", "/api/status")).body.count,
+            3,
+          );
+          await importDataset(pool, mixed(), multiOpts);
+          assert.equal(
+            (
+              await pool.query(
+                "SELECT count(*)::int AS n FROM location_categories WHERE category='tobacco'",
+              )
+            ).rows[0].n,
+            3,
           );
         },
       );

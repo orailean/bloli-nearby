@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily database backup for Bloli Nearby
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=bloli-nearby-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -34,11 +34,13 @@ import type {
   Settlement,
 } from "../shared/types.js";
 import {
-  dictionaries,
+  siteDictionaries,
   chooseLocale,
   formatDistance,
   type TranslationKey,
 } from "./i18n.js";
+import { site, sitePresentation, siteOverride } from "./sites/index.js";
+import type { SellerType } from "../shared/sites.js";
 import { SEARCH_RADII } from "../shared/domain.js";
 import MapView from "./Map.js";
 import Details from "./Details.js";
@@ -50,7 +52,8 @@ const quickPlaces = [
   { name: "Bremen", lat: 53.0758, lon: 8.8072 },
 ];
 async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const r = await fetch(path, { signal });
+  const requestPath = siteOverride ? `${path}${path.includes("?") ? "&" : "?"}site=${encodeURIComponent(siteOverride)}` : path;
+  const r = await fetch(requestPath, { signal });
   const body = await r.json();
   if (!r.ok) throw new Error(body.error || "SERVICE_UNAVAILABLE");
   return body;
@@ -58,7 +61,7 @@ async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
 function initialLocale() {
   let saved = null;
   try {
-    saved = localStorage.getItem("loo.language");
+    saved = localStorage.getItem(`${site.id}.language`);
   } catch {}
   return chooseLocale(saved, navigator.languages);
 }
@@ -75,6 +78,7 @@ export default function App() {
     [dataset, setDataset] = useState<Dataset | null>(null);
   const [origin, setOrigin] = useState<Origin | null>(null),
     [fee, setFee] = useState<FeeFilter>("all"),
+    [sellerType, setSellerType] = useState<SellerType | "all">("all"),
     [radius, setRadius] = useState<number>(SEARCH_RADII[0]),
     [openNow, setOpenNow] = useState(false),
     [items, setItems] = useState<Facility[]>([]),
@@ -105,7 +109,9 @@ export default function App() {
     dialogRef = useRef<HTMLDialogElement>(null),
     searchInput = useRef<HTMLInputElement>(null),
     resultsPane = useRef<HTMLDivElement>(null);
+  const dictionaries = siteDictionaries[site.id];
   const t = dictionaries[locale];
+  const { Icon: SiteIcon, Artwork, Filters, Summary, DetailFields } = sitePresentation[site.id];
   const errorKey = (e: unknown): TranslationKey =>
     e instanceof Error && Object.hasOwn(dictionaries.en, e.message)
       ? (e.message as TranslationKey)
@@ -116,7 +122,10 @@ export default function App() {
   useEffect(() => {
     const c = new AbortController();
     request<AppConfig>("/api/config", c.signal)
-      .then(setConfig)
+      .then((value) => {
+        if (value.site && value.site.id !== site.id) throw new Error("SITE_MISMATCH");
+        setConfig(value);
+      })
       .catch((e) => {
         if (e.name !== "AbortError") setConfigError(true);
       });
@@ -136,7 +145,7 @@ export default function App() {
     setSelected(null);
     setTruncated(false);
     request<SearchResponse>(
-      `/api/toilets?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), fee, radius: String(radius), openNow: String(openNow) })}`,
+      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : { sellerType }), radius: String(radius), openNow: String(openNow) })}`,
       c.signal,
     )
       .then((r) => {
@@ -154,7 +163,7 @@ export default function App() {
         if (!c.signal.aborted) setLoading(false);
       });
     return () => c.abort();
-  }, [origin?.lat, origin?.lon, fee, radius, openNow, retry]);
+  }, [origin?.lat, origin?.lon, fee, sellerType, radius, openNow, retry]);
   useEffect(() => {
     const d = dialogRef.current;
     if (!d) return;
@@ -202,7 +211,7 @@ export default function App() {
   function changeLocale(next: Locale) {
     setLocale(next);
     try {
-      localStorage.setItem("loo.language", next);
+      localStorage.setItem(`${site.id}.language`, next);
     } catch {}
   }
   function locate() {
@@ -275,12 +284,12 @@ export default function App() {
       </a>
       <header className="site-header">
         <div className="header-inner">
-          <a href="#" className="brand" aria-label="Find a Loo">
+          <a href="#" className="brand" aria-label={site.name}>
             <span className="brand-mark">
-              <Toilet size={25} aria-hidden="true" />
+              <SiteIcon size={25} aria-hidden="true" />
             </span>
             <span translate="no">
-              find a loo<span className="brand-dot">.</span>
+              {t.brandName}<span className="brand-dot">.</span>
             </span>
           </a>
           <nav aria-label={t.find}>
@@ -323,35 +332,7 @@ export default function App() {
               {t.noAccount}
             </div>
           </div>
-          <div className="hero-art" aria-hidden="true">
-            <div className="route-doodle">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="roll-character">
-              <div className="roll-end">
-                <i />
-              </div>
-              <div className="roll-front">
-                <div className="roll-eyes">
-                  <i />
-                  <i />
-                </div>
-                <div className="roll-smile" />
-              </div>
-              <div className="paper-tail">
-                <div className="tear-line" />
-                <Toilet size={32} />
-              </div>
-            </div>
-            <span className="art-caption">
-              {t.sticker}
-              <ArrowDown size={20} />
-            </span>
-            <span className="little-spark spark-one">✳</span>
-            <span className="little-spark spark-two">✳</span>
-          </div>
+          <Artwork t={t} />
         </section>
         <section id="finder" className="finder shell" aria-label={t.find}>
           <div className="search-dock">
@@ -459,25 +440,7 @@ export default function App() {
           )}
           <div className="workspace">
             <div className="workspace-toolbar">
-              <div className="fee-filters" role="group" aria-label={t.fee}>
-                {(["all", "free", "paid"] as const).map((f) => (
-                  <button
-                    key={f}
-                    aria-pressed={fee === f}
-                    className={fee === f ? "active" : ""}
-                    onClick={() => setFee(f)}
-                  >
-                    {f === "all" ? (
-                      <Toilet size={16} />
-                    ) : f === "free" ? (
-                      <Smile size={16} />
-                    ) : (
-                      <Coins size={16} />
-                    )}
-                    <span>{t[f]}</span>
-                  </button>
-                ))}
-              </div>
+              <Filters t={t} fee={fee} onFee={setFee} sellerType={sellerType} onSellerType={setSellerType} />
               <label className="open-now-control" title={t.openNowHint}>
                 <input
                   type="checkbox"
@@ -558,7 +521,7 @@ export default function App() {
                   ) : !origin ? (
                     <div className="empty-state">
                       <div className="empty-icon">
-                        <Toilet size={34} aria-hidden="true" />
+                        <SiteIcon size={34} aria-hidden="true" />
                       </div>
                       <h3>{t.start}</h3>
                       <p>{t.startHint}</p>
@@ -608,23 +571,7 @@ export default function App() {
                                     t.fallbackName}
                                 </strong>
                                 <span className="result-meta">
-                                  <span className={`fee-badge ${item.fee}`}>
-                                    {
-                                      t[
-                                        item.fee === "unknown"
-                                          ? "feeUnknown"
-                                          : item.fee === "free"
-                                            ? "freeBadge"
-                                            : "paidBadge"
-                                      ]
-                                    }
-                                  </span>
-                                  {item.wheelchair === "yes" && (
-                                    <Accessibility
-                                      size={14}
-                                      aria-label={t.wheelchair}
-                                    />
-                                  )}
+                                  <Summary item={item} t={t} />
                                 </span>
                               </span>
                               <span className="result-distance">
@@ -637,6 +584,8 @@ export default function App() {
                                 item={item}
                                 locale={locale}
                                 datasetAt={dataset?.datasetAt ?? null}
+                                siteId={site.id}
+                                DetailFields={DetailFields}
                               />
                             )}
                           </li>
@@ -717,7 +666,7 @@ export default function App() {
           </div>
           <span className="strip-dots" aria-hidden="true" />
           <div>
-            <Toilet size={23} aria-hidden="true" />
+            <SiteIcon size={23} aria-hidden="true" />
             <span>{t.how2}</span>
           </div>
           <span className="strip-dots" aria-hidden="true" />
@@ -732,9 +681,9 @@ export default function App() {
           <div>
             <a href="#" className="brand footer-brand">
               <span className="brand-mark">
-                <Toilet size={24} aria-hidden="true" />
+                <SiteIcon size={24} aria-hidden="true" />
               </span>
-              <span translate="no">find a loo.</span>
+              <span translate="no">{t.brandName}.</span>
             </a>
             <p>{t.footerText}</p>
           </div>
@@ -752,7 +701,7 @@ export default function App() {
               href={
                 config?.contactEmail
                   ? `mailto:${config.contactEmail}`
-                  : "https://github.com/orailean/find-a-loo/issues"
+                  : "https://github.com/orailean/bloli-nearby/issues"
               }
               target={config?.contactEmail ? undefined : "_blank"}
               rel="noopener noreferrer"
@@ -805,7 +754,7 @@ export default function App() {
           </button>
           <span className="dialog-symbol">
             {dialog === "how" ? (
-              <Toilet size={30} />
+              <SiteIcon size={30} />
             ) : (
               <ShieldCheck size={30} />
             )}

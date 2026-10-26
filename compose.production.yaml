@@ -1,12 +1,21 @@
-# Used later on Contabo only, after deployment is authorized.
+# Contabo migration keeps the original Compose identity and explicit data mounts.
+name: find-a-loo
 services:
   web:
     ports: !reset []
     networks:
       default: {}
       edge:
-        aliases: [find-a-loo-web]
+        aliases: [bloli-nearby-web, find-a-loo-web]
 networks:
   edge:
     external: true
     name: nginx_default
+
+volumes:
+  postgres_data:
+    external: true
+    name: ${POSTGRES_VOLUME:-find-a-loo_postgres_data}
+  import_data:
+    external: true
+    name: ${IMPORT_VOLUME:-find-a-loo_import_data}

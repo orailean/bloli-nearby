@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up Bloli Nearby PostgreSQL database
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=oliver
+WorkingDirectory=/home/oliver/stack/bloli-nearby
+ExecStart=/home/oliver/stack/bloli-nearby/scripts/backup.sh
+TimeoutStartSec=1h
+Nice=10
+UMask=0077
