@@ -52,4 +52,4 @@
 
 - [x] 7.5 Rename local development database/login/project/volume and examples, preserving existing sample data.
 
-- [ ] 7.6 Extend retail categories to Lotto/kiosks/Spätis/supermarkets/newsagents; test, reimport, deploy and record production verification.
+- [x] 7.6 Extend retail categories to Lotto/kiosks/Spätis/supermarkets/newsagents; test, reimport, deploy and record production verification.

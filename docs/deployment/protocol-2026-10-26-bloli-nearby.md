@@ -96,3 +96,12 @@ Rename VM checkout/remotes and timer paths, pin/reuse source for combined import
 - Pre-expansion VM backup: `backups/bloli-nearby-20261026T222139Z.dump`. Reimport uses the verified retained Germany source rather than downloading it again. Final publication counts are recorded below after completion.
 
 - First retail import stopped safely before publication: two supermarkets (OSM relations 5634713/Edeka and 17016023/Lidl) use `type=building` with outline ways. Saved `logs/retail-import-first-attempt.log`; old live data retained. Added a reproduced regression test and support for fixed building relation outlines (representative points inside their polygons), preserving relation IDs and strict failure for missing/invalid geometry. Retry reuses the verified source and completed filter.
+
+### Retail expansion completion
+
+- Corrected importer `11566e6` reused the verified Germany source and completed filtered snapshot. Import exited 0 and atomically published 107,861 sellers, 25,954 toilets and 196,951 settlements. WC coverage/count stayed unchanged.
+- Verified Shop category counts: 33,947 supermarkets, 13,210 kiosks, 10,347 convenience stores/Spätis, 1,501 newsagents and 705 lottery shops, plus shops with explicit tobacco evidence or lottery=yes. Fuel locations remain in the Petrol station filter.
+- Verified both real building relations against a small retained-source extract: relation/5634713 (Edeka) and relation/17016023 (Lidl) produced valid outline-based coordinates. Regression suites passed: 29 unit/operations checks, 16 Python importer checks, eight desktop/mobile browser checks and production build.
+- Final public browser/API check passed for both domains: correct profiles/counts, map tiles, directions, radius, Open now, no petrol-station sales label and all three locales at phone widths. Munich Shop query returned kiosks, supermarkets, convenience stores, lottery outlets and newsagents. Saved `logs/verification-retail-final.json` and `logs/retail-import-success.log` on the VM.
+- Final backup: `backups/bloli-nearby-20261026T225306Z.dump`. Removed completed importer container after preserving logs. All three shared production containers healthy. Local database/API/Vite/debug services remain stopped; no source data, dumps or binaries were committed.
+- Döner finder discussed as a possible future shared site; owner requested to wait. No domain or implementation was added for it.
