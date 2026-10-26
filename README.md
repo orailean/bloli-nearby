@@ -25,7 +25,7 @@ docker compose --profile tools build importer
 scripts/update.sh
 ```
 
-The importer downloads the Germany PBF and checks its published MD5 for transfer integrity, downloads the coverage polygon, filters relevant OSM entities with osmium, reconstructs areas with pyosmium, and publishes a validated snapshot transactionally. MD5 is used for comparison with Geofabrik's provided checksum; transport uses HTTPS. Incomplete toilet geometry, missing completion records, malformed records, timestamp regression, fewer than the configured minimum counts, or a count drop below 75% of the previous snapshot fail publication. The old snapshot stays available.
+The importer resolves a dated Germany PBF snapshot, fetches its published MD5 first, reuses matching verified cached files or downloads and verifies the source, downloads the coverage polygon, filters relevant OSM entities with osmium, reconstructs areas with pyosmium, and publishes a validated snapshot transactionally. MD5 is used for comparison with Geofabrik's provided checksum; transport uses HTTPS. Incomplete toilet geometry, missing completion records, malformed records, timestamp regression, fewer than the configured minimum counts, or a count drop below 75% of the previous snapshot fail publication. The old snapshot stays available.
 
 The importer has a filesystem lock covering the download and a database advisory lock covering publication. Source identities are deduplicated, and private/customer/key-only toilets are excluded. Missing or conditional fees remain unknown. Restricted venues are not presented as unrestricted public toilets. Incomplete settlement boundaries clipped at extract borders are reported in the completion record; incomplete toilet geometry is a hard failure.
 
@@ -76,6 +76,12 @@ python3 -m venv .venv
 .venv/bin/pip install -r importer/requirements.txt
 .venv/bin/python -m unittest discover -s importer -p 'test_*.py'
 ```
+
+## Production updates and data locations
+
+- [Update, verify, and roll back production](docs/deployment/production-updates.md).
+- [Downloaded Germany data, Docker volumes, and progress inspection](docs/deployment/data-storage.md).
+- [VM deployment protocol](docs/deployment/protocol-2026-10-26.md).
 
 ## Operations
 
