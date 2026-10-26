@@ -14,7 +14,7 @@ export function chooseLocale(
     const base = lang.toLowerCase().split("-")[0];
     if (Object.hasOwn(dictionaries, base)) return base as Locale;
   }
-  return "en";
+  return "de";
 }
 export function formatDistance(metres: number, locale: Locale) {
   return metres < 1000

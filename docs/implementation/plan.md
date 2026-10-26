@@ -8,7 +8,7 @@
 
 ## Global constraints
 
-- German, English and Romanian; saved locale, supported browser language, then English.
+- German, English and Romanian; saved locale, supported browser language, then German.
 - Public OSM tiles only for interactive viewport requests; local toilet/settlement data.
 - Free means confirmed fee=no, Paid means confirmed fee=yes. Ambiguous fees remain unknown.
 - Default 2 km radius, maximum 50 km, bounded results and explicit straight-line distance.

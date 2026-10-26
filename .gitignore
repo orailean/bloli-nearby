@@ -31,3 +31,5 @@ __pycache__/
 *.woff
 *.woff2
 *.pyc
+
+logs/

@@ -5,7 +5,7 @@ The app SHALL provide its complete interface in German, English, and Romanian, i
 
 #### Scenario: Initial language selection
 - **WHEN** the app starts without a saved supported language
-- **THEN** it uses the first supported browser language, matching regional variants, or English if none matches
+- **THEN** it uses the first supported browser language, matching regional variants, or German if none matches
 
 #### Scenario: Persist explicit choice
 - **WHEN** the user selects Română and later reloads with browser storage available

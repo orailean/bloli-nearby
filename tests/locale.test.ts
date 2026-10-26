@@ -5,7 +5,7 @@ test("saved locale overrides browser preferences; regional matches preserve pref
   assert.equal(chooseLocale("ro", ["de-DE"]), "ro");
   assert.equal(chooseLocale(null, ["fr-FR", "de-DE", "en-US"]), "de");
   assert.equal(chooseLocale("fr", ["ro-RO"]), "ro");
-  assert.equal(chooseLocale(null, ["fr"]), "en");
+  assert.equal(chooseLocale(null, ["fr"]), "de");
 });
 test("all three languages cover states, errors, accessibility, and controls", () => {
   assert.deepEqual(
@@ -33,4 +33,8 @@ test("simple EUR charges use locale formatting and descriptive charges stay verb
   assert.equal(formatCharge("0.50 EUR", "en"), "€0.50");
   assert.match(formatCharge("0.50 EUR", "de"), /0,50/);
   assert.equal(formatCharge("donation / 1-2 EUR", "ro"), "donation / 1-2 EUR");
+});
+
+test("German is used when browser language preferences are empty", () => {
+  assert.equal(chooseLocale(null, []), "de");
 });

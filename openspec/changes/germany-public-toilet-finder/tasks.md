@@ -31,7 +31,7 @@
 - [x] 5.3 Add fee filters, distance labels, details, and explicit unknown price/access/hours/accessibility states.
 - [x] 5.4 Add loading, empty, error, stale-data, missing-bootstrap, and tile-failure states with a usable independent list.
 - [x] 5.5 Add Google Maps walking-directions URLs using only destination coordinates, with no Google SDK or API key.
-- [x] 5.6 Add complete local German, English, and Romanian dictionaries, browser-language detection with English fallback, a persistent language selector, document-language updates, and locale-aware formatting without resetting search/map state.
+- [x] 5.6 Add complete local German, English, and Romanian dictionaries, browser-language detection with German fallback, a persistent language selector, document-language updates, and locale-aware formatting without resetting search/map state.
 
 ## 6. Verify requirements and operate the deployment
 
