@@ -71,6 +71,8 @@ export function normalizeFacility(r: SourceRecord): Facility | null {
     tags: t,
   };
 }
+export const SEARCH_RADII = [500, 1000, 2000, 3000, 5000] as const;
+
 export function parseSearch(p: URLSearchParams): SearchQuery {
   const number = (key: string, fallback?: number) => {
     const raw = p.get(key);
@@ -83,14 +85,14 @@ export function parseSearch(p: URLSearchParams): SearchQuery {
   };
   const lat = number("lat"),
     lon = number("lon"),
-    radius = number("radius", 2000),
+    radius = number("radius", SEARCH_RADII[0]),
     limit = number("limit", 100);
   coordinates(lat, lon);
   const fee = p.get("fee") ?? "all";
   const openNow = p.get("openNow") ?? "false";
   if (
     radius < 1 ||
-    radius > 50000 ||
+    radius > SEARCH_RADII[SEARCH_RADII.length - 1] ||
     !Number.isInteger(limit) ||
     limit < 1 ||
     limit > 100 ||

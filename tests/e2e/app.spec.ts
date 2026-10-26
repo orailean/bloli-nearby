@@ -226,11 +226,19 @@ test("changing search radius fits the map to the new search area", async ({
       .first()
       .getAttribute("src")
       .then((src) => Number(src?.match(/openstreetmap\.org\/(\d+)\//)?.[1]));
+  await expect(page.locator(".radius-control select")).toHaveValue("500");
+  expect(
+    await page
+      .locator(".radius-control option")
+      .evaluateAll((options) =>
+        options.map((option) => (option as HTMLOptionElement).value),
+      ),
+  ).toEqual(["500", "1000", "2000", "3000", "5000"]);
   const initialZoom = await zoom();
-  await page.locator(".radius-control select").selectOption("10000");
+  await page.locator(".radius-control select").selectOption("5000");
   await expect.poll(zoom).toBeLessThan(initialZoom);
   const wideZoom = await zoom();
-  await page.locator(".radius-control select").selectOption("2000");
+  await page.locator(".radius-control select").selectOption("500");
   await expect.poll(zoom).toBeGreaterThan(wideZoom);
 });
 
@@ -296,14 +304,14 @@ for (const width of [1440, 390]) {
         .getAttribute("src")
         .then((src) => Number(src?.match(/openstreetmap\.org\/(\d+)\//)?.[1]));
     const narrow = await zoom();
-    await page.locator(".radius-control select").selectOption("10000");
+    await page.locator(".radius-control select").selectOption("5000");
     await expect(page.locator(".result-row")).toHaveCount(2);
     await expect.poll(zoom).toBeLessThan(narrow);
     await expect(page.locator(".search-boundary")).toHaveCount(1);
     await page.getByRole("checkbox", { name: "Open now", exact: true }).check();
     await expect(page.locator(".result-row")).toHaveCount(1);
     await expect(page.locator(".result-row")).toContainText("Far open");
-    await page.locator(".radius-control select").selectOption("2000");
+    await page.locator(".radius-control select").selectOption("500");
     await expect(page.locator(".result-row")).toHaveCount(0);
     await expect.poll(zoom).toBe(narrow);
     await page
@@ -415,4 +423,22 @@ test("all ten phone results are reachable through normal page scrolling", async 
     "data-id",
     "node/9",
   );
+});
+
+test("phone mascot has a genuinely small layout box", async ({ page }) => {
+  await page.setViewportSize({ width: 393, height: 852 });
+  await page.goto("/");
+  await page.locator("#language").selectOption("de");
+  expect(
+    await page
+      .locator(".hero-art")
+      .evaluate((el) => (el as HTMLElement).offsetWidth),
+  ).toBeLessThanOrEqual(110);
+  expect(
+    await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth <= innerWidth &&
+        document.body.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

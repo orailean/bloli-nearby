@@ -55,6 +55,8 @@ try {
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page.locator(".place-option").first()).toBeVisible();
   await page.locator(".place-option").first().click();
+  await expect(page.locator(".radius-control select")).toHaveValue("500");
+  await page.locator(".radius-control select").selectOption("2000");
   await expect(page.locator(".result-select").first()).toBeVisible();
   await page.locator(".result-select").first().click();
   await expect(
@@ -81,7 +83,7 @@ try {
     assert.ok(data.items.every((item) => item.distance <= Number(radius)));
     return data;
   };
-  await changeRadius("10000");
+  await changeRadius("5000");
   await expect.poll(tileZoom).toBeLessThan(narrowZoom);
   await expect(page.locator(".search-boundary")).toHaveCount(1);
   const [openResponse] = await Promise.all([
@@ -98,7 +100,7 @@ try {
   assert.ok(openItems.every((item) => item.openingHours));
   await page.setViewportSize({ width: 390, height: 844 });
   const wideZoom = await tileZoom();
-  await changeRadius("2000");
+  await changeRadius("500");
   await expect.poll(tileZoom).toBeGreaterThan(wideZoom);
   await page.getByLabel("Language", { exact: true }).selectOption("ro");
   await expect(page.locator("html")).toHaveAttribute("lang", "ro");

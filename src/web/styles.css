@@ -1434,8 +1434,8 @@ a svg:not([aria-label]) {
     width: 15px;
   }
   .hero {
-    grid-template-columns: 1fr 110px;
-    overflow: clip;
+    grid-template-columns: minmax(0, 1fr) 96px;
+    overflow: hidden;
     min-height: unset;
     padding-top: 29px;
     padding-bottom: 30px;
@@ -1465,16 +1465,25 @@ a svg:not([aria-label]) {
     gap: 5px;
   }
   .hero-art {
-    transform: scale(0.53);
-    width: 250px;
-    height: 250px;
-    transform-origin: top left;
-    margin-top: 20px;
-    margin-left: -18px;
+    transform: none;
+    width: 96px;
+    height: 156px;
+    margin: 20px 0 0;
+    min-width: 0;
   }
   .hero-art::before {
-    width: 230px;
-    height: 240px;
+    width: 90px;
+    height: 120px;
+  }
+  .hero-art .roll-character {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.46) rotate(-13deg);
+    animation: none;
+  }
+  .hero-art .little-spark {
+    font-size: 16px;
   }
   .art-caption {
     display: none;
@@ -1742,11 +1751,10 @@ a svg:not([aria-label]) {
     font-size: 37px;
   }
   .hero {
-    grid-template-columns: 1fr 86px;
+    grid-template-columns: minmax(0, 1fr) 86px;
   }
   .hero-art {
-    transform: scale(0.44);
-    margin-left: -10px;
+    width: 86px;
   }
   .hero-assurance {
     font-size: 9px;

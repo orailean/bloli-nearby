@@ -174,7 +174,7 @@ test(
       await t.test("query validation and country coverage", async () => {
         for (const query of [
           "lat=&lon=13",
-          "lat=52&lon=13&radius=50001",
+          "lat=52&lon=13&radius=5001",
           "lat=52&lon=13&fee=unknown",
         ])
           assert.equal((await get(`/api/toilets?${query}`)).status, 400);

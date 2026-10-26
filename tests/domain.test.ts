@@ -90,13 +90,13 @@ test("search defaults and limits cannot be bypassed with malformed values", () =
   assert.deepEqual(q, {
     lat: 52.52,
     lon: 13.4,
-    radius: 2000,
+    radius: 500,
     limit: 100,
     fee: "all",
     openNow: false,
   });
   for (const extra of [
-    { radius: "50001" },
+    { radius: "5001" },
     { radius: "0" },
     { limit: "101" },
     { limit: "1.5" },

@@ -39,6 +39,7 @@ import {
   formatDistance,
   type TranslationKey,
 } from "./i18n.js";
+import { SEARCH_RADII } from "../shared/domain.js";
 import MapView from "./Map.js";
 import Details from "./Details.js";
 import "./styles.css";
@@ -74,7 +75,7 @@ export default function App() {
     [dataset, setDataset] = useState<Dataset | null>(null);
   const [origin, setOrigin] = useState<Origin | null>(null),
     [fee, setFee] = useState<FeeFilter>("all"),
-    [radius, setRadius] = useState(2000),
+    [radius, setRadius] = useState<number>(SEARCH_RADII[0]),
     [openNow, setOpenNow] = useState(false),
     [items, setItems] = useState<Facility[]>([]),
     [selected, setSelected] = useState<string | null>(null),
@@ -497,7 +498,7 @@ export default function App() {
                   value={radius}
                   onChange={(e) => setRadius(Number(e.target.value))}
                 >
-                  {[2000, 5000, 10000, 25000, 50000].map((r) => (
+                  {SEARCH_RADII.map((r) => (
                     <option key={r} value={r}>
                       {new Intl.NumberFormat(locale).format(r / 1000)} km
                     </option>
@@ -567,10 +568,15 @@ export default function App() {
                       <Compass size={42} aria-hidden="true" />
                       <h3>{t.empty}</h3>
                       <p>{t.emptyHint}</p>
-                      {radius < 50000 && (
+                      {radius < SEARCH_RADII[SEARCH_RADII.length - 1] && (
                         <button
                           className="text-button"
-                          onClick={() => setRadius(Math.min(50000, radius * 2))}
+                          onClick={() =>
+                            setRadius(
+                              SEARCH_RADII.find((value) => value > radius) ??
+                                radius,
+                            )
+                          }
                         >
                           {t.expand}
                           <ArrowUpRight size={16} />
