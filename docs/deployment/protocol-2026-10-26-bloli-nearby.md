@@ -81,3 +81,10 @@ Rename VM checkout/remotes and timer paths, pin/reuse source for combined import
 - Final VM backup: `backups/bloli-nearby-20261026T215026Z.dump`.
 - Renamed local development database/login to `bloli_nearby_dev` / `bloli_dev`, integration database to `bloli_nearby_integration`, and Docker project/container/volume to generic Bloli Nearby names. Preserved existing password and verified the 246-toilet sample. Old local volume retained for rollback; private SQL backup is outside Git.
 - Owner’s final petrol-station policy: assume cigarette sales and omit special sales labels in list/details; source evidence remains internal and explicit negative tags still exclude stations.
+
+### Final deployment verification
+
+- Deployed source commit `8fa5895` by rebuilding shared API/web and running `docker compose up -d --wait api web`. All three app containers healthy; database remains shared. No exited containers remained on the VM.
+- Fresh checks: 28 unit/operations tests, 11 real PostGIS integration checks, production build and 8 dual-site desktop/phone browser checks passed. Restarted stale local native processes from the renamed checkout; verified the generic local development DB with existing sample data.
+- Final public-domain browser/API verification passed for both HTTPS domains: correct metadata/categories, real map images, Munich results for all seller types including fuel, no petrol-station sales label in list/details, directions, radius, Open now and DE/EN/RO layouts at 320/390/430px without horizontal overflow. Evidence saved to VM `logs/verification-final.json`.
+- Both new refresh/backup timers active. Completed importer removed after log preservation. Source data/backup files remain outside Git; only source and documentation are committed. Rollback guidance remains in `bloli-nearby-migration.md`.

@@ -41,7 +41,7 @@
 - [x] 6.3 Import the expanded Germany snapshot from retained source and verify category counts/readiness plus WC data retention; record resource use and source reuse.
 - [x] 6.4 Verify kippe DNS and add its virtual host/certificate using existing Docker Nginx and Certbot webroot; validate configuration and gracefully reload, then verify renewal for both domains.
 - [x] 6.5 Deploy shared API/web and verify both public domains' initial metadata, correct categories, searches, filters, map images, directions, translations, phone widths and HTTPS.
-- [ ] 6.6 Save the complete migration/deployment protocol and final backup in the project directory, commit/push source-only changes and documentation, synchronize production checkout and record rollback commands.
+- [x] 6.6 Save the complete migration/deployment protocol and final backup in the project directory, commit/push source-only changes and documentation, synchronize production checkout and record rollback commands.
 
 ## 7. Owner refinements during rollout
 

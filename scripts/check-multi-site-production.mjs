@@ -37,6 +37,7 @@ try {
         );
         assert.equal(response.status, 200);
         const data = await response.json();
+        assert.ok(data.items.length > 0, `${type} results near Munich`);
         assert.ok(data.items.every((item) => item.sellerType === type));
       }
       assert.equal(
@@ -83,6 +84,13 @@ try {
     await expect(page.locator(".search-boundary")).toHaveCount(1);
     if (id === "kippe")
       await expect(page.locator(".seller-filters")).toBeVisible();
+    if (id === "kippe") {
+      await page.getByRole("button", { name: "Petrol station", exact: true }).click();
+      await expect(page.locator(".result-select").first()).toBeVisible();
+      await expect(page.locator(".results-content")).not.toContainText("unconfirmed");
+      await page.locator(".result-select").first().click();
+      await expect(page.locator(".detail-panel")).not.toContainText("Tobacco sales");
+    }
     for (const width of [320, 390, 430]) {
       await page.setViewportSize({ width, height: 852 });
       for (const lang of ["de", "ro", "en"]) {
