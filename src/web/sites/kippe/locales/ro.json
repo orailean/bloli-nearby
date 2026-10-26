@@ -25,5 +25,6 @@
   "selected": "Vânzător selectat",
   "DATA_NOT_READY": "Datele despre vânzători nu sunt încă disponibile. Operatorul trebuie să ruleze primul import.",
   "comfort": "Cartierul tău, puțin mai aproape.",
-  "brandName": "kippe"
+  "brandName": "kippe",
+  "openNowHint": "Folosește programul înregistrat; automatele fără program sunt presupuse deschise non-stop. Alte ore lipsă sau incerte sunt excluse."
 }

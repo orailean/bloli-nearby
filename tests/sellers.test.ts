@@ -17,7 +17,6 @@ test("tobacco classifiers require evidence and preserve seller type", () => {
   ] as const)
     assert.equal(normalizeSeller(record(tags))?.sellerType, type);
   for (const tags of [
-    { amenity: "fuel" },
     { shop: "supermarket" },
     { shop: "kiosk", name: "Tabakladen" },
     { amenity: "vending_machine", vending: "sweets" },
@@ -53,5 +52,36 @@ test("customer-only access is preserved", () => {
   assert.equal(
     normalizeSeller(record({ shop: "tobacco", access: "customers" }))?.access,
     "customers",
+  );
+});
+
+test("machines default to assumed 24/7 only when mapped hours are absent", () => {
+  const machine = normalizeSeller(
+    record({ amenity: "vending_machine", vending: "cigarettes" }),
+  )!;
+  assert.equal(machine.openingHours, "24/7");
+  assert.equal(machine.hoursAssumed, true);
+  const mapped = normalizeSeller(
+    record({
+      amenity: "vending_machine",
+      vending: "cigarettes",
+      opening_hours: "Mo-Fr 09:00-17:00",
+    }),
+  )!;
+  assert.equal(mapped.openingHours, "Mo-Fr 09:00-17:00");
+  assert.ok(!mapped.hoursAssumed);
+});
+
+test("petrol stations without sales evidence are clearly unconfirmed", () => {
+  const fuel = normalizeSeller(record({ amenity: "fuel" }))!;
+  assert.equal(fuel.sellerType, "fuel");
+  assert.equal(fuel.tobaccoSales, "unconfirmed");
+  assert.equal(
+    normalizeSeller(record({ amenity: "fuel", tobacco: "yes" }))?.tobaccoSales,
+    "mapped",
+  );
+  assert.equal(
+    normalizeSeller(record({ amenity: "fuel", tobacco: "no" })),
+    null,
   );
 });

@@ -32,7 +32,7 @@ if [ "$reused" = false ]; then
 fi
 printf '%s\n' "$DATA_URL" > /data/source.url
 curl --silent --show-error --fail --location --retry 3 --output /data/coverage.poly "$POLY_URL"
-FILTER_EXPRESSIONS='nwr/amenity=toilets nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco nwr/tobacco nwr/sells:tobacco'
+FILTER_EXPRESSIONS='nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco nwr/tobacco nwr/sells:tobacco'
 filter_key="$DATA_URL|$FILTER_EXPRESSIONS"
 if [ -f /data/filtered.osm.pbf ] && [ -f /data/filtered.source ] && [ "$(cat /data/filtered.source)" = "$filter_key" ]; then
   printf '[filter] Reusing completed filtered snapshot\n'

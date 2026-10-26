@@ -6,6 +6,7 @@ import type {
   Facility,
   Settlement,
 } from "../shared/types.js";
+import { applySellerDefaults } from "../shared/sellers.js";
 import { isOpenNow } from "./opening-hours.js";
 import { AppError } from "../shared/domain.js";
 export async function datasetStatus(
@@ -85,6 +86,7 @@ export async function searchLocations(
           .rows;
         if (!batch.length) break;
         for (const candidate of batch) {
+          candidate.data = applySellerDefaults(candidate.data);
           if (isOpenNow(candidate.data, now)) rows.push(candidate);
           if (rows.length > q.limit) break;
         }
@@ -96,9 +98,10 @@ export async function searchLocations(
     }
     await db.query("COMMIT");
     return {
-      items: rows
-        .slice(0, q.limit)
-        .map((r) => ({ ...r.data, distance: r.distance })) as Facility[],
+      items: rows.slice(0, q.limit).map((r) => ({
+        ...applySellerDefaults(r.data),
+        distance: r.distance,
+      })) as Facility[],
       truncated: rows.length > q.limit,
       dataset: {
         ready: true,

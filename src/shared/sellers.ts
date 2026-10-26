@@ -51,13 +51,13 @@ export function normalizeSeller(r: SourceRecord): Facility | null {
     tokens(t.vending).includes("cigarettes")
   )
     sellerType = "machine";
-  else if (t.amenity === "fuel" && positive) sellerType = "fuel";
+  else if (t.amenity === "fuel") sellerType = "fuel";
   else if (t.shop && (t.shop === "tobacco" || positive)) sellerType = "shop";
   else return null;
   const names: Facility["names"] = {};
   for (const lang of ["en", "de", "ro"] as const)
     if (t[`name:${lang}`]) names[lang] = t[`name:${lang}`];
-  return {
+  return applySellerDefaults({
     id: `${r.sourceType}/${r.sourceId}`,
     sourceType: r.sourceType,
     sourceId: r.sourceId,
@@ -67,6 +67,7 @@ export function normalizeSeller(r: SourceRecord): Facility | null {
     names,
     category: "tobacco",
     sellerType,
+    tobaccoSales: sellerType === "fuel" && !positive ? "unconfirmed" : "mapped",
     fee: "unknown",
     feeText: null,
     charge: null,
@@ -85,5 +86,24 @@ export function normalizeSeller(r: SourceRecord): Facility | null {
         .map(([key, value]) => [key.slice(8), value]),
     ),
     tags: t,
-  };
+  });
+}
+
+export function applySellerDefaults(facility: Facility): Facility {
+  if (facility.sellerType && !facility.tobaccoSales) {
+    const tags = facility.tags;
+    const positive =
+      tags.tobacco === "yes" ||
+      tokens(tags["sells:tobacco"]).some((value) =>
+        ["yes", "tobacco", "cigarette", "cigarettes"].includes(value),
+      );
+    facility = {
+      ...facility,
+      tobaccoSales:
+        facility.sellerType === "fuel" && !positive ? "unconfirmed" : "mapped",
+    };
+  }
+  if (facility.sellerType === "machine" && !facility.openingHours?.trim())
+    return { ...facility, openingHours: "24/7", hoursAssumed: true };
+  return facility;
 }

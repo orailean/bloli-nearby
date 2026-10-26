@@ -20,6 +20,7 @@ class SellerExtractionTests(unittest.TestCase):
         for tags in [
             {'amenity': 'vending_machine', 'vending': ' drinks ; cigarettes ; sweets'},
             {'shop': 'tobacco'},
+            {'amenity': 'fuel'},
             {'shop': 'kiosk', 'tobacco': 'yes'},
             {'shop': 'convenience', 'sells:tobacco': 'yes'},
             {'shop': 'convenience', 'sells:tobacco': 'cigarette'},
@@ -28,7 +29,7 @@ class SellerExtractionTests(unittest.TestCase):
             with self.subTest(tags=tags):
                 self.assertIn('seller', kinds(tags))
         for tags in [
-            {'amenity': 'fuel'}, {'shop': 'kiosk'},
+            {'shop': 'kiosk'},
             {'shop': 'supermarket', 'name': 'Tobacco Cigarettes'},
             {'amenity': 'vending_machine', 'vending': 'e-cigarettes'},
             {'shop': 'convenience', 'sells:tobacco': 'unknown'},
@@ -66,7 +67,7 @@ class SellerExtractionTests(unittest.TestCase):
         self.assertEqual(rows[-1]['records'], len(rows) - 2)
 
     def test_empty_seller_extract_still_declares_category_for_count_validation(self):
-        rows = self.extract_rows('<node id="1" lat="53.07" lon="8.80" version="1"><tag k="amenity" v="fuel"/></node>')
+        rows = self.extract_rows('<node id="1" lat="53.07" lon="8.80" version="1"><tag k="amenity" v="parking"/></node>')
         self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco'])
         self.assertEqual(rows[-1]['records'], 0)
 

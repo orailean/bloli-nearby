@@ -41,7 +41,11 @@ export default function Details({
             <Clock size={16} />
             {t.hours}
           </dt>
-          <dd>{item.openingHours || t.unknown}</dd>
+          <dd>
+            {item.hoursAssumed
+              ? t.machineHoursAssumed
+              : item.openingHours || t.unknown}
+          </dd>
         </div>
         <div>
           <dt>

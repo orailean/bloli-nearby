@@ -39,3 +39,9 @@ The production floor is set to **MIN_SELLERS=15000** from the measured ~31k base
 ## Verification
 
 Run `.venv/bin/python -m unittest discover -s importer`. Tests cover mixed-product tokens, explicit retail evidence, generic fuel/kiosk exclusion, misleading names, nodes/linear ways/areas/multipolygons/sites, multi-category identity, metadata/completion counts, absent seller geometry and existing WC/settlement extraction. Dated-source resolution is covered by `test_source.py`.
+
+## Owner-approved petrol-station and machine-hours extension
+
+After reviewing the sparse explicit petrol-station coverage, the owner approved including all active mapped `amenity=fuel` locations, while clearly labelling missing tobacco-sales evidence **Tobacco sales unconfirmed** in list/details. Explicit negative sales evidence and inactive/private restrictions still exclude a source. Generic non-fuel retailers continue to require positive sales evidence. Filter expressions now include `nwr/amenity=fuel`; this intentionally triggers reprocessing of the retained source. The earlier eight-station baseline above describes the previous evidence-only policy.
+
+Machines lacking mapped opening hours default to `24/7` with `hoursAssumed=true` for Open now and visible translated assumption wording. Explicit source hours remain authoritative, and access restrictions remain visible/excluded as applicable. This default is applied to existing records at query time as well as future normalized imports; it does not rewrite raw source tags or require an hours-only reimport.

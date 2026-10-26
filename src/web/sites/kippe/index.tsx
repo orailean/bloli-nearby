@@ -72,10 +72,15 @@ export function Summary({ item, t }: ItemProps) {
   const type = item.sellerType;
   const TypeIcon = type ? sellerIcons[type] : Store;
   return (
-    <span className={`seller-badge ${type || ""}`}>
-      <TypeIcon size={14} />
-      {type ? t[type] : t.fallbackName}
-    </span>
+    <>
+      <span className={`seller-badge ${type || ""}`}>
+        <TypeIcon size={14} />
+        {type ? t[type] : t.fallbackName}
+      </span>
+      {item.tobaccoSales === "unconfirmed" && (
+        <span className="sales-unconfirmed">{t.tobaccoSalesUnconfirmed}</span>
+      )}
+    </>
   );
 }
 export function DetailFields({ item, t }: ItemProps) {
@@ -111,6 +116,14 @@ export function DetailFields({ item, t }: ItemProps) {
       <div>
         <dt>{t.brand}</dt>
         <dd>{item.brand || t.unknown}</dd>
+      </div>
+      <div>
+        <dt>{t.tobaccoAvailability}</dt>
+        <dd>
+          {item.tobaccoSales === "unconfirmed"
+            ? t.tobaccoSalesUnconfirmed
+            : t.tobaccoSalesMapped}
+        </dd>
       </div>
       <div className="availability-note">
         <dd>{t.availability}</dd>

@@ -23,12 +23,14 @@ export interface Facility {
   access: "public" | "customers" | "unknown";
   wheelchair: "yes" | "no" | "limited" | "unknown";
   openingHours: string | null;
+  hoursAssumed?: boolean;
   operator: string | null;
   notes: string | null;
   tags: Record<string, string>;
   distance?: number;
   category?: Category;
   sellerType?: SellerType;
+  tobaccoSales?: "mapped" | "unconfirmed";
   paymentMethods?: Record<string, string>;
   brand?: string | null;
 }

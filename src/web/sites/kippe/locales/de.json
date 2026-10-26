@@ -25,5 +25,6 @@
   "selected": "Ausgewählte Verkaufsstelle",
   "DATA_NOT_READY": "Die Verkaufsstellendaten sind noch nicht bereit. Der Betreiber muss den ersten Import ausführen.",
   "comfort": "Dein Viertel, ein Stück näher.",
-  "brandName": "kippe"
+  "brandName": "kippe",
+  "openNowHint": "Nutzt erfasste Zeiten; Automaten ohne Zeitangabe gelten als 24/7 geöffnet. Andere fehlende oder unklare Zeiten werden ausgeschlossen."
 }

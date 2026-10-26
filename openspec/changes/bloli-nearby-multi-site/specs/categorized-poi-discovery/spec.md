@@ -12,7 +12,7 @@ The database SHALL share OSM source identities, spatial infrastructure and settl
 - **THEN** Loo remains ready while Kippe reports its missing dataset rather than a misleading empty successful search
 
 ### Requirement: Evidence-based tobacco purchase locations
-Kippe SHALL include cigarette vending machines, tobacco shops and retail shops or petrol stations explicitly mapped as selling tobacco. It SHALL NOT infer sales solely from a generic shop/fuel classification or a business name. Negative sales evidence, inactive lifecycle state and inaccessible venues MUST be handled conservatively. Results SHALL distinguish machine, shop and petrol station and identify mapped information as unverified stock/availability.
+Kippe SHALL include cigarette vending machines, tobacco shops and retail shops explicitly mapped as selling tobacco, and mapped petrol stations. Stations lacking tobacco-sales evidence SHALL be labelled unconfirmed in list/details; stations explicitly tagged not selling tobacco SHALL be excluded. It SHALL NOT infer sales solely from a generic shop/fuel classification or a business name. Negative sales evidence, inactive lifecycle state and inaccessible venues MUST be handled conservatively. Results SHALL distinguish machine, shop and petrol station and identify mapped information as unverified stock/availability.
 
 #### Scenario: Mixed-product machine
 - **WHEN** a vending machine's semicolon-separated vending tag contains cigarettes
@@ -24,10 +24,10 @@ Kippe SHALL include cigarette vending machines, tobacco shops and retail shops o
 
 #### Scenario: Untagged fuel station
 - **WHEN** a petrol station lacks explicit tobacco-sales evidence
-- **THEN** it is excluded rather than assumed to sell cigarettes
+- **THEN** it is included with an explicit tobacco-sales-unconfirmed label rather than a sales claim
 
 ### Requirement: Site-scoped discovery and filters
-Discovery SHALL constrain category, seller-type or WC fee filters, radius and distance ordering before returning at most 100 matching results with truncation metadata. Radius choices SHALL be 0.5, 1, 2, 3 and 5 km, with 0.5 km default and 5 km maximum. Unsupported category filters MUST fail validation. Open now SHALL use recorded schedules in Europe/Berlin and exclude missing/uncertain schedules before limiting results.
+Discovery SHALL constrain category, seller-type or WC fee filters, radius and distance ordering before returning at most 100 matching results with truncation metadata. Radius choices SHALL be 0.5, 1, 2, 3 and 5 km, with 0.5 km default and 5 km maximum. Unsupported category filters MUST fail validation. Open now SHALL use recorded schedules in Europe/Berlin and exclude missing/uncertain schedules before limiting results, except machines with missing hours SHALL default to explicitly labelled assumed 24/7. Explicit mapped hours SHALL take precedence.
 
 #### Scenario: Nearby wrong-category objects
 - **WHEN** a Kippe search has many closer toilets and some eligible sellers
@@ -53,4 +53,4 @@ Kippe SHALL display mapped seller type, name, operator/brand, payment methods, h
 
 #### Scenario: Missing hours and payment tags
 - **WHEN** a machine lacks those tags
-- **THEN** its details identify unknown hours/payment and Open now excludes it
+- **THEN** its details identify assumed 24/7 hours and unknown payment, and Open now includes it unless an explicit schedule or access restriction overrides the default

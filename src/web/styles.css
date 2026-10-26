@@ -1796,50 +1796,226 @@ a svg:not([aria-label]) {
 
 /* Kippe takes its cues from the red cabinets and striped awnings of street kiosks. */
 html[data-site="kippe"] {
-  color: #26323f; background: #fffdf7;
-  --ink: #26323f; --mint: #e9eef6; --yellow: #f2c86f;
-  --line: #dfded8; --muted: #626c78;
+  color: #26323f;
+  background: #fffdf7;
+  --ink: #26323f;
+  --mint: #e9eef6;
+  --yellow: #f2c86f;
+  --line: #dfded8;
+  --muted: #626c78;
   --display: Impact, "Arial Narrow", "Bricolage Grotesque Variable", sans-serif;
 }
-[data-site="kippe"] .hero h1 { font-weight: 500; letter-spacing: -.025em; }
+[data-site="kippe"] .hero h1 {
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
 [data-site="kippe"] .brand-mark,
 [data-site="kippe"] .locate-button,
 [data-site="kippe"] .search-submit,
 [data-site="kippe"] .fee-filters button.active,
-[data-site="kippe"] .walk-button { background: #b52d3b; color: #fffdf7; }
-[data-site="kippe"] .brand-dot { color: #b52d3b; }
-[data-site="kippe"] .hero-art::before { background: #e9eef6; border-radius: 48% 48% 14% 14%; }
-[data-site="kippe"] .site-footer { background: #214c77; color: #fffdf7; }
-[data-site="kippe"] .footer-main { border-color: #66829e; }
+[data-site="kippe"] .walk-button {
+  background: #b52d3b;
+  color: #fffdf7;
+}
+[data-site="kippe"] .brand-dot {
+  color: #b52d3b;
+}
+[data-site="kippe"] .hero-art::before {
+  background: #e9eef6;
+  border-radius: 48% 48% 14% 14%;
+}
+[data-site="kippe"] .site-footer {
+  background: #214c77;
+  color: #fffdf7;
+}
+[data-site="kippe"] .footer-main {
+  border-color: #66829e;
+}
 [data-site="kippe"] .footer-main p,
-[data-site="kippe"] .footer-bottom { color: #e2e9f1; }
-[data-site="kippe"] .footer-brand .brand-mark { background: #fffdf7; color: #b52d3b; }
-.seller-badge { display: inline-flex; align-items: center; gap: 5px; color: #214c77; font-size: 12px; }
-[data-site="kippe"] .map-pin { background: #b52d3b; }
-[data-site="kippe"] .map-pin.shop { background: #214c77; }
-[data-site="kippe"] .map-pin.fuel { background: #88621c; }
-[data-site="kippe"] .map-pin.active { background: #26323f; }
-.payment-entry { display: inline-block; margin-inline-end: 5px; }
-.detail-panel dl .availability-note { display: block; padding-top: 12px; }
-.availability-note dd { color: var(--muted); font-size: 12px; line-height: 1.6; }
-.vending-character { position: absolute; width: 185px; height: 260px; left: 90px; top: 8px; border: 4px solid #26323f; border-radius: 12px 12px 8px 8px; background: #b52d3b; transform: rotate(5deg); box-shadow: 10px 10px 0 #26323f15; }
-.vending-awning { position: absolute; top: -13px; left: -11px; right: -11px; height: 31px; background: repeating-linear-gradient(90deg,#fffdf7 0 22px,#b52d3b 22px 44px); border: 3px solid #26323f; border-radius: 8px 8px 5px 5px; }
-.vending-face { position: relative; height: 57px; display: flex; justify-content: center; gap: 20px; padding-top: 30px; }
-.vending-face i { width: 7px; height: 9px; border-radius: 50%; background: #fffdf7; }
-.vending-face span { position: absolute; left: 80px; top: 40px; width: 17px; height: 10px; border-bottom: 3px solid #fffdf7; border-radius: 50%; }
-.vending-window { position: absolute; top: 69px; left: 15px; width: 104px; height: 121px; background: #e9eef6; border: 3px solid #26323f; display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding: 12px 8px; }
-.vending-window i { background: #f2c86f; border: 2px solid #26323f; border-top: 8px solid #214c77; border-radius: 2px; }
-.vending-controls { position: absolute; top: 90px; right: 14px; display: grid; gap: 13px; }
-.vending-controls i { width: 18px; height: 18px; background: #fffdf7; border: 2px solid #26323f; border-radius: 50%; }
-.vending-controls span { width: 18px; height: 5px; background: #26323f; }
-.vending-tray { position: absolute; bottom: 19px; left: 25px; right: 25px; height: 24px; background: #26323f; border: 3px solid #fffdf7; border-radius: 3px; }
-.vending-feet { position: absolute; bottom: -20px; left: 22px; right: 22px; display: flex; justify-content: space-between; }
-.vending-feet i { width: 32px; height: 17px; background: #26323f; border-radius: 0 0 7px 7px; }
-@media (max-width: 1100px) and (min-width: 761px) { .seller-filters button { padding-inline: 9px; } }
+[data-site="kippe"] .footer-bottom {
+  color: #e2e9f1;
+}
+[data-site="kippe"] .footer-brand .brand-mark {
+  background: #fffdf7;
+  color: #b52d3b;
+}
+.seller-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #214c77;
+  font-size: 12px;
+}
+[data-site="kippe"] .map-pin {
+  background: #b52d3b;
+}
+[data-site="kippe"] .map-pin.shop {
+  background: #214c77;
+}
+[data-site="kippe"] .map-pin.fuel {
+  background: #88621c;
+}
+[data-site="kippe"] .map-pin.active {
+  background: #26323f;
+}
+.payment-entry {
+  display: inline-block;
+  margin-inline-end: 5px;
+}
+.detail-panel dl .availability-note {
+  display: block;
+  padding-top: 12px;
+}
+.availability-note dd {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.vending-character {
+  position: absolute;
+  width: 185px;
+  height: 260px;
+  left: 90px;
+  top: 8px;
+  border: 4px solid #26323f;
+  border-radius: 12px 12px 8px 8px;
+  background: #b52d3b;
+  transform: rotate(5deg);
+  box-shadow: 10px 10px 0 #26323f15;
+}
+.vending-awning {
+  position: absolute;
+  top: -13px;
+  left: -11px;
+  right: -11px;
+  height: 31px;
+  background: repeating-linear-gradient(
+    90deg,
+    #fffdf7 0 22px,
+    #b52d3b 22px 44px
+  );
+  border: 3px solid #26323f;
+  border-radius: 8px 8px 5px 5px;
+}
+.vending-face {
+  position: relative;
+  height: 57px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding-top: 30px;
+}
+.vending-face i {
+  width: 7px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fffdf7;
+}
+.vending-face span {
+  position: absolute;
+  left: 80px;
+  top: 40px;
+  width: 17px;
+  height: 10px;
+  border-bottom: 3px solid #fffdf7;
+  border-radius: 50%;
+}
+.vending-window {
+  position: absolute;
+  top: 69px;
+  left: 15px;
+  width: 104px;
+  height: 121px;
+  background: #e9eef6;
+  border: 3px solid #26323f;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 8px;
+}
+.vending-window i {
+  background: #f2c86f;
+  border: 2px solid #26323f;
+  border-top: 8px solid #214c77;
+  border-radius: 2px;
+}
+.vending-controls {
+  position: absolute;
+  top: 90px;
+  right: 14px;
+  display: grid;
+  gap: 13px;
+}
+.vending-controls i {
+  width: 18px;
+  height: 18px;
+  background: #fffdf7;
+  border: 2px solid #26323f;
+  border-radius: 50%;
+}
+.vending-controls span {
+  width: 18px;
+  height: 5px;
+  background: #26323f;
+}
+.vending-tray {
+  position: absolute;
+  bottom: 19px;
+  left: 25px;
+  right: 25px;
+  height: 24px;
+  background: #26323f;
+  border: 3px solid #fffdf7;
+  border-radius: 3px;
+}
+.vending-feet {
+  position: absolute;
+  bottom: -20px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  justify-content: space-between;
+}
+.vending-feet i {
+  width: 32px;
+  height: 17px;
+  background: #26323f;
+  border-radius: 0 0 7px 7px;
+}
+@media (max-width: 1100px) and (min-width: 761px) {
+  .seller-filters button {
+    padding-inline: 9px;
+  }
+}
 @media (max-width: 760px) {
-  .vending-art .vending-character { left: 2px; top: 5px; transform: scale(.36) rotate(5deg); transform-origin: top left; }
-  [data-site="kippe"] .workspace-toolbar { flex-wrap: wrap; }
-  [data-site="kippe"] .seller-filters { width: 100%; flex-basis: 100%; }
-  [data-site="kippe"] .seller-filters button { flex: 1; padding-inline: 5px; font-size: 11px; }
-  [data-site="kippe"] .open-now-control { margin-left: 4px; }
+  .vending-art .vending-character {
+    left: 2px;
+    top: 5px;
+    transform: scale(0.36) rotate(5deg);
+    transform-origin: top left;
+  }
+  [data-site="kippe"] .workspace-toolbar {
+    flex-wrap: wrap;
+  }
+  [data-site="kippe"] .seller-filters {
+    width: 100%;
+    flex-basis: 100%;
+  }
+  [data-site="kippe"] .seller-filters button {
+    flex: 1;
+    padding-inline: 5px;
+    font-size: 11px;
+  }
+  [data-site="kippe"] .open-now-control {
+    margin-left: 4px;
+  }
+}
+.sales-unconfirmed {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #765417;
+  background: #fff4d3;
+  border-radius: 5px;
+  padding: 3px 6px;
 }

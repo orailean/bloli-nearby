@@ -363,6 +363,8 @@ test(
                 "502",
                 { amenity: "fuel", tobacco: "yes", opening_hours: "24/7" },
               ],
+              ["503", { amenity: "vending_machine", vending: "cigarettes" }],
+              ["504", { amenity: "fuel" }],
             ] as const)
               yield {
                 kind: "seller",
@@ -393,7 +395,7 @@ test(
                 "/api/locations?lat=52.52&lon=13.405",
               )
             ).body.items.length,
-            3,
+            5,
           );
           assert.equal(
             (
@@ -409,7 +411,33 @@ test(
             "/api/locations?lat=52.52&lon=13.405&sellerType=machine",
           );
           assert.equal(machines.body.items[0].id, "node/501");
-          assert.equal(machines.body.items.length, 1);
+          assert.equal(machines.body.items.length, 2);
+          assert.equal(
+            machines.body.items.find((item: any) => item.id === "node/503")
+              .hoursAssumed,
+            true,
+          );
+          await pool.query(
+            "UPDATE location_categories SET data=data-'openingHours'-'hoursAssumed' WHERE category='tobacco' AND location_id='node/503'",
+          );
+          const assumedOpen = await byHost(
+            "kippe.bloli.com",
+            "/api/locations?lat=52.52&lon=13.405&sellerType=machine&openNow=true",
+          );
+          assert.deepEqual(
+            assumedOpen.body.items.map((item: any) => item.id),
+            ["node/503"],
+          );
+          assert.equal(assumedOpen.body.items[0].hoursAssumed, true);
+          const fuel = await byHost(
+            "kippe.bloli.com",
+            "/api/locations?lat=52.52&lon=13.405&sellerType=fuel",
+          );
+          assert.equal(
+            fuel.body.items.find((item: any) => item.id === "node/504")
+              .tobaccoSales,
+            "unconfirmed",
+          );
           const open = await byHost(
             "kippe.bloli.com",
             "/api/locations?lat=52.52&lon=13.405&openNow=true&limit=1",
@@ -460,7 +488,7 @@ test(
           );
           assert.equal(
             (await byHost("kippe.bloli.com", "/api/status")).body.count,
-            3,
+            5,
           );
           assert.equal(
             (await byHost("loo.bloli.com", "/api/status")).body.count,
@@ -473,7 +501,7 @@ test(
                 "SELECT count(*)::int AS n FROM location_categories WHERE category='tobacco'",
               )
             ).rows[0].n,
-            3,
+            5,
           );
         },
       );

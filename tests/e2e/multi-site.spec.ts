@@ -65,6 +65,8 @@ for (const id of ["loo", "kippe"] as const) {
             ...(id === "kippe"
               ? {
                   sellerType: type,
+                  hoursAssumed: type === "machine",
+                  tobaccoSales: type === "fuel" ? "unconfirmed" : "mapped",
                   paymentMethods: { cash: "yes" },
                   brand: "Fixture brand",
                 }
@@ -99,6 +101,18 @@ for (const id of ["loo", "kippe"] as const) {
         await expect(page.locator(".detail-panel")).not.toContainText(
           "Entry fee",
         );
+        await expect(page.locator(".detail-panel")).toContainText(
+          "24/7 assumed",
+        );
+        await page
+          .getByRole("button", { name: "Petrol station", exact: true })
+          .click();
+        await expect(page.locator(".result-row")).toContainText(
+          "Tobacco sales unconfirmed",
+        );
+        await page
+          .getByRole("button", { name: "Machine", exact: true })
+          .click();
         await expect(page.locator(".seller-filters")).toBeVisible();
       }
       await page.locator(".radius-control select").selectOption("5000");

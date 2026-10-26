@@ -44,6 +44,8 @@ def seller_candidate(tags):
     """Retain mapped sales evidence; normalization applies access/lifecycle rules."""
     if tags.get('amenity') == 'vending_machine' and 'cigarettes' in tokens(tags.get('vending', '')):
         return True
+    if tags.get('amenity') == 'fuel':
+        return True
     if tags.get('shop') == 'tobacco':
         return True
     positive = tags.get('tobacco', '').strip().lower() == 'yes' or bool(
