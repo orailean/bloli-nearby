@@ -47,6 +47,16 @@ class ExtractTests(unittest.TestCase):
    rows=[json.loads(line) for line in out.getvalue().splitlines()]
    self.assertFalse(any(r.get('sourceId')=='98' for r in rows))
    self.assertEqual(rows[-1]['kind'],'complete')
+ def test_site_relation_uses_member_geometry_and_collection_is_not_a_location(self):
+  with tempfile.TemporaryDirectory() as d:
+   extra='<relation id="90" version="1"><member type="way" ref="11" role="toilets"/><tag k="type" v="site"/><tag k="amenity" v="toilets"/></relation><relation id="91" version="1"><member type="node" ref="1" role=""/><tag k="type" v="collection"/><tag k="amenity" v="toilets"/></relation>'
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>',extra+'</osm>'))
+   out=io.StringIO();extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   site=next(r for r in rows if r.get('sourceId')=='90')
+   self.assertTrue(53.07<=site['lat']<=53.071)
+   self.assertFalse(any(r.get('sourceId')=='91' for r in rows))
+   self.assertEqual(rows[-1]['kind'],'complete')
  def test_poly_parser_preserves_exterior_and_holes(self):
   poly='germany\n1\n 5 47\n 16 47\n 16 56\n 5 56\n 5 47\nEND\n!1\n 6 48\n 7 48\n 7 49\n 6 48\nEND\nEND\n'
   self.assertEqual(len(poly_geojson(poly)['coordinates'][0]),2)

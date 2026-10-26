@@ -37,8 +37,8 @@ def poly_geojson(text):
 
 
 def kinds(tags):
-    # Route toilets are onboard vehicles, not a fixed public facility.
-    if tags.get('type') in ('route', 'route_master'):
+    # Routes describe onboard toilets; collections group separate locations.
+    if tags.get('type') in ('route', 'route_master', 'collection'):
         return []
     result = []
     if tags.get('amenity') == 'toilets' or tags.get('toilets') == 'yes':
@@ -61,6 +61,21 @@ def extract(filename, coverage, output, source, dataset_at=None):
         output.write(json.dumps(record, ensure_ascii=False) + '\n')
     emit({'kind': 'metadata', 'source': source, 'datasetAt': dataset_at, 'coverage': coverage})
     factory = osmium.geom.GeoJSONFactory()
+    sites = {}
+    member_keys = set()
+
+    class SiteMembers(osmium.SimpleHandler):
+        def relation(self, obj):
+            tags = dict(obj.tags)
+            if tags.get('type') == 'site' and kinds(tags):
+                members = [(m.type, m.ref) for m in obj.members if m.type in ('n', 'w')]
+                sites[obj.id] = (tags, members)
+                member_keys.update(members)
+
+    # Relations follow their members in OSM files. Collect only site references
+    # first, then retain coordinates for those members during the main pass.
+    SiteMembers().apply_file(filename)
+    member_points = {}
 
     class Extractor(osmium.SimpleHandler):
         def __init__(self):
@@ -77,11 +92,17 @@ def extract(filename, coverage, output, source, dataset_at=None):
 
         def node(self, obj):
             tags = dict(obj.tags)
-            if kinds(tags):
-                self.write('node', obj.id, tags, shape(json.loads(factory.create_point(obj))))
+            if kinds(tags) or ('n', obj.id) in member_keys:
+                point = shape(json.loads(factory.create_point(obj)))
+                if ('n', obj.id) in member_keys:
+                    member_points[('n', obj.id)] = point
+                if kinds(tags):
+                    self.write('node', obj.id, tags, point)
 
         def way(self, obj):
             tags = dict(obj.tags)
+            if ('w', obj.id) in member_keys:
+                member_points[('w', obj.id)] = shape(json.loads(factory.create_linestring(obj))).interpolate(0.5, normalized=True)
             if not kinds(tags):
                 return
             if obj.is_closed() and tags.get("area") != "no":
@@ -106,6 +127,15 @@ def extract(filename, coverage, output, source, dataset_at=None):
     handler = Extractor()
     with tempfile.TemporaryDirectory(prefix='loo-locations-') as temporary:
         handler.apply_file(filename, locations=True, idx=f'sparse_file_array,{temporary}/nodes.idx')
+    for source_id, (tags, members) in sites.items():
+        points = [member_points[key] for key in members if key in member_points]
+        if points:
+            # Choose an actual member point closest to the site's centre.
+            x = sum(p.x for p in points) / len(points)
+            y = sum(p.y for p in points) / len(points)
+            point = min(points, key=lambda p: (p.x-x)**2 + (p.y-y)**2)
+            handler.write('relation', source_id, tags, point)
+            handler.completed.add(('relation', source_id))
     missing = set(handler.expected) - handler.completed
     broken_facilities = [key for key in missing if 'facility' in handler.expected[key]]
     if broken_facilities:
