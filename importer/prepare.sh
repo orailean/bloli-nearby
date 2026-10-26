@@ -3,7 +3,11 @@ set -eu
 DATA_URL=${DATA_URL:-https://download.geofabrik.de/europe/germany-latest.osm.pbf}
 POLY_URL=${POLY_URL:-https://download.geofabrik.de/europe/germany.poly}
 DATA_URL=$(python3 /app/importer/source.py "$DATA_URL")
-cleanup() { rm -f /data/filtered.osm.pbf /data/extracted.jsonl.part; }
+cleanup() {
+  status=$?
+  rm -f /data/extracted.jsonl.part
+  if [ "$status" -eq 0 ]; then rm -f /data/filtered.osm.pbf /data/filtered.source; fi
+}
 trap cleanup EXIT
 printf '[source] %s\n' "$DATA_URL"
 # Fetch the small checksum first: latest Germany aliases do not expose .md5.
@@ -28,8 +32,17 @@ if [ "$reused" = false ]; then
 fi
 printf '%s\n' "$DATA_URL" > /data/source.url
 curl --silent --show-error --fail --location --retry 3 --output /data/coverage.poly "$POLY_URL"
-printf '[filter] Extracting toilets, places and postal boundaries\n'
-osmium tags-filter /data/source.osm.pbf nwr/amenity=toilets nwr/toilets=yes nwr/place r/boundary=postal_code -o /data/filtered.osm.pbf --overwrite
+FILTER_EXPRESSIONS='nwr/amenity=toilets nwr/toilets=yes nwr/place r/boundary=postal_code'
+filter_key="$DATA_URL|$FILTER_EXPRESSIONS"
+if [ -f /data/filtered.osm.pbf ] && [ -f /data/filtered.source ] && [ "$(cat /data/filtered.source)" = "$filter_key" ]; then
+  printf '[filter] Reusing completed filtered snapshot\n'
+else
+  rm -f /data/filtered.source
+  printf '[filter] Extracting toilets, places and postal boundaries\n'
+  # This word list is a fixed set of filter arguments, not user input.
+  osmium tags-filter /data/source.osm.pbf $FILTER_EXPRESSIONS -o /data/filtered.osm.pbf --overwrite
+  printf '%s\n' "$filter_key" > /data/filtered.source
+fi
 printf '[geometry] Building complete facility and settlement records\n'
 python3 /app/importer/extract.py /data/filtered.osm.pbf /data/coverage.poly --source "$DATA_URL" > /data/extracted.jsonl.part
 mv /data/extracted.jsonl.part /data/extracted.jsonl

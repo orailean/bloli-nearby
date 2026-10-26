@@ -33,6 +33,20 @@ class ExtractTests(unittest.TestCase):
    out=io.StringIO();extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
    last=json.loads(out.getvalue().splitlines()[-1])
    self.assertEqual(last['skippedSettlementGeometries'],1)
+ def test_closed_non_area_way_retains_a_valid_representative_point(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('<tag k="amenity" v="toilets"/></way>','<tag k="amenity" v="toilets"/><tag k="area" v="no"/></way>'))
+   out=io.StringIO();extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
+   ways=[json.loads(line) for line in out.getvalue().splitlines() if '"sourceType": "way"' in line]
+   self.assertEqual(len(ways),1)
+   self.assertTrue(53.07<=ways[0]['lat']<=53.071)
+ def test_train_route_with_onboard_toilets_is_not_a_fixed_facility(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>', '<relation id="98" version="1"><member type="way" ref="11" role=""/><tag k="type" v="route"/><tag k="route" v="train"/><tag k="toilets" v="yes"/></relation></osm>'))
+   out=io.StringIO();extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   self.assertFalse(any(r.get('sourceId')=='98' for r in rows))
+   self.assertEqual(rows[-1]['kind'],'complete')
  def test_poly_parser_preserves_exterior_and_holes(self):
   poly='germany\n1\n 5 47\n 16 47\n 16 56\n 5 56\n 5 47\nEND\n!1\n 6 48\n 7 48\n 7 49\n 6 48\nEND\nEND\n'
   self.assertEqual(len(poly_geojson(poly)['coordinates'][0]),2)

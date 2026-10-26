@@ -37,6 +37,9 @@ def poly_geojson(text):
 
 
 def kinds(tags):
+    # Route toilets are onboard vehicles, not a fixed public facility.
+    if tags.get('type') in ('route', 'route_master'):
+        return []
     result = []
     if tags.get('amenity') == 'toilets' or tags.get('toilets') == 'yes':
         result.append('facility')
@@ -81,7 +84,7 @@ def extract(filename, coverage, output, source, dataset_at=None):
             tags = dict(obj.tags)
             if not kinds(tags):
                 return
-            if obj.is_closed():
+            if obj.is_closed() and tags.get("area") != "no":
                 self.expected[('way', obj.id)] = kinds(tags)
             else:
                 line = shape(json.loads(factory.create_linestring(obj)))
@@ -106,7 +109,7 @@ def extract(filename, coverage, output, source, dataset_at=None):
     missing = set(handler.expected) - handler.completed
     broken_facilities = [key for key in missing if 'facility' in handler.expected[key]]
     if broken_facilities:
-        raise ValueError(f'Incomplete toilet geometries: {len(broken_facilities)}')
+        raise ValueError(f'Incomplete toilet geometries: {len(broken_facilities)}; sources: {sorted(broken_facilities)[:30]}')
     emit({'kind': 'complete', 'records': handler.count, 'skippedSettlementGeometries': len(missing)})
     return handler.count
 

@@ -51,7 +51,7 @@ Expected files:
 - `source.md5`: upstream transfer-integrity checksum.
 - `source.url`: exact immutable dated source URL selected for the verified file.
 - `coverage.poly`: source geographic coverage.
-- `filtered.osm.pbf`: transient filtered extract, removed by cleanup when preparation exits.
+- `filtered.osm.pbf` and `filtered.source`: completed filtered extract and source/filter marker, retained after extraction errors for retry and removed after successful preparation.
 - `extracted.jsonl.part`: incomplete extraction, never published.
 - `extracted.jsonl`: complete extraction used for publication.
 - `import.lock`: lock file; its presence alone does not mean a job is running.
