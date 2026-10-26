@@ -13,7 +13,7 @@ services:
     networks:
       default: {}
       edge:
-        aliases: [bloli-nearby-web, find-a-loo-web]
+        aliases: [bloli-nearby-web]
   importer:
     image: bloli-nearby-importer:latest
 networks:

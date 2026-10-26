@@ -4,7 +4,7 @@ The public sites are `loo.bloli.com` (Find a Loo) and `kippe.bloli.com` (Kippe).
 
 ## Resource identities that deliberately stay unchanged
 
-Running service containers are **`bloli-nearby-web`**, **`bloli-nearby-api`** and **`bloli-nearby-db`**. The production Compose override pins project **`find-a-loo`** and explicitly attaches the external volumes **`find-a-loo_postgres_data`** and **`find-a-loo_import_data`**. These are existing data resources, not application branding. The shared database is `bloli_nearby`, login role `bloli`; the existing password secret is reused. API/importer connections and backup/restore/health commands use configurable `DB_NAME`/`DB_USER` rather than fixed legacy names. The gateway adds `bloli-nearby-web` on `nginx_default` and retains `find-a-loo-web` for old proxy configuration. No new host ports are published. Never rename the checkout/project without verifying these bindings: Docker could otherwise create an empty replacement DB.
+Running service containers are **`bloli-nearby-web`**, **`bloli-nearby-api`** and **`bloli-nearby-db`**. The production Compose override pins project **`find-a-loo`** and explicitly attaches the external volumes **`find-a-loo_postgres_data`** and **`find-a-loo_import_data`**. These are existing data resources, not application branding. The shared database is `bloli_nearby`, login role `bloli`; the existing password secret is reused. API/importer connections and backup/restore/health commands use configurable `DB_NAME`/`DB_USER` rather than fixed legacy names. The gateway uses `bloli-nearby-web` on `nginx_default`. Both public virtual hosts include the same `bloli-nearby-proxy.inc` location block, so upstream/header/timeout settings cannot diverge. Install this `.inc` beside the virtual hosts in the shared Nginx configuration volume. No new host ports are published. Never rename the checkout/project without verifying these bindings: Docker could otherwise create an empty replacement DB.
 
 ```bash
 cd /home/oliver/stack/bloli-nearby
@@ -90,3 +90,5 @@ journalctl -u bloli-nearby-refresh.service -f
 Or run `scripts/update.sh` from the canonical project checkout. The advisory lock prevents overlapping imports; a rejected concurrent run is not a second updater. Check service exit status and both domains' `/api/status` after a run. Failed publication preserves the previous active data.
 
 To change the schedule, edit the timer or add a systemd override, then run `sudo systemctl daemon-reload` and `sudo systemctl restart bloli-nearby-refresh.timer`; verify the next activation with `list-timers`. Preserve a single active timer and document any operational schedule change.
+
+The restore script uses `pg_restore --no-owner` so archives created under the legacy role can be restored under the configured current login, without requiring the old role to exist. Objects become owned by the restoring app role; backup contents and categories are otherwise preserved.

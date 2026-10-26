@@ -26,5 +26,6 @@
   "DATA_NOT_READY": "Datele despre vânzători nu sunt încă disponibile. Operatorul trebuie să ruleze primul import.",
   "comfort": "Cartierul tău, puțin mai aproape.",
   "brandName": "kippe",
-  "openNowHint": "Folosește programul înregistrat; automatele fără program sunt presupuse deschise non-stop. Alte ore lipsă sau incerte sunt excluse."
+  "openNowHint": "Folosește programul înregistrat; automatele fără program sunt presupuse deschise non-stop. Alte ore lipsă sau incerte sunt excluse.",
+  "sourceHours": "Programul înregistrat este afișat când există; automatele fără program sunt presupuse deschise non-stop. Accesul actual nu este verificat."
 }

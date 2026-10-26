@@ -26,5 +26,6 @@
   "DATA_NOT_READY": "Die Verkaufsstellendaten sind noch nicht bereit. Der Betreiber muss den ersten Import ausführen.",
   "comfort": "Dein Viertel, ein Stück näher.",
   "brandName": "kippe",
-  "openNowHint": "Nutzt erfasste Zeiten; Automaten ohne Zeitangabe gelten als 24/7 geöffnet. Andere fehlende oder unklare Zeiten werden ausgeschlossen."
+  "openNowHint": "Nutzt erfasste Zeiten; Automaten ohne Zeitangabe gelten als 24/7 geöffnet. Andere fehlende oder unklare Zeiten werden ausgeschlossen.",
+  "sourceHours": "Erfasste Zeiten werden angezeigt; für Automaten ohne Zeitangabe wird 24/7 angenommen. Der aktuelle Zugang ist nicht bestätigt."
 }

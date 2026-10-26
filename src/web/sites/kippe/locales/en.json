@@ -26,5 +26,6 @@
   "DATA_NOT_READY": "The seller dataset is not ready yet. The site operator needs to run the first import.",
   "comfort": "Your neighbourhood, a little closer.",
   "brandName": "kippe",
-  "openNowHint": "Uses mapped hours; machines without hours are assumed open 24/7. Other missing or uncertain hours are excluded."
+  "openNowHint": "Uses mapped hours; machines without hours are assumed open 24/7. Other missing or uncertain hours are excluded.",
+  "sourceHours": "Mapped schedules are shown when available; machines without schedules are assumed open 24/7. Current access is not verified."
 }
