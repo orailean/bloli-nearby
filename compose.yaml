@@ -26,7 +26,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_PASSWORD_FILE: /run/secrets/db_password
-      TILE_URL: ${TILE_URL:-https://tile.openstreetmap.org/{z}/{x}/{y}.png}
+      # Keep brace templates out of Compose defaults (older Compose misparses them).
+      TILE_URL: ${TILE_URL:-}
       TILE_ATTRIBUTION: ${TILE_ATTRIBUTION:-© OpenStreetMap contributors}
       TILE_MAX_ZOOM: ${TILE_MAX_ZOOM:-19}
       CONTACT_EMAIL: ${CONTACT_EMAIL:-}

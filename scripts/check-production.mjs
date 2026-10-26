@@ -15,7 +15,9 @@ const browser=await chromium.launch();
 try{
  const context=await browser.newContext({locale:'fr-FR',viewport:{width:1440,height:1000},reducedMotion:'reduce'});
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(base);await expect(page.locator('html')).toHaveAttribute('lang','de');
+ await page.goto(base);
+ await expect.poll(()=>page.locator('.leaflet-tile').evaluateAll(images=>images.filter(img=>img.complete&&img.naturalWidth>0).length),{timeout:15000}).toBeGreaterThan(0);
+ await expect(page.locator('html')).toHaveAttribute('lang','de');
  await page.getByLabel('Sprache',{exact:true}).selectOption('en');
  await page.getByLabel('Town or postcode',{exact:true}).fill('81243');await page.getByRole('button',{name:'Search',exact:true}).click();
  await expect(page.locator('.place-option').first()).toBeVisible();await page.locator('.place-option').first().click();
@@ -25,6 +27,6 @@ try{
  await page.getByLabel('Language',{exact:true}).selectOption('ro');await expect(page.locator('html')).toHaveAttribute('lang','ro');
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await expect(page.locator('.leaflet-control-attribution')).toContainText('OpenStreetMap');
- assert.deepEqual(errors,[]);checks.browser={germanFallback:true,postcodeSearch:true,romanianSwitch:true,mobileWidth:true,pageErrors:errors};
+ assert.deepEqual(errors,[]);checks.browser={mapImagesLoaded:true,germanFallback:true,postcodeSearch:true,romanianSwitch:true,mobileWidth:true,pageErrors:errors};
  console.log(JSON.stringify(checks,null,2));
 }finally{await browser.close();}

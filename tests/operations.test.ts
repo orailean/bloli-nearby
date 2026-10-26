@@ -40,3 +40,8 @@ esac
     rmSync(temp, { recursive: true, force: true });
   }
 });
+
+test("Compose preserves tile URL placeholders without appending fallback fragments", () => {
+  const config = JSON.parse(execFileSync("docker", ["compose", "--env-file", ".env.example", "-f", "compose.yaml", "config", "--format", "json"], { encoding: "utf8" }));
+  assert.equal(config.services.api.environment.TILE_URL, "https://tile.openstreetmap.org/{z}/{x}/{y}.png");
+});

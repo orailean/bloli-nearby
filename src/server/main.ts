@@ -6,7 +6,7 @@ if (process.env.DATABASE_PASSWORD_FILE)
 const pool = createPool();
 await migrate(pool);
 const server = createApi(pool, {
-  tileUrl: process.env.TILE_URL,
+  tileUrl: process.env.TILE_URL || undefined,
   tileAttribution: process.env.TILE_ATTRIBUTION,
   tileMaxZoom: Number(process.env.TILE_MAX_ZOOM || 19),
   contactEmail: process.env.CONTACT_EMAIL,
