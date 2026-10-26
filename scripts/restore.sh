@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 [ -f "$2" ] || { echo 'Backup file not found' >&2; exit 1; }
 # Stop application readers during replacement; do not touch the shared external Nginx.
 ./scripts/compose.sh stop api web
-if ./scripts/compose.sh exec -T db pg_restore -U loo -d loo --clean --if-exists --exit-on-error --single-transaction < "$2"; then
+if ./scripts/compose.sh exec -T db sh -c 'exec pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --exit-on-error --single-transaction' < "$2"; then
   ./scripts/compose.sh up -d api web
 else
   echo 'Restore failed. App readers remain stopped; inspect database before restarting.' >&2

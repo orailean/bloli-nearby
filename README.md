@@ -29,7 +29,7 @@ Node >=22.12, Docker and Compose >=2.24.4 are required; the pinned PostGIS image
 
 For Contabo, use [the multi-site migration/update guide](docs/deployment/bloli-nearby-migration.md). Existing Docker Nginx remains the shared TLS proxy. The production override preserves the legacy Compose project identity and explicitly binds existing data/import volumes, while the package/repository is named `bloli-nearby`. No new application host ports are published. The canonical VM checkout is `/home/oliver/stack/bloli-nearby`.
 
-Do not remove volumes or assume renaming a directory migrates Docker resources. Existing database role `loo`, development Compose identity and legacy volume names are retained intentionally. [Data locations](docs/deployment/data-storage.md) explain the host paths; historical deployment protocols retain original names as an audit record.
+Do not remove volumes or assume renaming a directory migrates Docker resources. The shared production database/login are `bloli_nearby` / `bloli`, configured through `DB_NAME` / `DB_USER`. Development Compose identity and legacy volume names remain intact. [Data locations](docs/deployment/data-storage.md) explain the host paths; historical deployment protocols retain original names as an audit record.
 
 ## Import and refresh
 
@@ -76,7 +76,7 @@ scripts/restore.sh --replace-database backups/bloli-nearby-TIMESTAMP.dump
 
 Custom-format dumps include all location/category data, shared settlements, legacy toilets, coverage and job history. Back up `.env` and `.secrets` securely outside Git. Scripts preserve the active Compose file set through `scripts/compose.sh`. Restore stops only this app's API/web, uses transactional pg_restore and keeps shared Nginx running. Rehearse with a disposable database. Application rollback uses the recorded pre-migration commit/configuration; retain persistent volumes and use the verified backup when schema restoration is needed.
 
-Production uses one weekly `bloli-nearby-refresh.timer` and one daily `bloli-nearby-backup.timer`, plus existing Certbot renewal with a deploy hook scoped to both domains. [Migration/update instructions](docs/deployment/bloli-nearby-migration.md) cover paths, DNS, certificate bootstrap/renewal, verification and rollback. Host operations are recorded in dated protocol files under `docs/deployment/`.
+Production uses one weekly `bloli-nearby-refresh.timer` and one daily `bloli-nearby-backup.timer`, plus existing Certbot renewal with a deploy hook scoped to both domains. Refresh runs Sunday 03:15 Europe/Berlin plus up to 30 minutes jitter; backup runs daily 04:30 plus up to 15 minutes jitter. The [VM update schedule section](docs/deployment/bloli-nearby-migration.md#automatic-updates-on-the-vm) gives exact unit paths, status/log and manual-run commands. [Migration/update instructions](docs/deployment/bloli-nearby-migration.md) cover paths, DNS, certificate bootstrap/renewal, verification and rollback. Host operations are recorded in dated protocol files under `docs/deployment/`.
 
 ## Map policy, privacy and licenses
 

@@ -4,7 +4,7 @@ The public sites are `loo.bloli.com` (Find a Loo) and `kippe.bloli.com` (Kippe).
 
 ## Resource identities that deliberately stay unchanged
 
-Running service containers are **`bloli-nearby-web`**, **`bloli-nearby-api`** and **`bloli-nearby-db`**. The production Compose override pins project **`find-a-loo`** and explicitly attaches the external volumes **`find-a-loo_postgres_data`** and **`find-a-loo_import_data`**. These are existing data resources, not application branding. Database role/database `loo` and the secret file are retained. The gateway adds `bloli-nearby-web` on `nginx_default` and retains `find-a-loo-web` for old proxy configuration. No new host ports are published. Never rename the checkout/project without verifying these bindings: Docker could otherwise create an empty replacement DB.
+Running service containers are **`bloli-nearby-web`**, **`bloli-nearby-api`** and **`bloli-nearby-db`**. The production Compose override pins project **`find-a-loo`** and explicitly attaches the external volumes **`find-a-loo_postgres_data`** and **`find-a-loo_import_data`**. These are existing data resources, not application branding. The shared database is `bloli_nearby`, login role `bloli`; the existing password secret is reused. API/importer connections and backup/restore/health commands use configurable `DB_NAME`/`DB_USER` rather than fixed legacy names. The gateway adds `bloli-nearby-web` on `nginx_default` and retains `find-a-loo-web` for old proxy configuration. No new host ports are published. Never rename the checkout/project without verifying these bindings: Docker could otherwise create an empty replacement DB.
 
 ```bash
 cd /home/oliver/stack/bloli-nearby
@@ -54,3 +54,39 @@ Dataset refresh is separate: build the importer when its code changes, then use 
 Record and use the pre-migration commit/configuration. Stop only this app's API/web, restore the previous app images/checkouts/proxy aliases/timer paths, validate/reload Nginx and verify Loo. Legacy WC tables are maintained transactionally alongside generic data during the transition. If schema/data restoration is needed, use the verified pre-migration custom-format backup through the documented restore script. Preserve both named volumes. Do not run `down -v` or delete volumes during rollback. The shared Nginx and unrelated services remain running.
 
 Downloaded source/staging remains under `/var/lib/docker/volumes/find-a-loo_import_data/_data`; PostgreSQL files remain in `/var/lib/docker/volumes/find-a-loo_postgres_data/_data`. Neither moves when the checkout is renamed. Logs and backups move with the project directory and remain ignored by Git.
+
+## Database/role rename
+
+Wait for the combined import to exit successfully; back up the completed dataset. Build the configurable API/importer images first. Stop only app readers, use a temporary passwordless **local-socket-only** migration superuser to run `deploy/postgres/rename-shared-database.sql`, then connect as `bloli` and drop that temporary role. The SQL renames the database/role (retaining object ownership by role OID) and verifies/retains the existing SCRAM password hash without exposing it in shell output. Update VM `.env` to `DB_USER=bloli` and `DB_NAME=bloli_nearby`, then recreate the shared services with health checks. Verify both categories and restart scheduled operations only after success. Do not rename while an import holds connections. Record exact operations/results in the migration protocol.
+
+Rollback of the rename uses the same controlled connection shutdown, temporary local administrator and `ALTER DATABASE bloli_nearby RENAME TO loo` / `ALTER ROLE bloli RENAME TO loo`, reusing the password secret and restoring prior connection configuration. Persistent volume paths do not change.
+
+## Automatic updates on the VM
+
+Location data updates are scheduled by **systemd**, through these files:
+
+- `/etc/systemd/system/bloli-nearby-refresh.timer`: Sundays at **03:15 Europe/Berlin**, with up to **30 minutes random delay**; persistent timers catch missed runs after downtime.
+- `/etc/systemd/system/bloli-nearby-refresh.service`: runs `/usr/bin/docker compose --profile tools run --rm importer` as `oliver`, working directory `/home/oliver/stack/bloli-nearby`.
+- `/etc/systemd/system/bloli-nearby-backup.timer`: daily at **04:30 Europe/Berlin**, with up to **15 minutes random delay**; invokes the companion backup service/script.
+
+The old `find-a-loo-refresh.timer` and `find-a-loo-backup.timer` are disabled. There must be only one active refresh/backup pair. The weekly importer updates toilets, tobacco sellers and shared settlements from a single verified Germany source. Visible map tiles continue loading directly in users' browsers; the job does not download raster map tiles.
+
+Inspect schedules, exact configuration and refresh history:
+
+```bash
+systemctl list-timers --all bloli-nearby-refresh.timer bloli-nearby-backup.timer
+systemctl cat bloli-nearby-refresh.timer bloli-nearby-refresh.service
+systemctl status bloli-nearby-refresh.timer
+journalctl -u bloli-nearby-refresh.service --since '7 days ago'
+```
+
+Run a refresh manually through the same service (this may download a newer Germany snapshot and take several minutes):
+
+```bash
+sudo systemctl start bloli-nearby-refresh.service
+journalctl -u bloli-nearby-refresh.service -f
+```
+
+Or run `scripts/update.sh` from the canonical project checkout. The advisory lock prevents overlapping imports; a rejected concurrent run is not a second updater. Check service exit status and both domains' `/api/status` after a run. Failed publication preserves the previous active data.
+
+To change the schedule, edit the timer or add a systemd override, then run `sudo systemctl daemon-reload` and `sudo systemctl restart bloli-nearby-refresh.timer`; verify the next activation with `list-timers`. Preserve a single active timer and document any operational schedule change.

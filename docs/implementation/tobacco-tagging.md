@@ -28,7 +28,13 @@ The filter includes all `vending`, `tobacco` and `sells:tobacco` tags plus `shop
 
 ## Germany baseline measurement
 
-A single read-only pyosmium scan of the retained full snapshot was launched on 2026-10-26. Diagnostics are saved under the production checkout's `logs/tobacco-distribution.{py,json,err}`. The scan counts tag distributions and candidate seller classes without loading geometry or changing application data. Counts and threshold recommendations will be recorded here after it completes; do not copy the WC minimum threshold onto tobacco sellers.
+The retained 2026-10-25 Germany source was reused for the extension. The initial full-source diagnostic was stopped intentionally after filtering became available (exit 137, OOM false); the same read-only measurement ran against the complete expanded 52 MiB extract in 138.9 seconds. Saved results: VM `logs/tobacco-filtered-distribution.json` and `logs/tobacco-distribution-final.json`.
+
+Candidates before final exclusions: **28,900 machines**, **2,113 shops**, **8 petrol stations**. Final published records: **28,898 machines**, **2,112 shops**, **8 petrol stations** = **31,018 sellers**. The difference reflects inactive/restricted sources. No generic petrol station is inferred to sell tobacco.
+
+Observed explicit sales evidence includes `shop=tobacco` (1,424), `tobacco=yes` (475) and `sells:tobacco=yes` (304), plus many semicolon-delimited cigarette vending variants. The candidate object set contains 31,056 nodes and 153 ways with relevant tag evidence. Counts describe this extract, not a complete real-world seller inventory.
+
+The production floor is set to **MIN_SELLERS=15000** from the measured ~31k baseline, with **MIN_IMPORT_RATIO=0.75** protecting subsequent refreshes from drops below 75% of the previous active category. The shared configurable default remains conservative for fresh deployments; explicit small sample imports use a floor of 1. Never lower production thresholds merely to bypass a suspicious refresh.
 
 ## Verification
 

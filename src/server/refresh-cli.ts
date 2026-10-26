@@ -1,10 +1,7 @@
-import { readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { createPool, migrate } from "./db.js";
 import { runRefresh } from "./refresh.js";
 import { importFile } from "./import-file.js";
-if (process.env.DATABASE_PASSWORD_FILE)
-  process.env.DATABASE_URL = `postgres://loo:${encodeURIComponent(readFileSync(process.env.DATABASE_PASSWORD_FILE, "utf8").trim())}@db:5432/loo`;
 const pool = createPool();
 try {
   await migrate(pool);

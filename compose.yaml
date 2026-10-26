@@ -4,14 +4,14 @@ services:
     image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
     platform: linux/amd64
     environment:
-      POSTGRES_DB: loo
-      POSTGRES_USER: loo
+      POSTGRES_DB: ${DB_NAME:-bloli_nearby}
+      POSTGRES_USER: ${DB_USER:-bloli}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     secrets: [db_password]
     volumes: [postgres_data:/var/lib/postgresql/data]
     networks: [default]
     healthcheck:
-      test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U loo -d loo']
+      test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -26,6 +26,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      DB_USER: ${DB_USER:-bloli}
+      DB_NAME: ${DB_NAME:-bloli_nearby}
       # Keep brace templates out of Compose defaults (older Compose misparses them).
       TILE_URL: ${TILE_URL:-}
       TILE_ATTRIBUTION: ${TILE_ATTRIBUTION:-© OpenStreetMap contributors}
@@ -64,6 +66,8 @@ services:
       dockerfile: docker/importer.Dockerfile
     environment:
       DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      DB_USER: ${DB_USER:-bloli}
+      DB_NAME: ${DB_NAME:-bloli_nearby}
       DATA_URL: ${DATA_URL:-https://download.geofabrik.de/europe/germany-latest.osm.pbf}
       POLY_URL: ${POLY_URL:-https://download.geofabrik.de/europe/germany.poly}
       MIN_FACILITIES: ${MIN_FACILITIES:-1000}

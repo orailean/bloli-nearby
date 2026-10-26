@@ -65,8 +65,8 @@ The current filename stays `source.osm.pbf` even if a dated upstream snapshot is
 ```bash
 curl --fail --silent --show-error https://loo.bloli.com/api/status
 cd /home/oliver/stack/bloli-nearby
-scripts/compose.sh exec -T db psql -U loo -d loo -c 'SELECT source,dataset_at,imported_at,facility_count,settlement_count FROM dataset;'
-scripts/compose.sh exec -T db psql -U loo -d loo -c 'SELECT id,status,started_at,finished_at,facility_count,settlement_count,error FROM import_jobs ORDER BY id DESC LIMIT 10;'
+scripts/compose.sh exec -T db psql -U bloli -d bloli_nearby -c 'SELECT source,dataset_at,imported_at,facility_count,settlement_count FROM dataset;'
+scripts/compose.sh exec -T db psql -U bloli -d bloli_nearby -c 'SELECT id,status,started_at,finished_at,facility_count,settlement_count,error FROM import_jobs ORDER BY id DESC LIMIT 10;'
 ```
 
 An initial download does not immediately make the data searchable. The importer must finish extraction and transactional publication before readiness becomes true. Failed refreshes keep the previous active dataset. Do not copy or edit live PostgreSQL data files; use `scripts/backup.sh` and the documented restore procedure.

@@ -2,7 +2,7 @@
 
 - [x] 1.1 Record current application behavior and create mixed-category fixtures for machines, tobacco shops, explicitly tagged retailers/fuel stations, negative evidence, lifecycle/access restrictions and multi-category source objects.
 - [x] 1.2 Define and verify explicit bindings for existing production data/import volumes, Compose identity, gateway aliases and timer paths; prepare backup/rollback checks before any rename.
-- [ ] 1.3 Document supported tobacco-sales tags, seller classification and provenance/availability wording; inspect retained-source tag distributions before setting category thresholds.
+- [x] 1.3 Document supported tobacco-sales tags, seller classification and provenance/availability wording; inspect retained-source tag distributions before setting category thresholds.
 
 ## 2. Categorized data and importer
 
@@ -38,7 +38,7 @@
 
 - [x] 6.1 Back up and inventory the VM, verify actual source checksum/date and database/volume counts, then rename the GitHub repository/remotes and canonical VM checkout with pinned resource identities.
 - [x] 6.2 Update backup/refresh paths and generic gateway alias; verify only one application stack and one active set of timers remain and no additional host ports are published.
-- [ ] 6.3 Import the expanded Germany snapshot from retained source and verify category counts/readiness plus WC data retention; record resource use and source reuse.
-- [ ] 6.4 Verify kippe DNS and add its virtual host/certificate using existing Docker Nginx and Certbot webroot; validate configuration and gracefully reload, then verify renewal for both domains.
+- [x] 6.3 Import the expanded Germany snapshot from retained source and verify category counts/readiness plus WC data retention; record resource use and source reuse.
+- [x] 6.4 Verify kippe DNS and add its virtual host/certificate using existing Docker Nginx and Certbot webroot; validate configuration and gracefully reload, then verify renewal for both domains.
 - [ ] 6.5 Deploy shared API/web and verify both public domains' initial metadata, correct categories, searches, filters, map images, directions, translations, phone widths and HTTPS.
 - [ ] 6.6 Save the complete migration/deployment protocol and final backup in the project directory, commit/push source-only changes and documentation, synchronize production checkout and record rollback commands.
