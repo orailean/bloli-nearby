@@ -132,6 +132,6 @@ This attaches the app gateway to `nginx_default` as `find-a-loo-web` and removes
 
 ### Search area and Open now
 
-Changing the radius updates the results and fits the map to a visible search boundary on desktop and mobile. Results are capped at 100 nearest matching toilets, so increasing an already crowded search can keep the same first 100 results; the interface indicates truncation.
+Changing the radius updates the results and fits the map to a visible search boundary on desktop and mobile. On phones, results use normal page scrolling so all matches remain easy to reach; desktop retains its independently scrollable results pane. Results are capped at 100 nearest matching toilets, so increasing an already crowded search can keep the same first 100 results; the interface indicates truncation.
 
 **Open now** evaluates recorded OSM hours on the server in `Europe/Berlin`, including daylight saving time. It combines with price and radius filters before applying the result cap. Missing, invalid or uncertain schedules are excluded; holiday-dependent schedules also require state context. Results refresh every minute while this filter is active. Opening status reflects mapped schedules, not a live confirmation from the operator.

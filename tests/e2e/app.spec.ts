@@ -356,3 +356,63 @@ test("phone hero letters are not covered by the mascot in any language", async (
     }
   }
 });
+
+test("all ten phone results are reachable through normal page scrolling", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const dataset = {
+    ready: true,
+    count: 10,
+    datasetAt: "2026-10-25T00:00:00Z",
+    importedAt: "2026-10-26T00:00:00Z",
+    source: "fixture",
+    stale: false,
+    latestJob: null,
+  };
+  await page.route("**/api/status", (r) => r.fulfill({ json: dataset }));
+  await page.route("**/api/toilets?*", (r) =>
+    r.fulfill({
+      json: {
+        dataset,
+        truncated: false,
+        items: Array.from({ length: 10 }, (_, i) => ({
+          id: `node/${i}`,
+          sourceType: "node",
+          sourceId: String(i),
+          name: `Toilet ${i + 1}`,
+          names: {},
+          lat: 53.0758,
+          lon: 8.8072 + i * 0.001,
+          fee: "free",
+          charge: null,
+          feeText: null,
+          access: "public",
+          wheelchair: "unknown",
+          openingHours: null,
+          operator: null,
+          notes: null,
+          tags: {},
+          distance: i * 80,
+        })),
+      },
+    }),
+  );
+  await page.goto("/");
+  await page.getByRole("button", { name: "Bremen", exact: true }).click();
+  await expect(page.locator(".results-count")).toHaveText("10");
+  await expect(page.locator(".result-row")).toHaveCount(10);
+  expect(
+    await page
+      .locator(".results-content")
+      .evaluate((el) => el.clientHeight >= el.scrollHeight),
+  ).toBe(true);
+  const last = page.locator(".result-select").last();
+  await last.scrollIntoViewIfNeeded();
+  await last.click();
+  await expect(page.locator(".result-row.selected")).toHaveAttribute(
+    "data-id",
+    "node/9",
+  );
+});

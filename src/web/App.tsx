@@ -238,6 +238,15 @@ export default function App() {
       `[data-id="${CSS.escape(selected)}"]`,
     );
     if (!row) return;
+    if (window.matchMedia("(max-width: 760px)").matches) {
+      row.scrollIntoView({
+        block: "nearest",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+      return;
+    }
     const top =
       pane.scrollTop +
       row.getBoundingClientRect().top -

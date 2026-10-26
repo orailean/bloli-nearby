@@ -112,6 +112,37 @@ try {
   await expect(page.locator(".leaflet-control-attribution")).toContainText(
     "OpenStreetMap",
   );
+  assert.equal(
+    await page
+      .locator(".results-content")
+      .evaluate((el) => getComputedStyle(el).overflowY),
+    "visible",
+  );
+  await page.locator("#language").selectOption("de");
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    return document.fonts.ready;
+  });
+  assert.equal(
+    await page.locator("#hero-title").evaluate((heading) => {
+      const text = heading.firstChild;
+      const range = document.createRange();
+      for (let i = 0; i < text.textContent.length; i++) {
+        if (!text.textContent[i].trim()) continue;
+        range.setStart(text, i);
+        range.setEnd(text, i + 1);
+        const r = range.getBoundingClientRect();
+        if (
+          !heading.contains(
+            document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2),
+          )
+        )
+          return false;
+      }
+      return true;
+    }),
+    true,
+  );
   assert.deepEqual(errors, []);
   checks.browser = {
     mapImagesLoaded: true,
@@ -121,6 +152,8 @@ try {
     postcodeSearch: true,
     romanianSwitch: true,
     mobileWidth: true,
+    mobileNaturalScrolling: true,
+    germanPhoneHeadlineClear: true,
     pageErrors: errors,
   };
   console.log(JSON.stringify(checks, null, 2));
