@@ -16,7 +16,15 @@ class SellerExtractionTests(unittest.TestCase):
             extract(str(source), {}, output, 'fixture', '2026-10-25T00:00:00Z')
             return [json.loads(line) for line in output.getvalue().splitlines()]
 
-    def test_evidence_tokens_and_zero_assumptions(self):
+    def test_requested_retail_categories_and_lotto_concessions_are_extracted(self):
+        for shop in ('lottery', 'kiosk', 'convenience', 'supermarket', 'newsagent'):
+            with self.subTest(shop=shop):
+                self.assertIn('seller', kinds({'shop': shop}))
+        self.assertIn('seller', kinds({'shop': 'stationery', 'lottery': 'yes'}))
+        self.assertNotIn('seller', kinds({'shop': 'bakery', 'name': 'Lotto'}))
+        self.assertNotIn('seller', kinds({'amenity': 'gambling', 'lottery': 'yes'}))
+
+    def test_evidence_tokens_and_candidate_boundaries(self):
         for tags in [
             {'amenity': 'vending_machine', 'vending': ' drinks ; cigarettes ; sweets'},
             {'shop': 'tobacco'},
@@ -29,11 +37,10 @@ class SellerExtractionTests(unittest.TestCase):
             with self.subTest(tags=tags):
                 self.assertIn('seller', kinds(tags))
         for tags in [
-            {'shop': 'kiosk'},
-            {'shop': 'supermarket', 'name': 'Tobacco Cigarettes'},
+            {'shop': 'bakery', 'name': 'Tobacco Cigarettes'},
             {'amenity': 'vending_machine', 'vending': 'e-cigarettes'},
-            {'shop': 'convenience', 'sells:tobacco': 'unknown'},
-            {'tobacco': 'yes'}, {'shop': 'kiosk', 'tobacco': 'no'},
+            {'shop': 'bakery', 'sells:tobacco': 'unknown'},
+            {'tobacco': 'yes'},
             {'type': 'route', 'shop': 'tobacco'},
             {'type': 'collection', 'shop': 'tobacco'},
         ]:

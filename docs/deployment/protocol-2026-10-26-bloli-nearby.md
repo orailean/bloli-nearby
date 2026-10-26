@@ -88,3 +88,9 @@ Rename VM checkout/remotes and timer paths, pin/reuse source for combined import
 - Fresh checks: 28 unit/operations tests, 11 real PostGIS integration checks, production build and 8 dual-site desktop/phone browser checks passed. Restarted stale local native processes from the renamed checkout; verified the generic local development DB with existing sample data.
 - Final public-domain browser/API verification passed for both HTTPS domains: correct metadata/categories, real map images, Munich results for all seller types including fuel, no petrol-station sales label in list/details, directions, radius, Open now and DE/EN/RO layouts at 320/390/430px without horizontal overflow. Evidence saved to VM `logs/verification-final.json`.
 - Both new refresh/backup timers active. Completed importer removed after log preservation. Source data/backup files remain outside Git; only source and documentation are committed. Rollback guidance remains in `bloli-nearby-migration.md`.
+
+### Retail expansion requested after rollout
+
+- Extended extraction/normalization to Lotto outlets, kiosks, convenience stores/Spätis, supermarkets, newsagents and shops with lottery=yes. Retained explicit negative/access/lifecycle exclusions, unknown shop hours, and internal source provenance without special sales labels.
+- Updated DE/EN/RO copy to describe the broader coverage. Verified 29 unit checks, 15 Python importer checks, production build and eight mocked desktop/phone browser checks; no local database/debug services started. Temporary Vite test server stopped after completion.
+- Pre-expansion VM backup: `backups/bloli-nearby-20261026T222139Z.dump`. Reimport uses the verified retained Germany source rather than downloading it again. Final publication counts are recorded below after completion.

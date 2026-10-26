@@ -66,7 +66,7 @@ for (const id of ["loo", "kippe"] as const) {
               ? {
                   sellerType: type,
                   hoursAssumed: type === "machine",
-                  tobaccoSales: type === "fuel" ? "unconfirmed" : "mapped",
+                  tobaccoSales: type !== "machine" ? "unconfirmed" : "mapped",
                   paymentMethods: { cash: "yes" },
                   brand: "Fixture brand",
                 }
@@ -104,13 +104,23 @@ for (const id of ["loo", "kippe"] as const) {
         await expect(page.locator(".detail-panel")).toContainText(
           "24/7 assumed",
         );
+        await page.getByRole("button", { name: "Shop", exact: true }).click();
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel")).not.toContainText(
+          "Tobacco sales",
+        );
         await page
           .getByRole("button", { name: "Petrol station", exact: true })
           .click();
         await expect(page.locator(".result-row")).toHaveCount(1);
-        await expect(page.locator(".result-row")).not.toContainText("unconfirmed");
+        await expect(page.locator(".result-row")).not.toContainText(
+          "unconfirmed",
+        );
         await page.locator(".result-select").first().click();
-        await expect(page.locator(".detail-panel")).not.toContainText("Tobacco sales");
+        await expect(page.locator(".detail-panel")).not.toContainText(
+          "Tobacco sales",
+        );
         await page
           .getByRole("button", { name: "Machine", exact: true })
           .click();

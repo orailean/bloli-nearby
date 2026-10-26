@@ -51,3 +51,5 @@
 - [x] 7.4 Rename the local checkout folder to bloli-nearby and verify local/GitHub/VM synchronization after final checks.
 
 - [x] 7.5 Rename local development database/login/project/volume and examples, preserving existing sample data.
+
+- [ ] 7.6 Extend retail categories to Lotto/kiosks/Spätis/supermarkets/newsagents; test, reimport, deploy and record production verification.

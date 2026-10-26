@@ -12,7 +12,7 @@ The database SHALL share OSM source identities, spatial infrastructure and settl
 - **THEN** Loo remains ready while Kippe reports its missing dataset rather than a misleading empty successful search
 
 ### Requirement: Evidence-based tobacco purchase locations
-Kippe SHALL include cigarette vending machines, tobacco shops and retail shops explicitly mapped as selling tobacco, and mapped petrol stations. Stations lacking tobacco-sales evidence SHALL be treated as cigarette sellers by the application, without a special sales label; stations explicitly tagged not selling tobacco SHALL be excluded. It SHALL NOT infer sales solely from a generic non-fuel shop classification or a business name. Negative sales evidence, inactive lifecycle state and inaccessible venues MUST be handled conservatively. Results SHALL distinguish machine, shop and petrol station and identify mapped information as unverified stock/availability.
+Kippe SHALL include cigarette vending machines, tobacco shops and retail shops explicitly mapped as selling tobacco, Lotto shops, kiosks, convenience stores/Spätis, supermarkets, newsagents, shops offering Lotto, and mapped petrol stations. Stations lacking tobacco-sales evidence SHALL be treated as cigarette sellers by the application, without a special sales label; stations explicitly tagged not selling tobacco SHALL be excluded. It SHALL NOT infer sales solely from a generic non-fuel shop classification or a business name. Negative sales evidence, inactive lifecycle state and inaccessible venues MUST be handled conservatively. Results SHALL distinguish machine, shop and petrol station and identify mapped information as unverified stock/availability.
 
 #### Scenario: Mixed-product machine
 - **WHEN** a vending machine's semicolon-separated vending tag contains cigarettes
@@ -54,3 +54,14 @@ Kippe SHALL display mapped seller type, name, operator/brand, payment methods, h
 #### Scenario: Missing hours and payment tags
 - **WHEN** a machine lacks those tags
 - **THEN** its details identify assumed 24/7 hours and unknown payment, and Open now includes it unless an explicit schedule or access restriction overrides the default
+
+### Requirement: Requested retail categories
+Kippe SHALL include shop=lottery, kiosk, convenience, supermarket and newsagent, and shops with lottery=yes, without requiring positive tobacco evidence. Cigarette sales SHALL be assumed without a special sales label. Source provenance SHALL remain accurate. Explicit tobacco negatives and access/lifecycle exclusions SHALL take precedence. Shop hours SHALL remain unknown unless mapped.
+
+#### Scenario: Supermarket with no tobacco tag
+- **WHEN** an active accessible supermarket has no tobacco-sales tags
+- **THEN** it appears in the Shop filter without a sales-evidence label
+
+#### Scenario: Kiosk explicitly does not sell tobacco
+- **WHEN** a kiosk has tobacco=no
+- **THEN** it is excluded from Kippe

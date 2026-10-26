@@ -47,3 +47,7 @@ After reviewing the sparse explicit petrol-station coverage, the owner approved 
 Machines lacking mapped opening hours default to `24/7` with `hoursAssumed=true` for Open now and visible translated assumption wording. Explicit source hours remain authoritative, and access restrictions remain visible/excluded as applicable. This default is applied to existing records at query time as well as future normalized imports; it does not rewrite raw source tags or require an hours-only reimport.
 
 The owner subsequently chose to assume cigarette sales at mapped petrol stations and show no special sales label. Source evidence remains stored internally; explicit negative tags remain excluded. The expanded import published 48,514 sellers alongside 25,954 toilets and 196,951 settlements.
+
+## Expanded retail policy (owner request)
+
+Include `shop=lottery`, `kiosk`, `convenience` (including Spätis), `supermarket`, and `newsagent`, plus shops with `lottery=yes`. These join tobacco shops under the existing Shop filter. Cigarette sales are assumed for these categories with no special sales label; source evidence is retained internally, never fabricated as a mapped tobacco tag. Explicit negative tobacco tags and private/inactive restrictions still exclude them. Generic shop names alone do not qualify. Opening hours are never assumed for shops. The osmium prefilter and Python/TypeScript classifiers must remain aligned; the expanded filter triggers another retained-source extraction.

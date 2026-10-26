@@ -114,7 +114,7 @@ export function DetailFields({ item, t }: ItemProps) {
         <dt>{t.brand}</dt>
         <dd>{item.brand || t.unknown}</dd>
       </div>
-      {item.sellerType !== "fuel" && (
+      {item.tobaccoSales === "mapped" && (
         <div>
           <dt>{t.tobaccoAvailability}</dt>
           <dd>{t.tobaccoSalesMapped}</dd>

@@ -41,12 +41,14 @@ def tokens(value):
 
 
 def seller_candidate(tags):
-    """Retain mapped sales evidence; normalization applies access/lifecycle rules."""
+    """Retain evidence and owner-approved shop categories; normalization applies restrictions."""
     if tags.get('amenity') == 'vending_machine' and 'cigarettes' in tokens(tags.get('vending', '')):
         return True
     if tags.get('amenity') == 'fuel':
         return True
-    if tags.get('shop') == 'tobacco':
+    if tags.get('shop') in ('tobacco', 'lottery', 'kiosk', 'convenience', 'supermarket', 'newsagent'):
+        return True
+    if tags.get('shop') and tags.get('lottery') == 'yes':
         return True
     positive = tags.get('tobacco', '').strip().lower() == 'yes' or bool(
         tokens(tags.get('sells:tobacco', '')) & {'yes', 'tobacco', 'cigarette', 'cigarettes'})

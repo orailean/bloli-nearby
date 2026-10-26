@@ -52,7 +52,20 @@ export function normalizeSeller(r: SourceRecord): Facility | null {
   )
     sellerType = "machine";
   else if (t.amenity === "fuel") sellerType = "fuel";
-  else if (t.shop && (t.shop === "tobacco" || positive)) sellerType = "shop";
+  else if (
+    t.shop &&
+    ([
+      "tobacco",
+      "lottery",
+      "kiosk",
+      "convenience",
+      "supermarket",
+      "newsagent",
+    ].includes(t.shop) ||
+      t.lottery === "yes" ||
+      positive)
+  )
+    sellerType = "shop";
   else return null;
   const names: Facility["names"] = {};
   for (const lang of ["en", "de", "ro"] as const)
@@ -67,7 +80,10 @@ export function normalizeSeller(r: SourceRecord): Facility | null {
     names,
     category: "tobacco",
     sellerType,
-    tobaccoSales: sellerType === "fuel" && !positive ? "unconfirmed" : "mapped",
+    tobaccoSales:
+      sellerType !== "machine" && t.shop !== "tobacco" && !positive
+        ? "unconfirmed"
+        : "mapped",
     fee: "unknown",
     feeText: null,
     charge: null,
@@ -100,7 +116,11 @@ export function applySellerDefaults(facility: Facility): Facility {
     facility = {
       ...facility,
       tobaccoSales:
-        facility.sellerType === "fuel" && !positive ? "unconfirmed" : "mapped",
+        facility.sellerType !== "machine" &&
+        tags.shop !== "tobacco" &&
+        !positive
+          ? "unconfirmed"
+          : "mapped",
     };
   }
   if (facility.sellerType === "machine" && !facility.openingHours?.trim())
