@@ -44,6 +44,8 @@ scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -
 
 You can also inspect the host directory with `sudo ls -lh /var/lib/docker/volumes/find-a-loo_import_data/_data`; do not change Docker volume files directly.
 
+The initial Germany snapshot (2026-10-25) occupied 4.6 GB as a compressed source and approximately 48 MB after filtering. Future snapshots vary. Filtering reads the source in multiple passes, so its output can remain empty initially.
+
 Expected files:
 
 - `source.osm.pbf.part`: active or interrupted source download.
