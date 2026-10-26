@@ -12,7 +12,7 @@ Supported mapped evidence:
 | A retail `shop=*` and a `sells:tobacco` token equal to `yes`, `tobacco`, `cigarette` or `cigarettes` | shop |
 | `amenity=fuel` plus either of the preceding explicit sales signals | petrol station |
 
-Product tokens are trimmed and compared in lower case. `vending=drinks; cigarettes` qualifies; `vending=e-cigarettes` alone does not. `tobacco=only`, `cigarettes=yes`, names containing tobacco/cigarettes and arbitrary `sells=*` product tags are not currently supported positive evidence. A generic kiosk, supermarket or petrol station never qualifies without the evidence above. No brand, current stock or age-verification method is inferred.
+Product tokens are trimmed and compared in lower case. `vending=drinks; cigarettes` qualifies; `vending=e-cigarettes` alone does not. `tobacco=only`, `cigarettes=yes`, names containing tobacco/cigarettes and arbitrary `sells=*` product tags are not currently supported positive evidence. The owner-approved retail categories and petrol stations also qualify without positive sales tags (see the current policy below). No brand, current stock or age-verification method is inferred.
 
 Python extraction deliberately retains candidates with contradictory, private or inactive tags, preserving their tags for the final Node classifier. The final classifier must reject explicit negative sales evidence, inactive lifecycle features, non-retail shop values and inaccessible/private venues. Candidate counts are consequently an upper bound on publishable seller counts. Route, route-master and collection relations are excluded at extraction, regardless of product evidence.
 
@@ -38,7 +38,7 @@ The production floor is set to **MIN_SELLERS=15000** from the measured ~31k base
 
 ## Verification
 
-Run `.venv/bin/python -m unittest discover -s importer`. Tests cover mixed-product tokens, explicit retail evidence, generic fuel/kiosk exclusion, misleading names, nodes/linear ways/areas/multipolygons/sites, multi-category identity, metadata/completion counts, absent seller geometry and existing WC/settlement extraction. Dated-source resolution is covered by `test_source.py`.
+Run `.venv/bin/python -m unittest discover -s importer`. Tests cover mixed-product tokens, explicit retail evidence, retail category assumptions and explicit exclusions, misleading names, nodes/linear ways/areas/multipolygons/sites, multi-category identity, metadata/completion counts, absent seller geometry and existing WC/settlement extraction. Dated-source resolution is covered by `test_source.py`.
 
 ## Owner-approved petrol-station and machine-hours extension
 
@@ -48,6 +48,8 @@ Machines lacking mapped opening hours default to `24/7` with `hoursAssumed=true`
 
 The owner subsequently chose to assume cigarette sales at mapped petrol stations and show no special sales label. Source evidence remains stored internally; explicit negative tags remain excluded. The expanded import published 48,514 sellers alongside 25,954 toilets and 196,951 settlements.
 
-## Expanded retail policy (owner request)
+## Current retail policy (owner request)
 
 Include `shop=lottery`, `kiosk`, `convenience` (including Spätis), `supermarket`, and `newsagent`, plus shops with `lottery=yes`. These join tobacco shops under the existing Shop filter. Cigarette sales are assumed for these categories with no special sales label; source evidence is retained internally, never fabricated as a mapped tobacco tag. Explicit negative tobacco tags and private/inactive restrictions still exclude them. Generic shop names alone do not qualify. Opening hours are never assumed for shops. The osmium prefilter and Python/TypeScript classifiers must remain aligned; the expanded filter triggers another retained-source extraction.
+
+Building relations use their outline ways to obtain interior representative points (or mapped parts when no outline is present). Missing/invalid fixed geometry still aborts publication. This supports real Edeka/Lidl supermarket relations while preserving their OSM relation identities.

@@ -5,7 +5,7 @@ import sys
 import tempfile
 from pathlib import Path
 import osmium
-from shapely.geometry import shape
+from shapely.geometry import shape, Polygon
 
 
 def poly_geojson(text):
@@ -85,16 +85,23 @@ def extract(filename, coverage, output, source, dataset_at=None):
     factory = osmium.geom.GeoJSONFactory()
     sites = {}
     member_keys = set()
+    building_member_keys = set()
 
     class SiteMembers(osmium.SimpleHandler):
         def relation(self, obj):
             tags = dict(obj.tags)
-            if tags.get('type') == 'site' and kinds(tags):
+            if tags.get('type') in ('site', 'building') and kinds(tags):
                 members = [(m.type, m.ref) for m in obj.members if m.type in ('n', 'w')]
+                if tags.get('type') == 'building':
+                    outlines = [(m.type, m.ref) for m in obj.members
+                                if m.type in ('n', 'w') and m.role == 'outline']
+                    members = outlines or [(m.type, m.ref) for m in obj.members
+                                           if m.type in ('n', 'w') and m.role == 'part']
+                    building_member_keys.update(members)
                 sites[obj.id] = (tags, members)
                 member_keys.update(members)
 
-    # Relations follow their members in OSM files. Collect only site references
+    # Relations follow their members in OSM files. Collect only fixed site/building references
     # first, then retain coordinates for those members during the main pass.
     SiteMembers().apply_file(filename)
     member_points = {}
@@ -124,7 +131,14 @@ def extract(filename, coverage, output, source, dataset_at=None):
         def way(self, obj):
             tags = dict(obj.tags)
             if ('w', obj.id) in member_keys:
-                member_points[('w', obj.id)] = shape(json.loads(factory.create_linestring(obj))).interpolate(0.5, normalized=True)
+                line = shape(json.loads(factory.create_linestring(obj)))
+                if ('w', obj.id) in building_member_keys and obj.is_closed():
+                    polygon = Polygon(line.coords)
+                    if not polygon.is_valid or polygon.is_empty:
+                        raise ValueError(f'Invalid building outline: way/{obj.id}')
+                    member_points[('w', obj.id)] = polygon.representative_point()
+                else:
+                    member_points[('w', obj.id)] = line.interpolate(0.5, normalized=True)
             if not kinds(tags):
                 return
             if obj.is_closed() and tags.get("area") != "no":

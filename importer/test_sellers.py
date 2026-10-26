@@ -47,6 +47,26 @@ class SellerExtractionTests(unittest.TestCase):
             with self.subTest(tags=tags):
                 self.assertNotIn('seller', kinds(tags))
 
+    def test_building_shop_relation_uses_outline_and_preserves_source_identity(self):
+        rows = self.extract_rows('''
+<node id="1" lat="53.070" lon="8.801" version="1"/>
+<node id="2" lat="53.071" lon="8.801" version="1"/>
+<node id="3" lat="53.071" lon="8.802" version="1"/>
+<node id="4" lat="53.070" lon="8.802" version="1"/>
+<node id="5" lat="54.000" lon="9.000" version="1"/>
+<node id="6" lat="54.001" lon="9.001" version="1"/>
+<way id="10" version="1"><nd ref="1"/><nd ref="2"/><nd ref="3"/><nd ref="4"/><nd ref="1"/></way>
+<way id="11" version="1"><nd ref="5"/><nd ref="6"/></way>
+<relation id="20" version="1"><member type="way" ref="10" role="outline"/><member type="way" ref="11" role="part"/><tag k="type" v="building"/><tag k="shop" v="supermarket"/><tag k="name" v="Building supermarket"/></relation>
+''')
+        sellers = [r for r in rows if r['kind'] == 'seller']
+        self.assertEqual(len(sellers), 1)
+        self.assertEqual((sellers[0]['sourceType'], sellers[0]['sourceId']), ('relation', '20'))
+        self.assertTrue(53.070 < sellers[0]['lat'] < 53.071)
+        self.assertTrue(8.801 < sellers[0]['lon'] < 8.802)
+        with self.assertRaisesRegex(ValueError, 'Incomplete seller geometries'):
+            self.extract_rows('<relation id="21" version="1"><member type="way" ref="999" role="outline"/><tag k="type" v="building"/><tag k="shop" v="supermarket"/></relation>')
+
     def test_nodes_lines_areas_sites_and_dual_membership(self):
         rows = self.extract_rows('''
 <node id="1" lat="53.070" lon="8.801" version="1"><tag k="amenity" v="fuel"/><tag k="toilets" v="yes"/><tag k="tobacco" v="yes"/></node>
