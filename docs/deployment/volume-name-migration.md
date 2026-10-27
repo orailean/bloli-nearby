@@ -7,7 +7,7 @@ Historical source resources are project `find-a-loo`, DB volume `find-a-loo_post
 ## Required order
 
 1. Finish the active importer successfully, save its logs/counts and remove the exited importer. Pause only `bloli-nearby-refresh.timer`, recording its prior active state. Confirm no importer still owns the source lock or DB refresh lock.
-2. **Before pulling the generic project/volume override**, from `/home/oliver/stack/bloli-nearby` save the current fully resolved `docker compose config` to a private `backups/compose-before-volume-migration.yaml`, copy `.env` privately and record the actual DB/import mounts and category datasets. Run `scripts/backup.sh` and verify `pg_restore --list`.
+2. **Before pulling the generic project/volume override**, from `/home/oliver/stack/bloli-nearby` fetch the reviewed commit and ensure application images are available, then save the current fully resolved `docker compose config` to a private `backups/compose-before-volume-migration.yaml`, copy `.env` privately and record the actual DB/import mounts and category datasets. Run `scripts/backup.sh` and verify `pg_restore --list`.
 3. Confirm target names are absent/empty and not attached to another stack; create explicitly labelled migration targets. Never overwrite a nonempty target blindly.
 4. Copy import data first while the app remains online, with the old import volume read-only and its existing file lock held. No importer may write during this copy. Use a root helper with `cp -a /from/. /to/`, preserving ownership, symlinks and permissions. Compare complete regular-file SHA256 manifests from source and target, including the retained source PBF, and file/directory metadata.
 5. Stop/remove the old app stack through the **saved** configuration and explicit old project name, without deleting volumes:
@@ -17,7 +17,7 @@ docker compose -p find-a-loo -f backups/compose-before-volume-migration.yaml dow
 ```
 
 6. With PostgreSQL fully stopped, copy the old PGDATA volume read-only to its empty target using `cp -a`; compare file SHA256 manifests/metadata. Do not copy live PostgreSQL files. Retain both original volumes untouched.
-7. Pull the reviewed generic configuration and set `.env` bindings to `POSTGRES_VOLUME=bloli-nearby_postgres_data`, `IMPORT_VOLUME=bloli-nearby_import_data`. Remove/update a legacy `COMPOSE_PROJECT_NAME` if present, and preserve `COMPOSE_FILE=compose.yaml:compose.production.yaml`, DB_USER/DB_NAME and secret. Start the generic stack:
+7. Fast-forward to the prefetched reviewed generic configuration and set `.env` bindings to `POSTGRES_VOLUME=bloli-nearby_postgres_data`, `IMPORT_VOLUME=bloli-nearby_import_data`. Remove/update a legacy `COMPOSE_PROJECT_NAME` if present, and preserve `COMPOSE_FILE=compose.yaml:compose.production.yaml`, DB_USER/DB_NAME and secret. Start the generic stack:
 
 ```bash
 docker compose config --quiet

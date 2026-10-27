@@ -6,7 +6,7 @@ Kebab uses `kebab.bloli.com` and the existing Bloli Nearby web/API/PostGIS/impor
 
 The importer publishes toilets, tobacco and kebab plus settlements from one verified Germany snapshot, atomically. Cuisine tokens kebab/doner/doener/döner on fixed restaurants/fast-food places qualify, with case/semicolon handling. Restricted/inactive venues are excluded. Missing fixed geometry, incomplete streams, invalid thresholds, suspicious count drops or omitted active categories reject publication and retain all active datasets.
 
-`MIN_KEBABS` controls the independent food floor; first-import default is 100, followed by measured production configuration and the existing `MIN_IMPORT_RATIO=0.75` previous-count protection. Existing WC/tobacco floors remain independent. After Kebab activation do not run an old one/two-category importer against production.
+`MIN_KEBABS` controls the independent food floor; first-import default is 100; this VM uses 1000 after observing 11,267 venues, alongside the existing `MIN_IMPORT_RATIO=0.75` previous-count protection. Existing WC/tobacco floors remain independent. After Kebab activation do not run an old one/two-category importer against production.
 
 Visible map tiles load directly from OpenStreetMap in the browser. The weekly systemd job imports locations, not raster tiles. The UI dataset date comes from the OSM snapshot; `/api/status` separately reports `importedAt`, readiness and the latest import outcome.
 

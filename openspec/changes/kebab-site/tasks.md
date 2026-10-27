@@ -33,9 +33,9 @@
 ## 6. Production rollout
 
 - [x] 6.1 Back up production, deploy compatible additive schema/API/web/importer changes and confirm existing Loo/Kippe remain healthy with pinned resource bindings.
-- [ ] 6.2 Reuse a verified retained Germany source, measure Kebab counts/set validation floor, run the coherent three-category import, preserve logs and verify all category counts/readiness before activation.
-- [ ] 6.3 Verify domain A/AAAA routing, prepare the existing Docker Nginx HTTP challenge configuration, issue Kebab TLS through the existing account/webroot, extend renewal hooks and validate/gracefully reload.
-- [ ] 6.4 Activate the shared-proxy Kebab HTTPS vhost; verify all three public domains' metadata, category isolation, filters, mapped details, real map images, directions, translations, phone widths and certificate renewal.
-- [ ] 6.5 Take the post-import backup, save actual commands/results in a dated VM protocol, commit/push source-only changes, sync production, remove completed helpers and verify local debug/test services are stopped.
+- [x] 6.2 Reuse a verified retained Germany source, measure Kebab counts/set validation floor, run the coherent three-category import, preserve logs and verify all category counts/readiness before activation.
+- [x] 6.3 Verify domain A/AAAA routing, prepare the existing Docker Nginx HTTP challenge configuration, issue Kebab TLS through the existing account/webroot, extend renewal hooks and validate/gracefully reload.
+- [x] 6.4 Activate the shared-proxy Kebab HTTPS vhost; verify all three public domains' metadata, category isolation, filters, mapped details, real map images, directions, translations, phone widths and certificate renewal.
+- [x] 6.5 Take the post-import backup, save actual commands/results in a dated VM protocol, commit/push source-only changes, sync production, remove completed helpers and verify local debug/test services are stopped.
 
-- [ ] 6.6 Apply the owner-requested generic Compose/volume names using verified source copies, stopped PostgreSQL, rollback originals and unchanged data/count checks.
+- [x] 6.6 Apply the owner-requested generic Compose/volume names using verified source copies, stopped PostgreSQL, rollback originals and unchanged data/count checks.

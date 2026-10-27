@@ -1,5 +1,7 @@
 # Kebab rollout protocol — 2026-10-27
 
+Completed: https://kebab.bloli.com is live with 11,267 mapped venues. All three sites passed final public checks; the active project and data volumes use generic Bloli Nearby names. Original unmounted volumes remain only for rollback.
+
 ## Approved scope and baseline
 
 Owner approved `kebab.bloli.com`, mapped Döner/kebab venues and the white/aubergine/saffron takeaway design. Shared services/database and existing data resources remain. DNS was confirmed as A 173.212.194.159 with no AAAA answer before TLS work. Implementation uses isolated branch `feat/kebab-site`, base f03361b; existing production commit d76524f before rollout.
@@ -23,7 +25,7 @@ Owner approved `kebab.bloli.com`, mapped Döner/kebab venues and the white/auber
 
 ## Production operations and final evidence
 
-Pending implementation review and production rollout. Actual commands/results, certificate checks, source/count comparison, final backups and commits will be appended here.
+Implementation review and rollout completed; actual evidence follows.
 
 ### Review, sample and certificate preparation
 
@@ -48,3 +50,16 @@ Pending implementation review and production rollout. Actual commands/results, c
 - Paused the existing refresh timer after import exit and confirmed its service inactive. Saved the original resolved Compose manifest to private `backups/compose-before-volume-migration.yaml` and `.env` to `backups/env-before-volume-migration`, before pulling target config. Saved logical metadata/counts in `logs/volume-migration-before.json`.
 - Post-import/pre-copy dump: `backups/bloli-nearby-20261027T090704Z.dump`; verified archive listing (`logs/volume-pre-backup-toc.txt`). Disk check: 533 GiB free; old PGDATA approximately 1.2 GiB, retained import data 4.7 GiB.
 - Created labelled, initially empty target volumes after verifying target names absent. Import-data copy runs under its existing flock with source read-only, while app/DB stay online; complete SHA256 and metadata comparison required before DB downtime. The next entries record actual completion/startup verification.
+
+### Generic volume cutover and public activation completed
+
+- Import volume copy completed under flock with read-only source: complete regular-file SHA256 manifests plus ownership/mode/symlink metadata matched (`logs/import-volume-copy.log`, IMPORT_COPY_VERIFIED). Original application remained online during that phase.
+- Prefetched reviewed commit `079f29b` and confirmed required application images already existed before downtime. Stopped/removed old project with its saved resolved manifest and explicit `-p find-a-loo`, without deleting volumes. PostgreSQL control data reported clean shutdown and no postmaster.pid remained before copying.
+- PostgreSQL copy to empty labelled `bloli-nearby_postgres_data` passed complete file-hash and metadata comparison (`logs/postgres-volume-copy.log`, POSTGRES_COPY_VERIFIED). Preserved original volume untouched. Fast-forwarded the prefetched config commit without needing network during downtime; updated private `.env` bindings and removed legacy project-name overrides. Production MIN_KEBABS set to 1000 after observing 11,267 food records; 0.75 previous-count protection remains independently active.
+- Started a single `bloli-nearby` project. All three containers healthy; project labels generic. Actual active mounts: `/var/lib/docker/volumes/bloli-nearby_postgres_data/_data` and `/var/lib/docker/volumes/bloli-nearby_import_data/_data`. No new published host ports. Old project has no containers; neither old volume is mounted by any container.
+- Logical metadata/count snapshots before/after matched byte-for-byte: 145,049 shared source locations, 196,951 settlements, 25,954 toilets, 107,861 tobacco sellers and 11,267 kebab venues, with unchanged source/import dates and database/login. Evidence: `logs/volume-migration-before.json` and `logs/volume-migration-after.json`.
+- Measured stop-to-healthy window: 2026-10-27T09:14:43Z–09:15:55Z (72 seconds). Shared Nginx was not stopped or recreated. Retained original find-a-loo volumes as unmounted rollback copies, not active bindings; private old config/env snapshots are retained. No old-volume deletion was performed.
+- Confirmed internal Kebab readiness (HTTP 200, count 11,267), installed the Kebab HTTPS vhost using the shared `bloli-nearby-proxy.inc`, validated Nginx and gracefully reloaded. Validation/activation log: `logs/kebab-nginx-activation-test.log`. Resumed the existing refresh timer after data/mount/readiness verification; refresh/backup timers both active.
+- Final browser/API verification passed for all three public HTTPS domains: correct initial identity/canonical, category isolation, counts, real OSM tiles, walking directions, 0.5 km default/radius behavior, Open now, and DE/EN/RO layouts at 320/390/430 px with no horizontal overflow or JavaScript errors. Munich Kebab search returned 33 venues within 5 km. Evidence: `logs/verification-kebab-final.json`.
+- Verified the importer resolves the retained source through the new import volume via a one-shot read-only command (no download or publication). Final generic-project backup: `backups/bloli-nearby-20261027T092331Z.dump`, pg_restore listing verified (`logs/volume-post-backup-toc.txt`). Completed helper containers removed, ACME probe removed after successful certificate/renewal verification, and local debug/test services remain stopped.
+- GitHub About description updated through the owner's Firefox session to cover public toilets, tobacco sellers and Döner/kebab places. Current README/storage/update instructions now cover three sites and generic mounts; historical protocols preserve original names as an audit trail.
