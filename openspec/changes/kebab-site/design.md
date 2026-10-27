@@ -76,3 +76,7 @@ Rollback preserves the additive schema and existing volumes, restores previous a
 - Visual direction approved by owner on 2026-10-27.
 - Owner creates the `kebab.bloli.com` DNS record pointing to `173.212.194.159`, with no conflicting AAAA record, before TLS activation.
 - Initial Kebab validation floor to be set from the actual retained-source extract during implementation.
+
+## Owner refinement: generic persistent resource names (2026-10-27)
+
+The owner noticed active find-a-loo volume names and requested consistency with Bloli Nearby. This supersedes the earlier identity-retention constraint: target Compose project `bloli-nearby`, volumes `bloli-nearby_postgres_data` and `bloli-nearby_import_data`. Data content, credentials, service names/images, host ports and shared Nginx stay intact. Finish the active import first; pause its timer, snapshot old resolved Compose configuration/env/counts and verify a backup. Copy/checksum import data while the app remains online and no importer owns it; stop the old app/DB before copying PostgreSQL data with ownership preserved. Verify copies, update bindings and start one generic stack. Compare logical counts/metadata and public behavior before resuming the timer. Keep unmounted originals and private configuration backups for rollback; never delete the only source copy or copy live PGDATA. A brief app outage for the DB copy is expected; shared Nginx remains running.

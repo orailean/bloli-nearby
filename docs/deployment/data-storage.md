@@ -5,7 +5,7 @@ There is intentionally no `data/` folder in `/home/oliver/stack/bloli-nearby` fo
 ## What is downloaded
 
 - **Visible map background:** browsers load raster tiles directly from OpenStreetMap. The VM does not bulk-download or serve Germany map tiles.
-- **Germany OSM source:** the importer downloads Germany's `.osm.pbf` dataset from Geofabrik, verifies its published checksum and extracts toilets/settlements.
+- **Germany OSM source:** the importer downloads Germany's `.osm.pbf` dataset from Geofabrik, verifies its published checksum and extracts toilets, tobacco sellers, kebab venues and settlements.
 - **Search database:** normalized facility and settlement records, coverage, source dates and import job history are stored in PostGIS.
 
 ## Exact VM paths
@@ -14,15 +14,15 @@ Verified using `docker volume inspect` on this VM:
 
 | Content | Docker volume | Container path | Host path |
 | --- | --- | --- | --- |
-| Downloaded source and import staging | `find-a-loo_import_data` | `/data` in importer | `/var/lib/docker/volumes/find-a-loo_import_data/_data` |
-| PostgreSQL/PostGIS files | `find-a-loo_postgres_data` | `/var/lib/postgresql/data` in db | `/var/lib/docker/volumes/find-a-loo_postgres_data/_data` |
+| Downloaded source and import staging | `bloli-nearby_import_data` | `/data` in importer | `/var/lib/docker/volumes/bloli-nearby_import_data/_data` |
+| PostgreSQL/PostGIS files | `bloli-nearby_postgres_data` | `/var/lib/postgresql/data` in db | `/var/lib/docker/volumes/bloli-nearby_postgres_data/_data` |
 | Application database dumps | Project `backups/` directory | Not a DB data directory | `/home/oliver/stack/bloli-nearby/backups/` |
 | Deployment/build logs | Project `logs/` directory and systemd journal | N/A | `/home/oliver/stack/bloli-nearby/logs/` |
 
 Docker's storage root can differ on another host. Discover the current paths rather than assuming them:
 
 ```bash
-docker volume inspect find-a-loo_import_data find-a-loo_postgres_data --format '{{.Name}} {{.Mountpoint}}'
+docker volume inspect bloli-nearby_import_data bloli-nearby_postgres_data --format '{{.Name}} {{.Mountpoint}}'
 ```
 
 ## Inspect downloads and progress
@@ -30,9 +30,9 @@ docker volume inspect find-a-loo_import_data find-a-loo_postgres_data --format '
 While the initial named importer is running:
 
 ```bash
-docker exec find-a-loo-germany-import ls -lh /data
-docker logs --tail 50 find-a-loo-germany-import
-docker stats --no-stream find-a-loo-germany-import
+docker exec bloli-nearby-germany-kebab-import ls -lh /data
+docker logs --tail 50 bloli-nearby-germany-kebab-import
+docker stats --no-stream bloli-nearby-germany-kebab-import
 ```
 
 After it exits, or for scheduled imports with another container name, inspect the same persistent volume through a one-shot helper. Overriding the entrypoint avoids starting a download or import:
@@ -42,7 +42,7 @@ cd /home/oliver/stack/bloli-nearby
 scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -c 'ls -lh /data'
 ```
 
-You can also inspect the host directory with `sudo ls -lh /var/lib/docker/volumes/find-a-loo_import_data/_data`; do not change Docker volume files directly.
+You can also inspect the host directory with `sudo ls -lh /var/lib/docker/volumes/bloli-nearby_import_data/_data`; do not change Docker volume files directly.
 
 The initial Germany snapshot (2026-10-25) occupied 4.6 GB as a compressed source and approximately 48 MB after filtering. Future snapshots vary. Filtering reads the source in multiple passes, so its output can remain empty initially.
 
@@ -72,3 +72,5 @@ scripts/compose.sh exec -T db psql -U bloli -d bloli_nearby -c 'SELECT id,status
 An initial download does not immediately make the data searchable. The importer must finish extraction and transactional publication before readiness becomes true. Failed refreshes keep the previous active dataset. Do not copy or edit live PostgreSQL data files; use `scripts/backup.sh` and the documented restore procedure.
 
 Datasets, database files, dumps, screenshots, built assets and secrets are not committed to Git. See [production updates](production-updates.md) and [the deployment protocol](protocol-2026-10-26.md).
+
+The legacy `find-a-loo_*` volumes were the pre-rename sources. The 2026-10-27 rollout uses verified copies under the generic names; original unmounted copies are retained for rollback. See [volume migration](volume-name-migration.md) and the [Kebab protocol](protocol-2026-10-27-kebab.md). Never copy a running PostgreSQL volume.

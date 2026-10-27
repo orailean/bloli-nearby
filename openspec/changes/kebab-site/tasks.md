@@ -27,13 +27,15 @@
 ## 5. Local verification and operator documentation
 
 - [x] 5.1 Extend the safe synthetic three-category seed and document native three-host debugging with Docker-only PostGIS and an isolated integration database.
-- [ ] 5.2 Run classifier/unit, importer, isolated PostGIS, production build/proxy and all-three-host browser checks; inspect DE/EN/RO screenshots at desktop and 320/390/430 px phone widths.
+- [x] 5.2 Run classifier/unit, importer, isolated PostGIS, production build/proxy and all-three-host browser checks; inspect DE/EN/RO screenshots at desktop and 320/390/430 px phone widths.
 - [x] 5.3 Document three-site data classification, source/import dates, refresh/update/rollback procedures and the new domain's Nginx/TLS files; keep binaries/data/secrets outside Git.
 
 ## 6. Production rollout
 
-- [ ] 6.1 Back up production, deploy compatible additive schema/API/web/importer changes and confirm existing Loo/Kippe remain healthy with pinned resource bindings.
+- [x] 6.1 Back up production, deploy compatible additive schema/API/web/importer changes and confirm existing Loo/Kippe remain healthy with pinned resource bindings.
 - [ ] 6.2 Reuse a verified retained Germany source, measure Kebab counts/set validation floor, run the coherent three-category import, preserve logs and verify all category counts/readiness before activation.
 - [ ] 6.3 Verify domain A/AAAA routing, prepare the existing Docker Nginx HTTP challenge configuration, issue Kebab TLS through the existing account/webroot, extend renewal hooks and validate/gracefully reload.
 - [ ] 6.4 Activate the shared-proxy Kebab HTTPS vhost; verify all three public domains' metadata, category isolation, filters, mapped details, real map images, directions, translations, phone widths and certificate renewal.
 - [ ] 6.5 Take the post-import backup, save actual commands/results in a dated VM protocol, commit/push source-only changes, sync production, remove completed helpers and verify local debug/test services are stopped.
+
+- [ ] 6.6 Apply the owner-requested generic Compose/volume names using verified source copies, stopped PostgreSQL, rollback originals and unchanged data/count checks.

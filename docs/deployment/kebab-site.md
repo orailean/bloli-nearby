@@ -1,6 +1,6 @@
 # Kebab: third shared site
 
-Kebab uses `kebab.bloli.com` and the existing Bloli Nearby web/API/PostGIS/importer stack. No extra permanent containers or host ports are required. Existing Compose identity, external volumes, database/login, secret, edge alias and weekly/daily timers stay bound to their current resources.
+Kebab uses `kebab.bloli.com` and the existing Bloli Nearby web/API/PostGIS/importer stack. No extra permanent containers or host ports are required. The owner-requested Compose/volume rename preserves verified data copies; database/login, secret, edge alias, host ports and schedules remain unchanged. See [volume migration](volume-name-migration.md).
 
 ## Data and updates
 
@@ -21,7 +21,7 @@ docker compose up -d --wait api web
 scripts/update.sh
 ```
 
-Use `systemctl list-timers --all bloli-nearby-refresh.timer` and `sudo journalctl -u bloli-nearby-refresh.service -n 100 --no-pager` to inspect automation. The existing weekly Sunday 03:15 + up to 30-minute jitter and daily backup schedule are unchanged. Retained downloads live in `find-a-loo_import_data`, not a checkout data directory.
+Use `systemctl list-timers --all bloli-nearby-refresh.timer` and `sudo journalctl -u bloli-nearby-refresh.service -n 100 --no-pager` to inspect automation. The existing weekly Sunday 03:15 + up to 30-minute jitter and daily backup schedule are unchanged. Retained downloads live in `bloli-nearby_import_data`, not a checkout data directory.
 
 ## Domain and certificate setup
 

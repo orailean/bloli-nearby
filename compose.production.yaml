@@ -1,5 +1,5 @@
-# Contabo migration keeps the original Compose identity and explicit data mounts.
-name: find-a-loo
+# Production explicitly binds the verified shared Bloli Nearby data volumes.
+name: bloli-nearby
 services:
   db:
     container_name: bloli-nearby-db
@@ -24,7 +24,7 @@ networks:
 volumes:
   postgres_data:
     external: true
-    name: ${POSTGRES_VOLUME:-find-a-loo_postgres_data}
+    name: ${POSTGRES_VOLUME:-bloli-nearby_postgres_data}
   import_data:
     external: true
-    name: ${IMPORT_VOLUME:-find-a-loo_import_data}
+    name: ${IMPORT_VOLUME:-bloli-nearby_import_data}

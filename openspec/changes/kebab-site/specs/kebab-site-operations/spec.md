@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: One shared three-host platform
-Kebab SHALL use the existing shared frontend/gateway, API, database, retained source volume and scheduled importer. Production host/category bindings MUST be explicit and preserve Host through both proxy layers. Unknown hosts and untrusted site overrides SHALL remain rejected. Existing resource identities and host-port allocations SHALL be preserved.
+Kebab SHALL use the existing shared frontend/gateway, API, database, retained source volume and scheduled importer. Production host/category bindings MUST be explicit and preserve Host through both proxy layers. Unknown hosts and untrusted site overrides SHALL remain rejected. Host-port allocations, database credentials and persistent data content SHALL be preserved. Owner-approved resource renaming SHALL use verified copies with PostgreSQL stopped for its physical copy, retain rollback originals and compare logical category counts/metadata before resuming scheduled updates.
 
 #### Scenario: Third domain resolves to shared services
 - **WHEN** a request arrives for kebab.bloli.com
