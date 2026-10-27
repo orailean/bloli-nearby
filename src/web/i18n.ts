@@ -9,17 +9,37 @@ import kippeEn from "./sites/kippe/locales/en.json";
 import kippeDe from "./sites/kippe/locales/de.json";
 import kippeRo from "./sites/kippe/locales/ro.json";
 import type { SiteId } from "../shared/sites.js";
-type Dictionary = Record<keyof typeof commonEn | keyof typeof looEn, string>;
+import kebabEn from "./sites/kebab/locales/en.json";
+import kebabDe from "./sites/kebab/locales/de.json";
+import kebabRo from "./sites/kebab/locales/ro.json";
+type Dictionary = Record<
+  keyof typeof commonEn | keyof typeof looEn | keyof typeof kebabEn,
+  string
+>;
+// Food labels extend the shared presentation type; existing sites keep their own copy.
+const foodFallback = Object.fromEntries(
+  Object.entries(kebabDe).filter(
+    ([key]) => !Object.hasOwn(commonDe, key) && !Object.hasOwn(looDe, key),
+  ),
+) as Pick<
+  typeof kebabDe,
+  Exclude<keyof typeof kebabDe, keyof typeof commonDe | keyof typeof looDe>
+>;
 export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
+  kebab: {
+    en: { ...commonDe, ...commonEn, ...kebabDe, ...kebabEn },
+    de: { ...commonDe, ...kebabDe },
+    ro: { ...commonDe, ...commonRo, ...kebabDe, ...kebabRo },
+  },
   loo: {
-    en: { ...commonDe, ...commonEn, ...looDe, ...looEn },
-    de: { ...commonDe, ...looDe },
-    ro: { ...commonDe, ...commonRo, ...looDe, ...looRo },
+    en: { ...foodFallback, ...commonDe, ...commonEn, ...looDe, ...looEn },
+    de: { ...foodFallback, ...commonDe, ...looDe },
+    ro: { ...foodFallback, ...commonDe, ...commonRo, ...looDe, ...looRo },
   },
   kippe: {
-    en: { ...commonDe, ...commonEn, ...kippeDe, ...kippeEn },
-    de: { ...commonDe, ...kippeDe },
-    ro: { ...commonDe, ...commonRo, ...kippeDe, ...kippeRo },
+    en: { ...foodFallback, ...commonDe, ...commonEn, ...kippeDe, ...kippeEn },
+    de: { ...foodFallback, ...commonDe, ...kippeDe },
+    ro: { ...foodFallback, ...commonDe, ...commonRo, ...kippeDe, ...kippeRo },
   },
 };
 export const dictionaries = siteDictionaries.loo;

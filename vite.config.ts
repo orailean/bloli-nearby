@@ -4,7 +4,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: "0.0.0.0",
-    allowedHosts: ["loo.localhost", "kippe.localhost"],
+    allowedHosts: ["loo.localhost", "kippe.localhost", "kebab.localhost"],
     proxy: { "/api": { target: "http://127.0.0.1:3100", changeOrigin: false } },
   },
 });

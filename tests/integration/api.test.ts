@@ -1,3 +1,7 @@
+import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { importFile } from "../../src/server/import-file.js";
 import { runRefresh } from "../../src/server/refresh.js";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -502,6 +506,245 @@ test(
               )
             ).rows[0].n,
             5,
+          );
+        },
+      );
+      await t.test(
+        "third category publishes coherently and rejects incomplete or invalid replacements",
+        async () => {
+          const byHost = (host: string, path: string) =>
+            new Promise<{ status: number; body: any }>((resolve, reject) => {
+              httpGet(
+                `http://127.0.0.1:${address.port}${path}`,
+                { headers: { Host: host } },
+                (response) => {
+                  let body = "";
+                  response.on("data", (chunk) => (body += chunk));
+                  response.on("end", () =>
+                    resolve({
+                      status: response.statusCode!,
+                      body: JSON.parse(body),
+                    }),
+                  );
+                },
+              ).on("error", reject);
+            });
+          const shared = {
+            amenity: "fast_food",
+            cuisine: "pizza;kebab",
+            shop: "kiosk",
+            toilets: "yes",
+            "toilets:access": "public",
+            opening_hours: "off",
+          };
+          async function* triple(includeFood = true) {
+            for await (const row of records())
+              yield row.sourceId === "1" ? { ...row, tags: shared } : row;
+            for (let i = 0; i < 4; i++)
+              yield {
+                kind: "settlement",
+                sourceType: "node",
+                sourceId: String(700 + i),
+                lat: 52.52,
+                lon: 13.405,
+                tags: { place: "village", name: `Fixture ${i}` },
+              };
+            for (const id of ["1", "501", "502", "503", "504"])
+              yield {
+                kind: "seller",
+                sourceType: "node",
+                sourceId: id,
+                lat: 52.52,
+                lon: 13.405,
+                tags: id === "1" ? shared : { shop: "tobacco" },
+              };
+            if (includeFood)
+              for (const id of ["1", "801", "802", "803"])
+                yield {
+                  kind: "kebab",
+                  sourceType: "node",
+                  sourceId: id,
+                  lat: 52.52,
+                  lon: 13.405,
+                  tags:
+                    id === "1"
+                      ? shared
+                      : {
+                          amenity: "fast_food",
+                          cuisine: "kebab",
+                          ...(id === "803"
+                            ? { opening_hours: "24/7" }
+                            : id === "802"
+                              ? { opening_hours: "off" }
+                              : {}),
+                          website: "javascript:alert(1)",
+                        },
+                };
+          }
+          const options = {
+            ...opts,
+            categories: ["toilets", "tobacco", "kebab"] as Array<
+              "toilets" | "tobacco" | "kebab"
+            >,
+            minimumSellers: 1,
+            minimumKebabs: 1,
+          };
+          assert.equal(
+            (await byHost("kebab.bloli.com", "/api/ready")).status,
+            503,
+          );
+          const counts = await importDataset(pool, triple(), options);
+          assert.equal(counts.kebabs, 4);
+          await migrate(pool);
+          await migrate(pool);
+          assert.equal(
+            (await byHost("kebab.bloli.com", "/api/ready")).body.count,
+            4,
+          );
+          const all = await byHost(
+            "kebab.bloli.com",
+            "/api/locations?lat=52.52&lon=13.405",
+          );
+          assert.equal(all.status, 200);
+          assert.equal(all.body.items.length, 4);
+          assert.ok(
+            all.body.items.every(
+              (x: any) => x.category === "kebab" && !x.sellerType,
+            ),
+          );
+          assert.ok(all.body.items.every((x: any) => !x.hoursAssumed));
+          const opened = await byHost(
+            "kebab.bloli.com",
+            "/api/locations?lat=52.52&lon=13.405&openNow=true&limit=1",
+          );
+          assert.deepEqual(
+            opened.body.items.map((x: any) => x.id),
+            ["node/803"],
+          );
+          assert.equal(opened.body.items[0].website, null);
+          for (const suffix of [
+            "&fee=all",
+            "&sellerType=all",
+            "&category=toilets",
+          ])
+            assert.equal(
+              (
+                await byHost(
+                  "kebab.bloli.com",
+                  "/api/locations?lat=52.52&lon=13.405" + suffix,
+                )
+              ).status,
+              400,
+            );
+          assert.equal(
+            (
+              await byHost(
+                "kebab.bloli.com",
+                "/api/toilets?lat=52.52&lon=13.405",
+              )
+            ).status,
+            404,
+          );
+          assert.equal(
+            (
+              await pool.query(
+                "SELECT count(*)::int n FROM location_categories WHERE location_id='node/1'",
+              )
+            ).rows[0].n,
+            3,
+          );
+          async function* conflictingGeometry() {
+            for await (const row of triple())
+              yield row.kind === "kebab" && row.sourceId === "1"
+                ? { ...row, lon: 13.41 }
+                : row;
+          }
+          await assert.rejects(
+            importDataset(pool, conflictingGeometry(), options),
+            (e: any) => e.code === "INCONSISTENT_SOURCE_GEOMETRY",
+          );
+          const before = (
+            await pool.query(
+              "SELECT category,location_count,imported_at FROM category_datasets ORDER BY category",
+            )
+          ).rows;
+          await assert.rejects(
+            importDataset(pool, triple(false), {
+              ...options,
+              categories: ["toilets", "tobacco"],
+            }),
+            (e: any) => e.code === "PARTIAL_CATEGORY_IMPORT",
+          );
+          for (const overrides of [
+            { minimumKebabs: 99 },
+            { minimumKebabs: NaN },
+            { minimumKebabs: Infinity },
+            { minimumRatio: NaN },
+            { datasetAt: "2026-10-24T00:00:00Z" },
+          ])
+            await assert.rejects(
+              importDataset(pool, triple(), { ...options, ...overrides }),
+            );
+          await assert.rejects(
+            importDataset(pool, triple(), {
+              ...options,
+              categories: ["toilets", "kebab", "kebab"],
+            }),
+            (e: any) => e.code === "INVALID_CATEGORIES",
+          );
+          await assert.rejects(importDataset(pool, triple(false), options));
+          assert.deepEqual(
+            (
+              await pool.query(
+                "SELECT category,location_count,imported_at FROM category_datasets ORDER BY category",
+              )
+            ).rows,
+            before,
+          );
+          const directory = await mkdtemp(join(tmpdir(), "bloli-incomplete-"));
+          const path = join(directory, "incomplete.jsonl");
+          const lines = [JSON.stringify({ kind: "metadata", ...options })];
+          for await (const row of triple()) lines.push(JSON.stringify(row));
+          const priorEnv = {
+            fac: process.env.MIN_FACILITIES,
+            sett: process.env.MIN_SETTLEMENTS,
+            sell: process.env.MIN_SELLERS,
+            food: process.env.MIN_KEBABS,
+          };
+          try {
+            await writeFile(path, lines.join("\n") + "\n");
+            process.env.MIN_FACILITIES = "1";
+            process.env.MIN_SETTLEMENTS = "1";
+            process.env.MIN_SELLERS = "1";
+            process.env.MIN_KEBABS = "1";
+            await assert.rejects(importFile(pool, path), /INCOMPLETE_IMPORT/);
+            assert.deepEqual(
+              (
+                await pool.query(
+                  "SELECT category,location_count,imported_at FROM category_datasets ORDER BY category",
+                )
+              ).rows,
+              before,
+            );
+          } finally {
+            for (const [key, value] of Object.entries({
+              MIN_FACILITIES: priorEnv.fac,
+              MIN_SETTLEMENTS: priorEnv.sett,
+              MIN_SELLERS: priorEnv.sell,
+              MIN_KEBABS: priorEnv.food,
+            }))
+              if (value === undefined) delete process.env[key];
+              else process.env[key] = value;
+            await rm(directory, { recursive: true, force: true });
+          }
+          await importDataset(pool, triple(), options);
+          assert.equal(
+            (
+              await pool.query(
+                "SELECT count(*)::int n FROM location_categories WHERE category='kebab'",
+              )
+            ).rows[0].n,
+            4,
           );
         },
       );

@@ -3,7 +3,7 @@ import { chromium, expect } from "@playwright/test";
 const results = {};
 const browser = await chromium.launch();
 try {
-  for (const id of ["loo", "kippe"]) {
+  for (const id of (process.env.SITES || "loo,kippe,kebab").split(",")) {
     const base = `https://${id}.bloli.com`;
     const htmlResponse = await fetch(base);
     assert.equal(htmlResponse.status, 200);
@@ -30,6 +30,24 @@ try {
           (id === "kippe" ? !!item.sellerType : !item.sellerType),
       ),
     );
+    if (id === "kebab") {
+      assert.ok(
+        all.items.every(
+          (item) => item.category === "kebab" && !item.hoursAssumed,
+        ),
+      );
+      for (const suffix of ["&fee=all", "&sellerType=all", "&category=tobacco"])
+        assert.equal(
+          (await fetch(`${base}/api/locations?${query}${suffix}`)).status,
+          400,
+        );
+      const opened = await fetch(
+        `${base}/api/locations?${query}&openNow=true`,
+      ).then((r) => r.json());
+      assert.ok(
+        opened.items.every((item) => !!item.openingHours && !item.hoursAssumed),
+      );
+    }
     if (id === "kippe") {
       for (const type of ["machine", "shop", "fuel"]) {
         const response = await fetch(
@@ -85,11 +103,17 @@ try {
     if (id === "kippe")
       await expect(page.locator(".seller-filters")).toBeVisible();
     if (id === "kippe") {
-      await page.getByRole("button", { name: "Petrol station", exact: true }).click();
+      await page
+        .getByRole("button", { name: "Petrol station", exact: true })
+        .click();
       await expect(page.locator(".result-select").first()).toBeVisible();
-      await expect(page.locator(".results-content")).not.toContainText("unconfirmed");
+      await expect(page.locator(".results-content")).not.toContainText(
+        "unconfirmed",
+      );
       await page.locator(".result-select").first().click();
-      await expect(page.locator(".detail-panel")).not.toContainText("Tobacco sales");
+      await expect(page.locator(".detail-panel")).not.toContainText(
+        "Tobacco sales",
+      );
     }
     for (const width of [320, 390, 430]) {
       await page.setViewportSize({ width, height: 852 });
@@ -120,6 +144,7 @@ try {
       profile: profile.id,
       count: status.body.count,
       datasetAt: status.body.datasetAt,
+      importedAt: status.body.importedAt,
       munichResults: all.items.length,
       initialHtml: true,
       mapImagesLoaded: true,

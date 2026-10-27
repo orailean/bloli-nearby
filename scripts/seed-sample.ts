@@ -20,6 +20,7 @@ try {
   process.env.MIN_FACILITIES = "1";
   process.env.MIN_SETTLEMENTS = "1";
   process.env.MIN_SELLERS = "1";
+  process.env.MIN_KEBABS = "1";
   console.log(await importFile(pool, "tests/fixtures/multi-site.jsonl"));
 } finally {
   await pool.end();

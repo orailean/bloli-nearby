@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 
-# Scope this new hook to the app certificate, leaving other lineages alone.
+# Scope this new hook to the app certificates, leaving other lineages alone.
 case " ${RENEWED_DOMAINS:-} " in
-    *" loo.bloli.com "*|*" kippe.bloli.com "*) ;;
+    *" loo.bloli.com "*|*" kippe.bloli.com "*|*" kebab.bloli.com "*) ;;
     *) exit 0 ;;
 esac
 

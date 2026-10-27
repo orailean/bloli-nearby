@@ -52,7 +52,9 @@ const quickPlaces = [
   { name: "Bremen", lat: 53.0758, lon: 8.8072 },
 ];
 async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const requestPath = siteOverride ? `${path}${path.includes("?") ? "&" : "?"}site=${encodeURIComponent(siteOverride)}` : path;
+  const requestPath = siteOverride
+    ? `${path}${path.includes("?") ? "&" : "?"}site=${encodeURIComponent(siteOverride)}`
+    : path;
   const r = await fetch(requestPath, { signal });
   const body = await r.json();
   if (!r.ok) throw new Error(body.error || "SERVICE_UNAVAILABLE");
@@ -111,7 +113,13 @@ export default function App() {
     resultsPane = useRef<HTMLDivElement>(null);
   const dictionaries = siteDictionaries[site.id];
   const t = dictionaries[locale];
-  const { Icon: SiteIcon, Artwork, Filters, Summary, DetailFields } = sitePresentation[site.id];
+  const {
+    Icon: SiteIcon,
+    Artwork,
+    Filters,
+    Summary,
+    DetailFields,
+  } = sitePresentation[site.id];
   const errorKey = (e: unknown): TranslationKey =>
     e instanceof Error && Object.hasOwn(dictionaries.en, e.message)
       ? (e.message as TranslationKey)
@@ -123,7 +131,8 @@ export default function App() {
     const c = new AbortController();
     request<AppConfig>("/api/config", c.signal)
       .then((value) => {
-        if (value.site && value.site.id !== site.id) throw new Error("SITE_MISMATCH");
+        if (value.site && value.site.id !== site.id)
+          throw new Error("SITE_MISMATCH");
         setConfig(value);
       })
       .catch((e) => {
@@ -145,7 +154,7 @@ export default function App() {
     setSelected(null);
     setTruncated(false);
     request<SearchResponse>(
-      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : { sellerType }), radius: String(radius), openNow: String(openNow) })}`,
+      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), openNow: String(openNow) })}`,
       c.signal,
     )
       .then((r) => {
@@ -289,7 +298,8 @@ export default function App() {
               <SiteIcon size={25} aria-hidden="true" />
             </span>
             <span translate="no">
-              {t.brandName}<span className="brand-dot">.</span>
+              {t.brandName}
+              <span className="brand-dot">.</span>
             </span>
           </a>
           <nav aria-label={t.find}>
@@ -319,7 +329,10 @@ export default function App() {
         </div>
       </header>
       <main>
-        <section className="hero shell" aria-labelledby="hero-title">
+        <section
+          className={`hero shell ${loading ? "is-searching" : ""}`}
+          aria-labelledby="hero-title"
+        >
           <div className="hero-copy">
             <div className="country-tag">
               <span className="country-dot" />
@@ -440,7 +453,13 @@ export default function App() {
           )}
           <div className="workspace">
             <div className="workspace-toolbar">
-              <Filters t={t} fee={fee} onFee={setFee} sellerType={sellerType} onSellerType={setSellerType} />
+              <Filters
+                t={t}
+                fee={fee}
+                onFee={setFee}
+                sellerType={sellerType}
+                onSellerType={setSellerType}
+              />
               <label className="open-now-control" title={t.openNowHint}>
                 <input
                   type="checkbox"

@@ -9,7 +9,7 @@ const dataset = {
   stale: false,
   latestJob: null,
 };
-for (const id of ["loo", "kippe"] as const) {
+for (const id of ["loo", "kippe", "kebab"] as const) {
   for (const width of [1440, 320, 390, 430]) {
     test(`${id} ${width}px shares search, keeps its category and fits every locale`, async ({
       page,
@@ -37,10 +37,11 @@ for (const id of ["loo", "kippe"] as const) {
         const q = new URL(route.request().url()).searchParams;
         expect(q.get("radius")).toMatch(/^(500|1000|2000|3000|5000)$/);
         expect(q.has(id === "loo" ? "sellerType" : "fee")).toBe(false);
+        if (id === "kebab") expect(q.has("sellerType")).toBe(false);
         const items = ["machine", "shop", "fuel"]
           .filter(
             (type) =>
-              id === "loo" ||
+              id !== "kippe" ||
               q.get("sellerType") === "all" ||
               q.get("sellerType") === type,
           )
@@ -51,7 +52,10 @@ for (const id of ["loo", "kippe"] as const) {
             lat: 53.0758,
             lon: 8.8072 + i * 0.001,
             names: {},
-            name: `Fixture ${type}`,
+            name:
+              id === "kebab"
+                ? `Döner Kebab Spezialitäten und vegetarische Küche am langen Straßenbahnhof ${type}`
+                : `Fixture ${type}`,
             fee: "free",
             charge: null,
             feeText: null,
@@ -62,6 +66,16 @@ for (const id of ["loo", "kippe"] as const) {
             notes: null,
             tags: {},
             distance: i * 80,
+            ...(id === "kebab"
+              ? {
+                  cuisine: ["kebab"],
+                  takeaway: "yes",
+                  delivery: "no",
+                  dietary: { halal: "no" },
+                  website: "javascript:alert(1)",
+                  menuUrl: "https://example.com/menu",
+                }
+              : {}),
             ...(id === "kippe"
               ? {
                   sellerType: type,
@@ -81,11 +95,24 @@ for (const id of ["loo", "kippe"] as const) {
       await page.goto(`http://${id}.localhost:5173/`);
       await expect(page.locator("html")).toHaveAttribute("data-site", id);
       await expect(page.locator(".brand").first()).toContainText(
-        id === "loo" ? "find a loo" : "kippe",
+        id === "loo" ? "find a loo" : id,
       );
       await page.getByRole("button", { name: "Bremen", exact: true }).click();
       await expect(page.locator(".result-row")).toHaveCount(3);
       await expect(page.locator(".radius-control select")).toHaveValue("500");
+      if (id === "kebab") {
+        await expect(page.locator(".fee-filters")).toHaveCount(0);
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel")).toContainText("Takeaway");
+        await expect(page.locator(".detail-panel")).toContainText("Halal: No");
+        await expect(
+          page.locator('.detail-panel a[href^="javascript:"]'),
+        ).toHaveCount(0);
+        await expect(page.locator(".food-link")).toHaveAttribute(
+          "href",
+          "https://example.com/menu",
+        );
+      }
       if (id === "kippe") {
         await page
           .getByRole("button", { name: "Machine", exact: true })
@@ -167,6 +194,11 @@ for (const id of ["loo", "kippe"] as const) {
           ),
         ).toBe(true);
         await expect(page.locator("footer")).toBeAttached();
+        if (id === "kebab")
+          await page.screenshot({
+            path: `/private/tmp/bloli-kebab-${width}-${locale}.png`,
+            fullPage: true,
+          });
       }
       await page.screenshot({
         path: `/private/tmp/bloli-${id}-${width}.png`,

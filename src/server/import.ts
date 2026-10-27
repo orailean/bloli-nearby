@@ -1,8 +1,8 @@
 import type pg from "pg";
-import { normalizeFacility, coordinates, AppError } from "../shared/domain.js";
-import { normalizeSeller } from "../shared/sellers.js";
+import { coordinates, AppError } from "../shared/domain.js";
 import type { Category } from "../shared/sites.js";
-import type { SourceRecord } from "../shared/types.js";
+import type { SourceRecord, Facility } from "../shared/types.js";
+import { categoryImports } from "./category-imports.js";
 import { runRefresh, type RefreshContext } from "./refresh.js";
 export interface ImportOptions {
   source: string;
@@ -13,13 +13,19 @@ export interface ImportOptions {
   minimumRatio?: number;
   categories?: Category[];
   minimumSellers?: number;
+  minimumKebabs?: number;
 }
 export async function importDataset(
   pool: pg.Pool,
   records: AsyncIterable<unknown>,
   options: ImportOptions,
   context?: RefreshContext,
-): Promise<{ facilities: number; settlements: number; sellers: number }> {
+): Promise<{
+  facilities: number;
+  settlements: number;
+  sellers: number;
+  kebabs: number;
+}> {
   if (!Number.isFinite(Date.parse(options.datasetAt)))
     throw new AppError("INVALID_DATASET_DATE");
   if (!context)
@@ -29,56 +35,57 @@ export async function importDataset(
   const { db, jobId } = context;
   const categories = options.categories ?? ["toilets"];
   if (
+    !Array.isArray(categories) ||
     !categories.includes("toilets") ||
-    categories.some((value) => !["toilets", "tobacco"].includes(value))
+    new Set(categories).size !== categories.length ||
+    categories.some((c) => !Object.hasOwn(categoryImports, c))
   )
     throw new AppError("INVALID_CATEGORIES");
-  const withSellers = categories.includes("tobacco");
+  const ratio = options.minimumRatio ?? 0.75;
+  const minimumSettlements = options.minimumSettlements ?? 1000;
+  if (
+    !Number.isFinite(ratio) ||
+    ratio < 0.5 ||
+    ratio > 1 ||
+    !Number.isInteger(minimumSettlements) ||
+    minimumSettlements < 1 ||
+    categories.some((c) => {
+      const n =
+        options[categoryImports[c].minimum] ??
+        categoryImports[c].defaultMinimum;
+      return !Number.isInteger(n) || n < 1;
+    })
+  )
+    throw new AppError("SUSPICIOUS_IMPORT");
   try {
     await db.query("BEGIN");
-    if (
-      !withSellers &&
-      (
-        await db.query(
-          "SELECT 1 FROM category_datasets WHERE category='tobacco'",
-        )
-      ).rowCount
-    )
+    const active = (await db.query("SELECT * FROM category_datasets")).rows;
+    if (active.some((row) => !categories.includes(row.category)))
       throw new AppError("PARTIAL_CATEGORY_IMPORT");
     await db.query("SET LOCAL statement_timeout=0");
-    await db.query(
-      "CREATE TEMP TABLE stage_facilities (LIKE facilities INCLUDING ALL) ON COMMIT DROP; CREATE TEMP TABLE stage_settlements (LIKE settlements INCLUDING ALL) ON COMMIT DROP; CREATE TEMP TABLE stage_sellers (LIKE facilities INCLUDING ALL) ON COMMIT DROP",
-    );
-    let sellers: unknown[] = [];
-    let facilities: unknown[] = [],
+    await db.query(`CREATE TEMP TABLE stage_category_locations (
+   category text NOT NULL,id text NOT NULL,data jsonb NOT NULL,fee text NOT NULL,location geography(Point,4326) NOT NULL,PRIMARY KEY(category,id)
+  ) ON COMMIT DROP; CREATE TEMP TABLE stage_settlements (LIKE settlements INCLUDING ALL) ON COMMIT DROP`);
+    let locations: Array<Facility & { category: Category }> = [],
       settlements: unknown[] = [];
     const flush = async () => {
-      if (facilities.length)
+      if (locations.length)
         await db.query(
-          `INSERT INTO stage_facilities(id,data,fee,location)
-        SELECT v->>'id',v,v->>'fee',ST_SetSRID(ST_MakePoint((v->>'lon')::float8,(v->>'lat')::float8),4326)::geography
-        FROM jsonb_array_elements($1::jsonb) v ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data,fee=EXCLUDED.fee,location=EXCLUDED.location`,
-          [JSON.stringify(facilities)],
-        );
-      if (sellers.length)
-        await db.query(
-          `INSERT INTO stage_sellers(id,data,fee,location)
-        SELECT v->>'id',v,'unknown',ST_SetSRID(ST_MakePoint((v->>'lon')::float8,(v->>'lat')::float8),4326)::geography
-        FROM jsonb_array_elements($1::jsonb) v ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data,location=EXCLUDED.location`,
-          [JSON.stringify(sellers)],
+          `INSERT INTO stage_category_locations(category,id,data,fee,location)
+    SELECT v->>'category',v->>'id',v,v->>'fee',ST_SetSRID(ST_MakePoint((v->>'lon')::float8,(v->>'lat')::float8),4326)::geography
+    FROM jsonb_array_elements($1::jsonb) v ON CONFLICT(category,id) DO UPDATE SET data=EXCLUDED.data,fee=EXCLUDED.fee,location=EXCLUDED.location`,
+          [JSON.stringify(locations)],
         );
       if (settlements.length)
         await db.query(
           `INSERT INTO stage_settlements(id,name,postcode,region,names,location,place_type)
-        SELECT v->>'id',v->>'name',v->>'postcode',v->>'region',v->'names',ST_SetSRID(ST_MakePoint((v->>'lon')::float8,(v->>'lat')::float8),4326)::geography,v->>'placeType'
-        FROM jsonb_array_elements($1::jsonb) v ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,postcode=EXCLUDED.postcode,region=EXCLUDED.region,names=EXCLUDED.names,location=EXCLUDED.location,place_type=EXCLUDED.place_type`,
+    SELECT v->>'id',v->>'name',v->>'postcode',v->>'region',v->'names',ST_SetSRID(ST_MakePoint((v->>'lon')::float8,(v->>'lat')::float8),4326)::geography,v->>'placeType'
+    FROM jsonb_array_elements($1::jsonb) v ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,postcode=EXCLUDED.postcode,region=EXCLUDED.region,names=EXCLUDED.names,location=EXCLUDED.location,place_type=EXCLUDED.place_type`,
           [JSON.stringify(settlements)],
         );
-      facilities = [];
-      sellers = [];
+      locations = [];
       settlements = [];
     };
-    // A batch can contain duplicate source identities. Flush duplicates into the existing stage rows.
     const batchIds = new Set<string>();
     for await (const raw of records) {
       if (!raw || typeof raw !== "object") throw new AppError("INVALID_RECORD");
@@ -86,6 +93,7 @@ export async function importDataset(
       if (
         !r.tags ||
         typeof r.tags !== "object" ||
+        Array.isArray(r.tags) ||
         Object.values(r.tags).some((v) => typeof v !== "string")
       )
         throw new AppError("INVALID_TAGS");
@@ -101,14 +109,7 @@ export async function importDataset(
         batchIds.clear();
       }
       batchIds.add(key);
-      if (r.kind === "facility") {
-        const facility = normalizeFacility(r);
-        if (facility) facilities.push(facility);
-      } else if (r.kind === "seller") {
-        if (!withSellers) throw new AppError("UNDECLARED_CATEGORY");
-        const seller = normalizeSeller(r);
-        if (seller) sellers.push(seller);
-      } else if (r.kind === "settlement") {
+      if (r.kind === "settlement") {
         const t = r.tags,
           postcode = t.postal_code || t["addr:postcode"] || null,
           name = t.name || postcode;
@@ -118,7 +119,7 @@ export async function importDataset(
             name,
             placeType: t.place || null,
             postcode,
-            region: t["is_in:state"] || t["addr:state"] || t["is_in"] || null,
+            region: t["is_in:state"] || t["addr:state"] || t.is_in || null,
             names: Object.fromEntries(
               ["en", "de", "ro"]
                 .filter((l) => t[`name:${l}`])
@@ -127,13 +128,27 @@ export async function importDataset(
             lat: r.lat,
             lon: r.lon,
           });
-      } else throw new AppError("INVALID_RECORD_KIND");
-      if (facilities.length + sellers.length + settlements.length >= 1000) {
+      } else {
+        const category = (Object.keys(categoryImports) as Category[]).find(
+          (c) => categoryImports[c].kind === r.kind,
+        );
+        if (!category) throw new AppError("INVALID_RECORD_KIND");
+        if (!categories.includes(category))
+          throw new AppError("UNDECLARED_CATEGORY");
+        const location = categoryImports[category].normalize(r);
+        if (location) locations.push({ ...location, category });
+      }
+      if (locations.length + settlements.length >= 1000) {
         await flush();
         batchIds.clear();
       }
     }
     await flush();
+    const conflicting = await db.query(
+      "SELECT id FROM stage_category_locations GROUP BY id HAVING count(DISTINCT ST_AsEWKB(location::geometry)) > 1 LIMIT 1",
+    );
+    if (conflicting.rowCount)
+      throw new AppError("INCONSISTENT_SOURCE_GEOMETRY");
     const coverage = JSON.stringify(options.coverage);
     const valid = (
       await db.query(
@@ -142,50 +157,55 @@ export async function importDataset(
       )
     ).rows[0].valid;
     if (!valid) throw new AppError("INVALID_COVERAGE");
-    // Extract buffers may contain neighbouring objects; publish only covered points.
-    for (const table of [
-      "stage_facilities",
-      "stage_settlements",
-      "stage_sellers",
-    ])
+    for (const table of ["stage_category_locations", "stage_settlements"])
       await db.query(
         `DELETE FROM ${table} WHERE NOT ST_Covers(ST_SetSRID(ST_GeomFromGeoJSON($1),4326),location::geometry)`,
         [coverage],
       );
-    const counts = (
+    const totals = (
       await db.query(
-        "SELECT (SELECT count(*)::int FROM stage_facilities) AS facilities,(SELECT count(*)::int FROM stage_settlements) AS settlements,(SELECT count(*)::int FROM stage_sellers) AS sellers",
+        "SELECT category,count(*)::int AS count FROM stage_category_locations GROUP BY category",
       )
-    ).rows[0];
+    ).rows;
+    const categoryCounts = new Map<string, number>(
+      totals.map((row) => [row.category, row.count]),
+    );
+    const counts = {
+      facilities: categoryCounts.get("toilets") ?? 0,
+      sellers: categoryCounts.get("tobacco") ?? 0,
+      kebabs: categoryCounts.get("kebab") ?? 0,
+      settlements: (
+        await db.query("SELECT count(*)::int AS n FROM stage_settlements")
+      ).rows[0].n as number,
+    };
     const previous = (await db.query("SELECT * FROM dataset")).rows[0];
-    const previousSellers = (
-      await db.query("SELECT * FROM category_datasets WHERE category='tobacco'")
-    ).rows[0];
-    const ratio = options.minimumRatio ?? 0.75;
     if (
-      ratio < 0.5 ||
-      ratio > 1 ||
-      counts.facilities < (options.minimumFacilities ?? 1000) ||
-      counts.settlements < (options.minimumSettlements ?? 1000) ||
-      (withSellers &&
-        (counts.sellers < (options.minimumSellers ?? 100) ||
-          (previousSellers &&
-            (counts.sellers < previousSellers.location_count * ratio ||
-              Date.parse(options.datasetAt) <
-                new Date(previousSellers.dataset_at).getTime())))) ||
+      counts.settlements < minimumSettlements ||
       (previous &&
-        (counts.facilities < previous.facility_count * ratio ||
-          counts.settlements < previous.settlement_count * ratio ||
+        (counts.settlements < previous.settlement_count * ratio ||
           Date.parse(options.datasetAt) <
             new Date(previous.dataset_at).getTime()))
     )
       throw new AppError("SUSPICIOUS_IMPORT");
+    for (const category of categories) {
+      const count = categoryCounts.get(category) ?? 0;
+      const previousCategory = active.find((row) => row.category === category);
+      if (
+        count <
+          (options[categoryImports[category].minimum] ??
+            categoryImports[category].defaultMinimum) ||
+        (previousCategory &&
+          (count < previousCategory.location_count * ratio ||
+            Date.parse(options.datasetAt) <
+              new Date(previousCategory.dataset_at).getTime()))
+      )
+        throw new AppError("SUSPICIOUS_IMPORT");
+    }
     await db.query(
-      "DELETE FROM facilities; INSERT INTO facilities SELECT * FROM stage_facilities; DELETE FROM settlements; INSERT INTO settlements SELECT * FROM stage_settlements; DELETE FROM dataset",
+      "DELETE FROM facilities; INSERT INTO facilities(id,data,fee,location) SELECT id,data,fee,location FROM stage_category_locations WHERE category='toilets'; DELETE FROM settlements; INSERT INTO settlements SELECT * FROM stage_settlements; DELETE FROM dataset",
     );
     await db.query(
-      `INSERT INTO dataset(dataset_at,source,facility_count,settlement_count,coverage)
-      VALUES($1,$2,$3,$4,ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($5),4326)))`,
+      "INSERT INTO dataset(dataset_at,source,facility_count,settlement_count,coverage) VALUES($1,$2,$3,$4,ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($5),4326)))",
       [
         options.datasetAt,
         options.source,
@@ -194,20 +214,16 @@ export async function importDataset(
         coverage,
       ],
     );
-    // Refresh only declared categories. Keep legacy toilets and normalized
-    // memberships in the same transaction for rollback compatibility.
-    for (const [category, table, count] of [
-      ["toilets", "stage_facilities", counts.facilities],
-      ...(withSellers ? [["tobacco", "stage_sellers", counts.sellers]] : []),
-    ] as Array<[Category, string, number]>) {
+    for (const category of categories) {
       await db.query(
-        `INSERT INTO locations(id,location,tags) SELECT id,location,data->'tags' FROM ${table} ON CONFLICT(id) DO UPDATE SET location=EXCLUDED.location,tags=EXCLUDED.tags`,
+        "INSERT INTO locations(id,location,tags) SELECT id,location,data->'tags' FROM stage_category_locations WHERE category=$1 ON CONFLICT(id) DO UPDATE SET location=EXCLUDED.location,tags=EXCLUDED.tags",
+        [category],
       );
       await db.query("DELETE FROM location_categories WHERE category=$1", [
         category,
       ]);
       await db.query(
-        `INSERT INTO location_categories(category,location_id,data,fee,seller_type) SELECT $1,id,data,fee,data->>'sellerType' FROM ${table}`,
+        "INSERT INTO location_categories(category,location_id,data,fee,seller_type) SELECT category,id,data,fee,data->>'sellerType' FROM stage_category_locations WHERE category=$1",
         [category],
       );
       await db.query(
@@ -216,7 +232,7 @@ export async function importDataset(
           category,
           options.datasetAt,
           options.source,
-          count,
+          categoryCounts.get(category) ?? 0,
           counts.settlements,
           coverage,
         ],
@@ -225,13 +241,15 @@ export async function importDataset(
     await db.query(
       "DELETE FROM locations l WHERE NOT EXISTS(SELECT 1 FROM location_categories c WHERE c.location_id=l.id)",
     );
-    await db.query("UPDATE import_jobs SET seller_count=$2 WHERE id=$1", [
-      jobId,
-      withSellers ? counts.sellers : null,
-    ]);
     await db.query(
-      "UPDATE import_jobs SET status='success',finished_at=now(),facility_count=$2,settlement_count=$3 WHERE id=$1",
-      [jobId, counts.facilities, counts.settlements],
+      "UPDATE import_jobs SET status='success',finished_at=now(),facility_count=$2,settlement_count=$3,seller_count=$4,kebab_count=$5 WHERE id=$1",
+      [
+        jobId,
+        counts.facilities,
+        counts.settlements,
+        categories.includes("tobacco") ? counts.sellers : null,
+        categories.includes("kebab") ? counts.kebabs : null,
+      ],
     );
     await db.query("COMMIT");
     return counts;

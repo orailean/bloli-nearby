@@ -1,34 +1,34 @@
 ## 1. Design and migration baseline
 
-- [ ] 1.1 Confirm the owner-reviewed Kebab visual direction and record confirmed domain/scope; verify DNS before public activation.
-- [ ] 1.2 Record current category counts, source identity, resource bindings and public behavior; verify a backup/rollback baseline before schema or production changes.
+- [x] 1.1 Confirm the owner-reviewed Kebab visual direction and record confirmed domain/scope; verify DNS before public activation.
+- [x] 1.2 Record current category counts, source identity, resource bindings and public behavior; verify a backup/rollback baseline before schema or production changes.
 
 ## 2. Third-category data and publication
 
-- [ ] 2.1 Add tested Kebab normalization for qualifying cuisine tokens, fixed food venue types, explicit exclusions, unknown hours and mapped details.
-- [ ] 2.2 Extend osmium/Python candidates and metadata/completion contracts to kebab; verify nodes, ways, multipolygons, sites and building outlines with synthetic and relevant real-source fixtures.
-- [ ] 2.3 Add rerunnable category constraint migrations and typed category/profile/record-kind registrations without rewriting active datasets on startup.
-- [ ] 2.4 Generalize category staging/publication and active-category completeness checks, preserving legacy WC compatibility and coherent shared locations/settlements.
-- [ ] 2.5 Verify isolated PostGIS migration, dual-category source identities, first three-category publication, per-category threshold/date failures and two-category refresh rejection after activation.
+- [x] 2.1 Add tested Kebab normalization for qualifying cuisine tokens, fixed food venue types, explicit exclusions, unknown hours and mapped details.
+- [x] 2.2 Extend osmium/Python candidates and metadata/completion contracts to kebab; verify nodes, ways, multipolygons, sites and building outlines with synthetic and relevant real-source fixtures.
+- [x] 2.3 Add rerunnable category constraint migrations and typed category/profile/record-kind registrations without rewriting active datasets on startup.
+- [x] 2.4 Generalize category staging/publication and active-category completeness checks, preserving legacy WC compatibility and coherent shared locations/settlements.
+- [x] 2.5 Verify isolated PostGIS migration, dual-category source identities, first three-category publication, per-category threshold/date failures and two-category refresh rejection after activation.
 
 ## 3. Domain, API and metadata
 
-- [ ] 3.1 Add explicit kebab.bloli.com and kebab.localhost bindings, category readiness/search/settlement routing and compatible development overrides; retain unknown-host/override rejection.
-- [ ] 3.2 Verify radius ordering/defaults/truncation and Open now before limiting; reject WC/tobacco-specific filters for Kebab without changing existing hosts.
-- [ ] 3.3 Generate Kebab initial shell, canonical/social metadata and favicon; extend the shared gateway and Vite routing while preserving Host and existing domain behavior.
+- [x] 3.1 Add explicit kebab.bloli.com and kebab.localhost bindings, category readiness/search/settlement routing and compatible development overrides; retain unknown-host/override rejection.
+- [x] 3.2 Verify radius ordering/defaults/truncation and Open now before limiting; reject WC/tobacco-specific filters for Kebab without changing existing hosts.
+- [x] 3.3 Generate Kebab initial shell, canonical/social metadata and favicon; extend the shared gateway and Vite routing while preserving Host and existing domain behavior.
 
 ## 4. Kebab presentation
 
-- [ ] 4.1 Implement the approved site module, theme tokens, locally bundled free typography, original artwork and fitting header/footer using project frontend-design guidance.
-- [ ] 4.2 Add separate DE/EN/RO site content with translation parity, per-host saved language and German fallback; keep shared behavior/content appropriately reusable.
-- [ ] 4.3 Implement food details with mapped payment/takeaway/delivery/dietary information and safe website/menu links, preserving unknown values and avoiding inferred claims.
-- [ ] 4.4 Add restrained action-triggered motion, reduced-motion behavior, keyboard focus and accessible controls; verify radius/marker/list synchronization and phone scrolling.
+- [x] 4.1 Implement the approved site module, theme tokens, locally bundled free typography, original artwork and fitting header/footer using project frontend-design guidance.
+- [x] 4.2 Add separate DE/EN/RO site content with translation parity, per-host saved language and German fallback; keep shared behavior/content appropriately reusable.
+- [x] 4.3 Implement food details with mapped payment/takeaway/delivery/dietary information and safe website/menu links, preserving unknown values and avoiding inferred claims.
+- [x] 4.4 Add restrained action-triggered motion, reduced-motion behavior, keyboard focus and accessible controls; verify radius/marker/list synchronization and phone scrolling.
 
 ## 5. Local verification and operator documentation
 
-- [ ] 5.1 Extend the safe synthetic three-category seed and document native three-host debugging with Docker-only PostGIS and an isolated integration database.
+- [x] 5.1 Extend the safe synthetic three-category seed and document native three-host debugging with Docker-only PostGIS and an isolated integration database.
 - [ ] 5.2 Run classifier/unit, importer, isolated PostGIS, production build/proxy and all-three-host browser checks; inspect DE/EN/RO screenshots at desktop and 320/390/430 px phone widths.
-- [ ] 5.3 Document three-site data classification, source/import dates, refresh/update/rollback procedures and the new domain's Nginx/TLS files; keep binaries/data/secrets outside Git.
+- [x] 5.3 Document three-site data classification, source/import dates, refresh/update/rollback procedures and the new domain's Nginx/TLS files; keep binaries/data/secrets outside Git.
 
 ## 6. Production rollout
 

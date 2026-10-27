@@ -31,14 +31,14 @@ CREATE TABLE IF NOT EXISTS locations (
 );
 CREATE INDEX IF NOT EXISTS locations_location_idx ON locations USING gist(location);
 CREATE TABLE IF NOT EXISTS location_categories (
- category text NOT NULL CHECK(category IN ('toilets','tobacco')),
+ category text NOT NULL CHECK(category IN ('toilets','tobacco','kebab')),
  location_id text NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
  data jsonb NOT NULL, fee text NOT NULL DEFAULT 'unknown', seller_type text,
  PRIMARY KEY(category,location_id)
 );
 CREATE INDEX IF NOT EXISTS location_categories_filter_idx ON location_categories(category,seller_type,fee);
 CREATE TABLE IF NOT EXISTS category_datasets (
- category text PRIMARY KEY CHECK(category IN ('toilets','tobacco')),
+ category text PRIMARY KEY CHECK(category IN ('toilets','tobacco','kebab')),
  dataset_at timestamptz NOT NULL, imported_at timestamptz NOT NULL DEFAULT now(),
  source text NOT NULL, location_count integer NOT NULL, settlement_count integer NOT NULL,
  coverage geometry(MultiPolygon,4326) NOT NULL
@@ -52,3 +52,17 @@ INSERT INTO category_datasets(category,dataset_at,imported_at,source,location_co
  SELECT 'toilets',dataset_at,imported_at,source,facility_count,settlement_count,coverage FROM dataset
  ON CONFLICT(category) DO NOTHING;
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS seller_count integer;
+
+-- Expand category checks in existing installations without rewriting active rows.
+DO $$
+BEGIN
+ IF EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='location_categories'::regclass AND conname='location_categories_category_check' AND pg_get_constraintdef(oid) NOT LIKE '%kebab%') THEN
+  ALTER TABLE location_categories DROP CONSTRAINT IF EXISTS location_categories_category_check;
+  ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab'));
+ END IF;
+ IF EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='category_datasets'::regclass AND conname='category_datasets_category_check' AND pg_get_constraintdef(oid) NOT LIKE '%kebab%') THEN
+  ALTER TABLE category_datasets DROP CONSTRAINT IF EXISTS category_datasets_category_check;
+  ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab'));
+ END IF;
+END $$;
+ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS kebab_count integer;

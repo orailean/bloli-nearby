@@ -33,6 +33,12 @@ export interface Facility {
   tobaccoSales?: "mapped" | "unconfirmed";
   paymentMethods?: Record<string, string>;
   brand?: string | null;
+  cuisine?: string[];
+  takeaway?: string | null;
+  delivery?: string | null;
+  dietary?: Record<string, string>;
+  website?: string | null;
+  menuUrl?: string | null;
 }
 export interface Settlement {
   nearCity: string | null;

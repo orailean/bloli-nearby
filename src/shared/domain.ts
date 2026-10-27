@@ -1,3 +1,4 @@
+import type { Category } from "./sites.js";
 import type { Facility, SourceRecord, SearchQuery } from "./types.js";
 export class AppError extends Error {
   constructor(
@@ -75,7 +76,7 @@ export const SEARCH_RADII = [500, 1000, 2000, 3000, 5000] as const;
 
 export function parseSearch(
   p: URLSearchParams,
-  category: "toilets" | "tobacco" = "toilets",
+  category: Category = "toilets",
 ): SearchQuery {
   const number = (key: string, fallback?: number) => {
     const raw = p.get(key);
@@ -97,8 +98,8 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   if (
-    (category === "tobacco" && p.has("fee")) ||
-    (category === "toilets" && p.has("sellerType"))
+    (category !== "toilets" && p.has("fee")) ||
+    (category !== "tobacco" && p.has("sellerType"))
   )
     throw new AppError("INVALID_QUERY");
   const sellerType = p.get("sellerType") ?? "all";

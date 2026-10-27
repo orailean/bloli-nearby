@@ -83,3 +83,10 @@ Production uses one weekly `bloli-nearby-refresh.timer` and one daily `bloli-nea
 Normal interactive OSM raster tiles retain attribution, browser caching and Referer; there is no bulk tile download, proxy, offline pack or prefetch. Public tiles have no availability guarantee; a permitted alternative provider remains configurable. The provider receives IP/viewed tile coordinates. Searches do not store location history and query URLs are not logged routinely. Explicit language preference is stored locally; opening directions sends the destination to Google Maps.
 
 Map/location data is © OpenStreetMap contributors under ODbL, via Geofabrik. Preserve source attribution and applicable database-sharing obligations. See [OSM copyright](https://www.openstreetmap.org/copyright), [tile policy](https://operations.osmfoundation.org/policies/tiles/) and [third-party notices](THIRD_PARTY_NOTICES.md). Downloaded PBFs, databases, dumps, screenshots, built assets and secrets remain outside Git. The repository is `git@github.com:orailean/bloli-nearby.git`.
+
+
+## Kebab
+
+`https://kebab.bloli.com` discovers mapped Döner/kebab restaurants and fast-food venues. It shares the database, API, web gateway and weekly Germany source import with Loo and Kippe. Cuisine tokens `kebab`, `doner`, `doener` and `döner` qualify, including case/semicolon variants; Turkish cuisine or a business name alone does not. Food opening hours, takeaway/delivery, dietary information and menu/website links are shown only when mapped; food venues never receive the machine 24/7 assumption.
+
+Run all three local sites at `loo.localhost:5173`, `kippe.localhost:5173` and `kebab.localhost:5173` with one native API/Vite pair and Docker PostGIS. The mixed sample contains synthetic toilets, sellers and food venues; see [local development](docs/development/multi-site.md). See [Kebab deployment](docs/deployment/kebab-site.md) for DNS, TLS, shared data validation and rollback. The displayed dataset date is the OSM snapshot timestamp; `/api/status` also reports `importedAt` and the latest job result.

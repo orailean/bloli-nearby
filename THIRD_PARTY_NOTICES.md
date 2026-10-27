@@ -13,6 +13,7 @@ The app bundles open-source software and self-hosted fonts. Preserve the license
 | tsx | MIT; https://github.com/privatenumber/tsx/blob/master/LICENSE |
 | TypeScript | Apache-2.0; https://github.com/microsoft/TypeScript/blob/main/LICENSE.txt |
 | Bricolage Grotesque | SIL OFL 1.1; https://github.com/ateliertriay/bricolage/blob/main/OFL.txt |
+| Rubik | SIL OFL 1.1; https://github.com/googlefonts/rubik |
 | DM Sans | SIL OFL 1.1; https://github.com/googlefonts/dm-fonts |
 | pyosmium | BSD-2-Clause; https://github.com/osmcode/pyosmium |
 | Shapely | BSD-3-Clause; https://github.com/shapely/shapely |

@@ -32,9 +32,9 @@ Add `kebab` to the explicit database category checks through a rerunnable additi
 
 Stage each category plus shared settlements before one transaction publishes shared identities, memberships and category metadata. Support the same source object in multiple categories. Per-category minimums and previous-count/drop checks apply independently; choose the initial Kebab minimum from measured extract counts, with a conservative first-import floor and the existing ratio policy afterward. Unknown kinds/categories and missing completion markers remain errors. Failure retains all active categories and records a failed job.
 
-### Proposed visual direction: the takeaway counter
+### Approved visual direction: the takeaway counter
 
-This is the proposed design for owner review, not an approved visual choice yet.
+The owner approved this design on 2026-10-27 with “yes, build”.
 
 - Palette: porcelain white `#FFFFFF`, aubergine ink `#402B52`, saffron `#F6BA32`, parsley `#21755C`, and a restrained ceramic blue `#1598A5`. White is the main surface; aubergine/saffron carry the identity, with the other colors reserved for food artwork and status.
 - Typography: locally bundled free Rubik for a bold, friendly wordmark/headlines, with the existing DM Sans for readable controls and details. Verify DE/RO diacritics and font licensing; no third-party font requests at runtime.
@@ -73,6 +73,6 @@ Rollback preserves the additive schema and existing volumes, restores previous a
 
 ## Open Questions
 
-- Owner review of the proposed takeaway-counter visual direction.
+- Visual direction approved by owner on 2026-10-27.
 - Owner creates the `kebab.bloli.com` DNS record pointing to `173.212.194.159`, with no conflicting AAAA record, before TLS activation.
 - Initial Kebab validation floor to be set from the actual retained-source extract during implementation.

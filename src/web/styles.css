@@ -1,3 +1,4 @@
+@import "@fontsource-variable/rubik";
 @import "@fontsource-variable/bricolage-grotesque";
 @import "@fontsource-variable/dm-sans";
 :root {
@@ -2008,5 +2009,236 @@ html[data-site="kippe"] {
   }
   [data-site="kippe"] .open-now-control {
     margin-left: 4px;
+  }
+}
+
+/* Kebab: a white takeaway counter, with one illustrated spit and pita. */
+html[data-site="kebab"] {
+  --ink: #402b52;
+  --mint: #f4eef7;
+  --yellow: #f6ba32;
+  --line: #e6deeb;
+  --muted: #706379;
+  --display: "Rubik Variable", sans-serif;
+  background: #fff;
+  color: var(--ink);
+}
+[data-site="kebab"] .site-header {
+  background: #fff;
+}
+[data-site="kebab"] .brand {
+  font-family: var(--display);
+  font-weight: 800;
+  letter-spacing: -1.6px;
+}
+[data-site="kebab"] .brand-mark {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 12px 12px 4px 12px;
+}
+[data-site="kebab"] .brand-dot {
+  color: #a36d00;
+}
+[data-site="kebab"] .hero {
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+  min-height: 420px;
+}
+[data-site="kebab"] .hero h1 {
+  font-size: clamp(44px, 4.7vw, 68px);
+  font-weight: 800;
+  letter-spacing: -2.8px;
+  line-height: 1.07;
+}
+[data-site="kebab"] .country-tag {
+  background: none;
+  padding: 0;
+  margin-bottom: 19px;
+}
+[data-site="kebab"] .country-dot {
+  background: #21755c;
+}
+[data-site="kebab"] .hero-copy > p {
+  max-width: 490px;
+  font-size: 16px;
+}
+[data-site="kebab"] .hero-art::before {
+  display: none;
+}
+[data-site="kebab"] .kebab-counter {
+  width: 100%;
+  max-width: 400px;
+  height: 300px;
+}
+[data-site="kebab"] .art-caption {
+  bottom: -4px;
+  left: auto;
+  right: 25px;
+  background: var(--yellow);
+  color: var(--ink);
+  border-radius: 3px;
+  transform: rotate(-4deg);
+  font-family: var(--display);
+  font-size: 13px;
+  padding: 9px 14px;
+}
+[data-site="kebab"] .search-dock {
+  border-radius: 6px;
+  box-shadow: 0 8px 0 #f4eef7;
+  border: 1px solid var(--line);
+}
+[data-site="kebab"] .locate-button,
+[data-site="kebab"] .search-submit,
+[data-site="kebab"] .walk-button {
+  background: var(--yellow);
+  color: var(--ink);
+}
+[data-site="kebab"] .locate-button {
+  border-radius: 4px;
+}
+[data-site="kebab"] .workspace {
+  border-radius: 6px;
+  border-color: var(--line);
+}
+[data-site="kebab"] .workspace-toolbar {
+  justify-content: flex-start;
+}
+[data-site="kebab"] .radius-control {
+  margin-left: auto;
+}
+[data-site="kebab"] .result-row {
+  border-bottom: 1px dashed #cfc1d8;
+}
+[data-site="kebab"] .result-row.selected {
+  background: #f6f1f8;
+}
+[data-site="kebab"] .result-number {
+  background: var(--yellow);
+  color: var(--ink);
+  border-radius: 3px;
+  font-family: var(--display);
+}
+[data-site="kebab"] .result-info strong {
+  overflow-wrap: anywhere;
+}
+[data-site="kebab"] .food-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+[data-site="kebab"] .food-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+[data-site="kebab"] .detail-panel {
+  animation: counter-ticket 0.22s ease-out;
+}
+[data-site="kebab"] .map-pin {
+  background: var(--ink);
+  border-color: #fff;
+}
+[data-site="kebab"] .map-pin.active {
+  background: var(--yellow);
+  color: var(--ink);
+}
+[data-site="kebab"] .site-footer {
+  background: var(--ink);
+  color: #fff;
+}
+[data-site="kebab"] .footer-brand .brand-mark {
+  background: var(--yellow);
+  color: var(--ink);
+}
+[data-site="kebab"] .footer-main p,
+[data-site="kebab"] .footer-bottom {
+  color: #e4d9eb;
+}
+[data-site="kebab"] .footer-main {
+  border-bottom-color: #695574;
+}
+[data-site="kebab"] .footer-main h2 {
+  font-weight: 700;
+}
+@keyframes counter-ticket {
+  from {
+    opacity: 0.4;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes spit-turn {
+  50% {
+    transform: scaleX(0.88);
+  }
+}
+[data-site="kebab"] .is-searching .kebab-spit {
+  transform-origin: 171px 150px;
+  animation: spit-turn 0.45s ease-in-out;
+}
+@media (max-width: 760px) {
+  [data-site="kebab"] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 28px;
+    padding-bottom: 24px;
+    min-height: 0;
+  }
+  [data-site="kebab"] .hero h1 {
+    font-size: clamp(37px, 9.3vw, 60px);
+    letter-spacing: -1.7px;
+    max-width: 100%;
+  }
+  [data-site="kebab"] .hero-art {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    transform: none;
+    margin-top: 12px;
+  }
+  [data-site="kebab"] .kebab-counter {
+    height: 190px;
+    width: 245px;
+  }
+  [data-site="kebab"] .art-caption {
+    bottom: 4px;
+    right: 0;
+    font-size: 11px;
+    max-width: 160px;
+  }
+  [data-site="kebab"] .hero-copy > p {
+    font-size: 14px;
+  }
+  [data-site="kebab"] .workspace-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 14px;
+    gap: 12px;
+  }
+  [data-site="kebab"] .open-now-control {
+    margin-left: 0;
+  }
+  [data-site="kebab"] .radius-control {
+    margin-left: auto;
+  }
+  [data-site="kebab"] .locate-button {
+    white-space: normal;
+  }
+  [data-site="kebab"] .footer-main h2 {
+    overflow-wrap: anywhere;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-site="kebab"] *,
+  [data-site="kebab"] *::before,
+  [data-site="kebab"] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }

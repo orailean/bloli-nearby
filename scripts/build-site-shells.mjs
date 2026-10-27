@@ -5,12 +5,21 @@ const template = await readFile(
 );
 const profiles = {
   loo: {
+    domain: "loo.bloli.com",
     title: "Find a Loo · A little relief, nearby.",
     description:
       "Find public toilets across Germany. Search nearby, filter free and paid toilets, and check mapped opening hours.",
     color: "#123f3b",
   },
+  kebab: {
+    domain: "kebab.bloli.com",
+    title: "Kebab · Mit allem. Ganz in deiner Nähe.",
+    description:
+      "Finde Döner- und Kebab-Läden in Deutschland. Mit erfassten Öffnungszeiten, Mitnahme, Lieferung und Menülinks aus OpenStreetMap.",
+    color: "#402b52",
+  },
   kippe: {
+    domain: "kippe.bloli.com",
     title: "Kippe · Tobacco sellers around the corner.",
     description:
       "Find cigarette machines, tobacco shops and explicitly mapped tobacco sellers across Germany. Check seller types, mapped hours and payment details.",
@@ -18,7 +27,7 @@ const profiles = {
   },
 };
 for (const [id, profile] of Object.entries(profiles)) {
-  const canonical = `https://${id}.bloli.com/`;
+  const canonical = `https://${profile.domain}/`;
   const html = template
     .replace(/<html\b[^>]*>/, `<html lang="de" data-site="${id}">`)
     .replace(/<title>[^<]*<\/title>/, `<title>${profile.title}</title>`)

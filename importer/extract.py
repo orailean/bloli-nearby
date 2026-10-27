@@ -55,6 +55,12 @@ def seller_candidate(tags):
     return positive and (bool(tags.get('shop')) or tags.get('amenity') == 'fuel')
 
 
+def kebab_candidate(tags):
+    """Retain explicit fixed food venues; normalization applies access/lifecycle rules."""
+    return tags.get('amenity') in ('restaurant', 'fast_food') and bool(
+        tokens(tags.get('cuisine', '')) & {'kebab', 'doner', 'doener', 'döner'})
+
+
 def kinds(tags):
     # Routes describe onboard toilets; collections group separate locations.
     if tags.get('type') in ('route', 'route_master', 'collection'):
@@ -64,6 +70,8 @@ def kinds(tags):
         result.append('facility')
     if seller_candidate(tags):
         result.append('seller')
+    if kebab_candidate(tags):
+        result.append('kebab')
     if tags.get('place') in ('city', 'town', 'village', 'hamlet', 'suburb', 'borough', 'quarter', 'locality') or tags.get('boundary') == 'postal_code':
         result.append('settlement')
     return result
@@ -81,7 +89,7 @@ def extract(filename, coverage, output, source, dataset_at=None):
     def emit(record):
         output.write(json.dumps(record, ensure_ascii=False) + '\n')
     emit({'kind': 'metadata', 'source': source, 'datasetAt': dataset_at, 'coverage': coverage,
-          'categories': ['toilets', 'tobacco']})
+          'categories': ['toilets', 'tobacco', 'kebab']})
     factory = osmium.geom.GeoJSONFactory()
     sites = {}
     member_keys = set()
@@ -179,6 +187,9 @@ def extract(filename, coverage, output, source, dataset_at=None):
     broken_sellers = [key for key in missing if 'seller' in handler.expected[key]]
     if broken_sellers:
         raise ValueError(f'Incomplete seller geometries: {len(broken_sellers)}; sources: {sorted(broken_sellers)[:30]}')
+    broken_kebabs = [key for key in missing if 'kebab' in handler.expected[key]]
+    if broken_kebabs:
+        raise ValueError(f'Incomplete kebab geometries: {len(broken_kebabs)}; sources: {sorted(broken_kebabs)[:30]}')
     emit({'kind': 'complete', 'records': handler.count, 'skippedSettlementGeometries': len(missing)})
     return handler.count
 

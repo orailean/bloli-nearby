@@ -1,5 +1,5 @@
-export type SiteId = "loo" | "kippe";
-export type Category = "toilets" | "tobacco";
+export type SiteId = "loo" | "kippe" | "kebab";
+export type Category = "toilets" | "tobacco" | "kebab";
 export type SellerType = "machine" | "shop" | "fuel";
 export interface SiteProfile {
   id: SiteId;
@@ -9,6 +9,13 @@ export interface SiteProfile {
   capabilities: { fee: boolean; sellerType: boolean; openNow: boolean };
 }
 export const sites: Record<SiteId, SiteProfile> = {
+  kebab: {
+    id: "kebab",
+    category: "kebab",
+    name: "Kebab",
+    domain: "kebab.bloli.com",
+    capabilities: { fee: false, sellerType: false, openNow: true },
+  },
   loo: {
     id: "loo",
     category: "toilets",
@@ -30,20 +37,17 @@ export function resolveSite(
   override?: string,
 ): SiteProfile | null {
   const normalized = host.toLowerCase().replace(/\.$/, "").replace(/:\d+$/, "");
-  if (normalized === "loo.bloli.com") return sites.loo;
-  if (normalized === "kippe.bloli.com") return sites.kippe;
+  const profiles = Object.values(sites);
+  const publicSite = profiles.find((site) => site.domain === normalized);
+  if (publicSite) return publicSite;
   if (production) return null;
-  if (
-    [
-      "localhost",
-      "127.0.0.1",
-      "[::1]",
-      "loo.localhost",
-      "kippe.localhost",
-    ].includes(normalized)
-  ) {
-    if (override === "loo" || override === "kippe") return sites[override];
-    return normalized === "kippe.localhost" ? sites.kippe : sites.loo;
+  const localSite = profiles.find(
+    (site) => `${site.id}.localhost` === normalized,
+  );
+  if (["localhost", "127.0.0.1", "[::1]"].includes(normalized) || localSite) {
+    if (override && Object.hasOwn(sites, override))
+      return sites[override as SiteId];
+    return localSite ?? sites.loo;
   }
   return null;
 }
