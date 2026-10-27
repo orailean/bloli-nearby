@@ -21,3 +21,8 @@ Use [production updates](production-updates.md) for app code and `scripts/update
 ## TLS and rollout
 
 Use the existing shared Nginx include with `deploy/nginx/transit.bloli.com.{http,https}.conf`, existing ACME webroot/account and `/snap/bin/certbot`. Extend the existing domain-scoped reload hook to Transit, validate then gracefully reload Nginx, and dry-run renewal/deploy hooks for all five domains. Existing generic mounts and timer schedules remain. Save actual rollout changes, dates/counts, backup verification, resource/runtime measurements and public evidence in the dated Transit protocol.
+
+
+## Cross-schema rollback
+
+For a full rollback to a pre-Transit four-category dump, restore into a **fresh separate database** on the same Postgres instance, verify it, then switch the private production `DB_NAME` to that restored database with matching older app images and refresh paused. An older dump does not know the new `transit_components` foreign key; do not assume `pg_restore --clean` over the newer schema can remove it safely. For same-schema five-category restores, the usual transactional restore helper applies. Keep the current database and a fresh backup until the rollback is verified. The old `find-a-loo_*` volumes were removed at the owner’s request; they are no longer a rollback source.

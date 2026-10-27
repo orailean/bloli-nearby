@@ -36,3 +36,10 @@ Use the same pinned PostGIS image as the DB for root copy/checksum helpers, with
 If copying fails, leave the original running stack/bindings untouched when still online. If startup/verification fails after stopping it, stop the new project (without `-v`), restore the private pre-migration `.env`, and use the saved configuration with `-p find-a-loo` to start the original data copies and generic service names. Never run both projects simultaneously with the same container names. Confirm counts/health before resuming the timer. The original data includes the successful three-category import, so a name-only rollback need not erase Kebab data.
 
 See the dated [Kebab rollout protocol](protocol-2026-10-27-kebab.md) for actual evidence, backups, timings and resulting mount paths. The configuration already describes the target names; this guide is a controlled one-time procedure, not an ordinary app update command.
+
+
+## Later cleanup — 2026-10-27
+
+At the owner’s explicit request, both old `find-a-loo_postgres_data` and `find-a-loo_import_data` volumes were removed at18:49:26UTC. Neither had container references; active DB/import mounts were verified as the generic Bloli Nearby volumes, and `backups/bloli-nearby-20261027T183812Z.dump` was reverified with `pg_restore --list` before removal. Evidence: project logs `legacy-loo-volume-cleanup.txt` and `legacy-volume-cleanup-backup-toc.txt`. Active data and the running Transit import were unaffected.
+
+The original-volume rollback instructions above describe the migration-time option and are now historical. Those deleted copies cannot be rebound. Use current verified dump/image/configuration backups and the release’s schema-compatible restore procedure instead. Preserve `bloli-nearby_postgres_data` and `bloli-nearby_import_data`.

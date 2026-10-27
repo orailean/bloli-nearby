@@ -96,3 +96,8 @@ Rollback pauses refresh before incompatible code changes. Do not run an older fo
 - Owner approved this concrete design on2026-10-27.
 - Owner selected the focused rail/bus/taxi/ferry/cable scope; shared mobility and airports are excluded.
 - Exact source-backed S-Bahn evidence rules and production minimum counts will be verified from real data during implementation rather than guessed.
+
+
+## Owner refinement during rollout: unused legacy volume cleanup
+
+The owner explicitly requested removing the unused `find-a-loo_*` volumes. This supersedes the earlier instruction to retain those rollback copies. Verified zero references, active generic mounts and a readable current backup before removing exactly the two old volumes; active generic data and the import remain unchanged. Record cleanup in the VM protocol and current storage/rollback guide. Cross-schema rollback uses a fresh restored database rather than rebinding deleted copies.

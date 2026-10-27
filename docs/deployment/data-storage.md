@@ -44,7 +44,7 @@ scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -
 
 You can also inspect the host directory with `sudo ls -lh /var/lib/docker/volumes/bloli-nearby_import_data/_data`; do not change Docker volume files directly.
 
-The initial Germany snapshot (2026-10-25) occupied 4.6 GB as a compressed source and approximately 48 MB after filtering. Future snapshots vary. Filtering reads the source in multiple passes, so its output can remain empty initially.
+The initial Germany snapshot (2026-10-25) occupied 4.6 GB as a compressed source and approximately48MiB after the initial toilet-focused filter. After the five-category Transit rollout, the filter was111MiB, complete JSON1.9GiB, relation sidecar260MiB and PostgreSQL database2091MB. These are different processing stages; JSON repeats context and does not need to fit in memory. Future snapshots vary. Filtering reads the source in multiple passes, so its output can remain empty initially.
 
 Expected files:
 
@@ -71,10 +71,10 @@ scripts/compose.sh exec -T db psql -U bloli -d bloli_nearby -c 'SELECT id,status
 
 An initial download does not immediately make the data searchable. The importer must finish extraction and transactional publication before readiness becomes true. Failed refreshes keep the previous active dataset. Do not copy or edit live PostgreSQL data files; use `scripts/backup.sh` and the documented restore procedure.
 
-Datasets, database files, dumps, screenshots, built assets and secrets are not committed to Git. See [production updates](production-updates.md) and [the deployment protocol](protocol-2026-10-26.md).
+Datasets, database files, dumps, screenshots, built assets and secrets are not committed to Git. See [production updates](production-updates.md) and [the Transit deployment protocol](protocol-2026-10-27-transit.md).
 
-The legacy `find-a-loo_*` volumes were the pre-rename sources. The 2026-10-27 rollout uses verified copies under the generic names; original unmounted copies are retained for rollback. See [volume migration](volume-name-migration.md) and the [Kebab protocol](protocol-2026-10-27-kebab.md). Never copy a running PostgreSQL volume.
+The legacy `find-a-loo_*` volumes were the pre-rename sources. The 2026-10-27 rollout uses verified copies under the generic names; original unmounted copies were explicitly removed at the owner’s request on2026-10-27T18:49:26Z after confirming zero references and verifying a backup. Current rollback uses verified dumps and retained image/configuration backups, not the deleted old volumes. See [volume migration](volume-name-migration.md) and the [Kebab protocol](protocol-2026-10-27-kebab.md). Never copy a running PostgreSQL volume.
 
-Water uses the same `bloli-nearby_import_data` volume and `/data/source.osm.pbf`; there is no separate water map download. Refiltering is required when adding Water because previous filters omitted its tags. Initial rollout reuses a verified retained snapshot; regular refresh then updates all four categories.
+Water uses the same `bloli-nearby_import_data` volume and `/data/source.osm.pbf`; there is no separate water map download. Refiltering is required when adding Water because previous filters omitted its tags. Initial rollout reuses a verified retained snapshot; regular refresh updates all active categories (five after Transit activation).
 
 Transit adds a source-bound SQLite relation metadata sidecar in the same import volume: `/data/transit-context.sqlite` and `/data/transit-context.source`. It contains route labels/mode evidence and stop_area membership, not route path geometry or a second map. The source checksum/context version controls reuse; all five categories/context publish atomically. Source PBF and visible browser tiles retain their existing separate roles.

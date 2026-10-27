@@ -40,8 +40,8 @@
 ## 6. Controlled rollout and audit
 
 - [x] 6.1 Save current VM versions/images/counts/source/mounts/timers/private config and verify a pre-change backup; preserve working four sites and existing generic resources.
-- [ ] 6.2 Deploy compatible images, pause refresh, reuse verified Germany source and build transport context/filter; measure runtime/resource use and publish five validated categories.
-- [ ] 6.3 Compare original four counts for the same source, set measured Transit floors and verify source/group/readiness details plus a post-import backup.
-- [ ] 6.4 Issue Transit TLS using existing ACME infrastructure, extend renewal hook scope, validate/gracefully reload Nginx and dry-run all five renewals.
-- [ ] 6.5 Verify representative modes/interchanges/S-Bahn evidence and all five public sites with actual map tiles, languages, phone layouts and no page errors; resume/verify timers.
-- [ ] 6.6 Save the dated actual VM protocol and current operating instructions, commit/push source-only changes, synchronize the VM and stop/remove temporary debugging/helpers while preserving data and rollback volumes.
+- [x] 6.2 Deploy compatible images, pause refresh, reuse verified Germany source and build transport context/filter; measure runtime/resource use and publish five validated categories.
+- [x] 6.3 Compare original four counts for the same source, set measured Transit floors and verify source/group/readiness details plus a post-import backup.
+- [x] 6.4 Issue Transit TLS using existing ACME infrastructure, extend renewal hook scope, validate/gracefully reload Nginx and dry-run all five renewals.
+- [x] 6.5 Verify representative modes/interchanges/S-Bahn evidence and all five public sites with actual map tiles, languages, phone layouts and no page errors; resume/verify timers.
+- [x] 6.6 Save the dated actual VM protocol and current operating instructions, commit/push source-only changes, synchronize the VM and stop/remove temporary debugging/helpers while preserving active data/backups and documenting the owner-authorized unused legacy-volume removal.
