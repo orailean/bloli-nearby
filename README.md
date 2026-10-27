@@ -91,3 +91,10 @@ Map/location data is © OpenStreetMap contributors under ODbL, via Geofabrik. Pr
 `https://kebab.bloli.com` discovers mapped Döner/kebab restaurants and fast-food venues. It shares the database, API, web gateway and weekly Germany source import with Loo and Kippe. Cuisine tokens `kebab`, `doner`, `doener` and `döner` qualify, including case/semicolon variants; Turkish cuisine or a business name alone does not. Food opening hours, takeaway/delivery, dietary information and menu/website links are shown only when mapped; food venues never receive the machine 24/7 assumption.
 
 Run all three local sites at `loo.localhost:5173`, `kippe.localhost:5173` and `kebab.localhost:5173` with one native API/Vite pair and Docker PostGIS. The mixed sample contains synthetic toilets, sellers and food venues; see [local development](docs/development/multi-site.md). See [Kebab deployment](docs/deployment/kebab-site.md) for DNS, TLS, shared data validation and rollback. The displayed dataset date is the OSM snapshot timestamp; `/api/status` also reports `importedAt` and the latest job result.
+
+
+### Water
+
+[Water](https://water.bloli.com) finds explicitly mapped drinking-water points and refill partners in Germany, on the same shared stack as Loo, Kippe and Kebab. Native development: `http://water.localhost:5173` (or `http://localhost:5173/?site=water`). Water has separate DE/EN/RO content, fee and mapped Open now filters, and the same 0.5 km default radius.
+
+See [Water setup and updates](docs/deployment/water-site.md). The small guarded sample seed now contains all four categories. Production refresh must include all four after Water first publishes; do not run an older three-category importer.

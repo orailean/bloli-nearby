@@ -3,18 +3,27 @@ import type { Facility, SourceRecord } from "../shared/types.js";
 import { normalizeFacility } from "../shared/domain.js";
 import { normalizeSeller } from "../shared/sellers.js";
 import { normalizeKebab } from "../shared/kebab.js";
+import { normalizeWater } from "../shared/water.js";
 export type CategoryMinimum =
   | "minimumFacilities"
   | "minimumSellers"
-  | "minimumKebabs";
+  | "minimumKebabs"
+  | "minimumWaterPoints";
 export interface CategoryImport {
   kind: string;
   minimum: CategoryMinimum;
   defaultMinimum: number;
-  count: "facilities" | "sellers" | "kebabs";
+  count: "facilities" | "sellers" | "kebabs" | "waterPoints";
   normalize: (record: SourceRecord) => Facility | null;
 }
 export const categoryImports: Record<Category, CategoryImport> = {
+  water: {
+    kind: "water",
+    minimum: "minimumWaterPoints",
+    defaultMinimum: 100,
+    count: "waterPoints",
+    normalize: normalizeWater,
+  },
   toilets: {
     kind: "facility",
     minimum: "minimumFacilities",

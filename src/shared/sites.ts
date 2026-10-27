@@ -1,5 +1,5 @@
-export type SiteId = "loo" | "kippe" | "kebab";
-export type Category = "toilets" | "tobacco" | "kebab";
+export type SiteId = "loo" | "kippe" | "kebab" | "water";
+export type Category = "toilets" | "tobacco" | "kebab" | "water";
 export type SellerType = "machine" | "shop" | "fuel";
 export interface SiteProfile {
   id: SiteId;
@@ -9,6 +9,13 @@ export interface SiteProfile {
   capabilities: { fee: boolean; sellerType: boolean; openNow: boolean };
 }
 export const sites: Record<SiteId, SiteProfile> = {
+  water: {
+    id: "water",
+    category: "water",
+    name: "Water",
+    domain: "water.bloli.com",
+    capabilities: { fee: true, sellerType: false, openNow: true },
+  },
   kebab: {
     id: "kebab",
     category: "kebab",

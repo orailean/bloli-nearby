@@ -4,6 +4,13 @@ const template = await readFile(
   "utf8",
 );
 const profiles = {
+  water: {
+    domain: "water.bloli.com",
+    title: "Water · Kurz auffüllen. Weiter geht’s.",
+    description:
+      "Finde erfasste Trinkwasserstellen und Refill-Partner in Deutschland. Mit Gebühren, saisonalen Angaben und Öffnungszeiten aus OpenStreetMap.",
+    color: "#1459d9",
+  },
   loo: {
     domain: "loo.bloli.com",
     title: "Find a Loo · A little relief, nearby.",

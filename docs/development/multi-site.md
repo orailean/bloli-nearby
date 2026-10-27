@@ -48,3 +48,8 @@ For Docker preview, the production gateway intentionally accepts only the three 
 The development database/login were renamed to `bloli_nearby_dev` / `bloli_dev`, preserving the existing password and 246-toilet Bremen sample. The integration database is `bloli_nearby_integration`. The stopped old PostgreSQL volume was copied with ownership preserved into `bloli-nearby-dev-postgres-data`, and the new `bloli-nearby-dev-db-1` container was started on the same loopback port. The old development volume remains as a rollback copy; do not run both copies on the same port. The ignored `.env.local` was updated without changing its password. Fresh installations use the example password shown above.
 
 The synthetic three-category fixture contains 6 toilets, 8 tobacco sellers, 8 kebab venues and 2 settlements. Integration imports use the disposable `bloli_nearby_integration` database and never the saved development sample. Once a database has all three categories active, imports omitting an active category are rejected; use a new local database when trying historical one/two-category samples.
+
+
+## Water profile
+
+Open `http://water.localhost:5173` with the same native API/Vite and Docker-only DB workflow. The guarded synthetic sample includes eight Water records across München and Bremen (public points, a seasonal source and refill partners); it refuses to overwrite an active dataset. Set `MIN_WATER_POINTS=1` only for manually importing a small local sample; `seed:sample` sets this itself. Existing saved local data is preserved by using a fresh sample database.

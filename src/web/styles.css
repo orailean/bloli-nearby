@@ -2242,3 +2242,227 @@ html[data-site="kebab"] {
     scroll-behavior: auto !important;
   }
 }
+
+/* Water: a clean refill stop, with one illustrated tap and bottle. */
+[data-site="water"] {
+  --ink: #12335b;
+  --mint: #e8f7fc;
+  --yellow: #e4f46d;
+  --line: #d6e5ef;
+  --muted: #4d657d;
+  --display: "Rubik Variable", sans-serif;
+  color: var(--ink);
+  background: #fff;
+}
+[data-site="water"] .site-header {
+  background: #fff;
+}
+[data-site="water"] .brand-mark {
+  background: #1459d9;
+  color: #fff;
+  border-radius: 50% 50% 50% 8px;
+}
+[data-site="water"] .brand-dot {
+  color: #087e8b;
+}
+[data-site="water"] .hero {
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr);
+  min-height: 420px;
+}
+[data-site="water"] .hero h1 {
+  font-size: clamp(42px, 4.7vw, 68px);
+  letter-spacing: -2.7px;
+  line-height: 1.08;
+  font-weight: 750;
+}
+[data-site="water"] .hero-copy > p {
+  max-width: 510px;
+}
+[data-site="water"] .country-tag {
+  background: #e8f7fc;
+}
+[data-site="water"] .country-dot {
+  background: #1459d9;
+}
+[data-site="water"] .hero-art::before {
+  display: none;
+}
+[data-site="water"] .refill-scene {
+  width: 100%;
+  max-width: 400px;
+  height: 310px;
+}
+[data-site="water"] .art-caption {
+  background: #e8f7fc;
+  color: var(--ink);
+  border-radius: 30px;
+  bottom: -2px;
+  left: auto;
+  right: 20px;
+  font-size: 13px;
+  transform: rotate(-3deg);
+}
+[data-site="water"] .search-dock {
+  border-color: var(--line);
+  box-shadow: 0 8px 0 #e8f7fc;
+  border-radius: 24px 24px 24px 6px;
+}
+[data-site="water"] .locate-button,
+[data-site="water"] .search-submit,
+[data-site="water"] .walk-button {
+  background: #1459d9;
+  color: #fff;
+}
+[data-site="water"] .workspace {
+  border-radius: 24px 24px 8px 8px;
+}
+[data-site="water"] .fee-filters button.active {
+  background: #1459d9;
+  color: #fff;
+}
+[data-site="water"] .result-row.selected {
+  background: #edf7fd;
+}
+[data-site="water"] .result-number {
+  background: #e8f7fc;
+  color: var(--ink);
+  border-radius: 50% 50% 50% 7px;
+}
+[data-site="water"] .water-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #25547c;
+  font-size: 12px;
+}
+[data-site="water"] .result-info strong {
+  overflow-wrap: anywhere;
+}
+[data-site="water"] .map-pin {
+  background: #1459d9;
+}
+[data-site="water"] .map-pin.active {
+  background: var(--yellow);
+  color: var(--ink);
+}
+[data-site="water"] .site-footer {
+  background: #12335b;
+  color: #fff;
+}
+[data-site="water"] .footer-brand .brand-mark {
+  background: #e8f7fc;
+  color: #1459d9;
+}
+[data-site="water"] .footer-main p,
+[data-site="water"] .footer-bottom {
+  color: #d6e8f9;
+}
+[data-site="water"] .footer-main {
+  border-bottom-color: #416287;
+}
+[data-site="water"] .detail-panel {
+  animation: water-ripple 0.3s ease-out;
+}
+[data-site="water"] .bottle-water {
+  animation: bottle-fill 0.8s ease-out;
+  transform-origin: 190px 273px;
+}
+[data-site="water"] .is-searching .water-stream {
+  animation: water-flow 0.5s linear;
+}
+[data-site="water"] .is-searching .water-bottle {
+  animation: bottle-nod 0.5s ease-out;
+  transform-origin: 190px 277px;
+}
+@keyframes bottle-fill {
+  from {
+    transform: scaleY(0.08);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes water-flow {
+  to {
+    stroke-dashoffset: -38;
+  }
+}
+@keyframes bottle-nod {
+  50% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes water-ripple {
+  from {
+    box-shadow: inset 0 0 0 4px #a9dff1;
+  }
+  to {
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+}
+@media (max-width: 760px) {
+  [data-site="water"] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding-top: 28px;
+    padding-bottom: 24px;
+  }
+  [data-site="water"] .hero h1 {
+    font-size: clamp(35px, 9.3vw, 60px);
+    letter-spacing: -1.6px;
+    max-width: 100%;
+  }
+  [data-site="water"] .hero-art {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    transform: none;
+    margin-top: 10px;
+  }
+  [data-site="water"] .refill-scene {
+    height: 185px;
+    width: 245px;
+  }
+  [data-site="water"] .art-caption {
+    bottom: 0;
+    right: 0;
+    font-size: 11px;
+    max-width: 150px;
+  }
+  [data-site="water"] .hero-copy > p {
+    font-size: 14px;
+  }
+  [data-site="water"] .workspace-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px;
+  }
+  [data-site="water"] .fee-filters {
+    width: 100%;
+  }
+  [data-site="water"] .fee-filters button {
+    padding: 10px 8px;
+    flex: 1;
+    gap: 5px;
+    font-size: 12px;
+  }
+  [data-site="water"] .open-now-control {
+    margin-left: 0;
+  }
+  [data-site="water"] .radius-control {
+    margin-left: auto;
+  }
+  [data-site="water"] .locate-button {
+    white-space: normal;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-site="water"] *,
+  [data-site="water"] *::before,
+  [data-site="water"] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -66,3 +66,10 @@ BEGIN
  END IF;
 END $$;
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS kebab_count integer;
+
+-- Expand existing checks for the fourth profile without rewriting active rows.
+ALTER TABLE location_categories DROP CONSTRAINT IF EXISTS location_categories_category_check;
+ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water'));
+ALTER TABLE category_datasets DROP CONSTRAINT IF EXISTS category_datasets_category_check;
+ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water'));
+ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS water_count integer;

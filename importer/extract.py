@@ -61,6 +61,10 @@ def kebab_candidate(tags):
         tokens(tags.get('cuisine', '')) & {'kebab', 'doner', 'doener', 'döner'})
 
 
+def water_candidate(tags):
+    return tags.get('amenity') == 'drinking_water' or tags.get('drinking_water') == 'yes' or (tags.get('amenity') == 'fountain' and tags.get('fountain') == 'drinking') or tags.get('drinking_water:refill') == 'yes'
+
+
 def kinds(tags):
     # Routes describe onboard toilets; collections group separate locations.
     if tags.get('type') in ('route', 'route_master', 'collection'):
@@ -70,6 +74,8 @@ def kinds(tags):
         result.append('facility')
     if seller_candidate(tags):
         result.append('seller')
+    if water_candidate(tags):
+        result.append('water')
     if kebab_candidate(tags):
         result.append('kebab')
     if tags.get('place') in ('city', 'town', 'village', 'hamlet', 'suburb', 'borough', 'quarter', 'locality') or tags.get('boundary') == 'postal_code':
@@ -89,7 +95,7 @@ def extract(filename, coverage, output, source, dataset_at=None):
     def emit(record):
         output.write(json.dumps(record, ensure_ascii=False) + '\n')
     emit({'kind': 'metadata', 'source': source, 'datasetAt': dataset_at, 'coverage': coverage,
-          'categories': ['toilets', 'tobacco', 'kebab']})
+          'categories': ['toilets', 'tobacco', 'kebab', 'water']})
     factory = osmium.geom.GeoJSONFactory()
     sites = {}
     member_keys = set()
@@ -190,6 +196,9 @@ def extract(filename, coverage, output, source, dataset_at=None):
     broken_kebabs = [key for key in missing if 'kebab' in handler.expected[key]]
     if broken_kebabs:
         raise ValueError(f'Incomplete kebab geometries: {len(broken_kebabs)}; sources: {sorted(broken_kebabs)[:30]}')
+    broken_water = [key for key in missing if 'water' in handler.expected[key]]
+    if broken_water:
+        raise ValueError(f'Incomplete water geometries: {len(broken_water)}; sources: {sorted(broken_water)[:30]}')
     emit({'kind': 'complete', 'records': handler.count, 'skippedSettlementGeometries': len(missing)})
     return handler.count
 

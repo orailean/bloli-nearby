@@ -33,6 +33,10 @@ export interface Facility {
   tobaccoSales?: "mapped" | "unconfirmed";
   paymentMethods?: Record<string, string>;
   brand?: string | null;
+  waterType?: "point" | "refill";
+  bottle?: string | null;
+  seasonal?: string | null;
+  refillNetwork?: string | null;
   cuisine?: string[];
   takeaway?: string | null;
   delivery?: string | null;

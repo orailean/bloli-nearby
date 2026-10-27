@@ -98,7 +98,7 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   if (
-    (category !== "toilets" && p.has("fee")) ||
+    (!["toilets", "water"].includes(category) && p.has("fee")) ||
     (category !== "tobacco" && p.has("sellerType"))
   )
     throw new AppError("INVALID_QUERY");

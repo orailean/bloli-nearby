@@ -51,7 +51,7 @@ class KebabExtractionTests(unittest.TestCase):
     def test_node_three_memberships_tags_unknown_hours_and_completion(self):
         rows = self.run_extract('<node id="5" lat="53.07" lon="8.80" version="1">' + FOOD +
                                 '<tag k="shop" v="supermarket"/><tag k="toilets" v="yes"/></node>')
-        self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco', 'kebab'])
+        self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco', 'kebab', 'water'])
         records = rows[1:-1]
         self.assertEqual({r['kind'] for r in records}, {'facility', 'seller', 'kebab'})
         self.assertEqual(len(records), 3)
@@ -106,7 +106,7 @@ class KebabExtractionTests(unittest.TestCase):
 
     def test_empty_extract_declares_all_categories_and_zero_records(self):
         rows = self.run_extract('')
-        self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco', 'kebab'])
+        self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco', 'kebab', 'water'])
         self.assertEqual(rows[-1]['records'], 0)
 
 

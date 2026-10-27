@@ -3,7 +3,7 @@ import { chromium, expect } from "@playwright/test";
 const results = {};
 const browser = await chromium.launch();
 try {
-  for (const id of (process.env.SITES || "loo,kippe,kebab").split(",")) {
+  for (const id of (process.env.SITES || "loo,kippe,kebab,water").split(",")) {
     const base = `https://${id}.bloli.com`;
     const htmlResponse = await fetch(base);
     assert.equal(htmlResponse.status, 200);
@@ -47,6 +47,24 @@ try {
       assert.ok(
         opened.items.every((item) => !!item.openingHours && !item.hoursAssumed),
       );
+    }
+    if (id === "water") {
+      assert.ok(
+        all.items.every(
+          (item) => item.category === "water" && !item.hoursAssumed,
+        ),
+      );
+      for (const suffix of ["&sellerType=all", "&category=tobacco"])
+        assert.equal(
+          (await fetch(`${base}/api/locations?${query}${suffix}`)).status,
+          400,
+        );
+      for (const fee of ["free", "paid"]) {
+        const r = await fetch(`${base}/api/locations?${query}&fee=${fee}`);
+        assert.equal(r.status, 200);
+        const d = await r.json();
+        assert.ok(d.items.every((item) => item.fee === fee));
+      }
     }
     if (id === "kippe") {
       for (const type of ["machine", "shop", "fuel"]) {

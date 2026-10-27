@@ -12,8 +12,14 @@ import type { SiteId } from "../shared/sites.js";
 import kebabEn from "./sites/kebab/locales/en.json";
 import kebabDe from "./sites/kebab/locales/de.json";
 import kebabRo from "./sites/kebab/locales/ro.json";
+import waterEn from "./sites/water/locales/en.json";
+import waterDe from "./sites/water/locales/de.json";
+import waterRo from "./sites/water/locales/ro.json";
 type Dictionary = Record<
-  keyof typeof commonEn | keyof typeof looEn | keyof typeof kebabEn,
+  | keyof typeof commonEn
+  | keyof typeof looEn
+  | keyof typeof kebabEn
+  | keyof typeof waterEn,
   string
 >;
 // Food labels extend the shared presentation type; existing sites keep their own copy.
@@ -25,21 +31,62 @@ const foodFallback = Object.fromEntries(
   typeof kebabDe,
   Exclude<keyof typeof kebabDe, keyof typeof commonDe | keyof typeof looDe>
 >;
+const waterFallback = Object.fromEntries(
+  Object.entries(waterDe).filter(
+    ([key]) => !Object.hasOwn(commonDe, key) && !Object.hasOwn(looDe, key),
+  ),
+) as Pick<
+  typeof waterDe,
+  Exclude<keyof typeof waterDe, keyof typeof commonDe | keyof typeof looDe>
+>;
 export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
+  water: {
+    en: { ...foodFallback, ...commonDe, ...commonEn, ...waterDe, ...waterEn },
+    de: { ...foodFallback, ...commonDe, ...waterDe },
+    ro: { ...foodFallback, ...commonDe, ...commonRo, ...waterDe, ...waterRo },
+  },
   kebab: {
-    en: { ...commonDe, ...commonEn, ...kebabDe, ...kebabEn },
-    de: { ...commonDe, ...kebabDe },
-    ro: { ...commonDe, ...commonRo, ...kebabDe, ...kebabRo },
+    en: { ...waterFallback, ...commonDe, ...commonEn, ...kebabDe, ...kebabEn },
+    de: { ...waterFallback, ...commonDe, ...kebabDe },
+    ro: { ...waterFallback, ...commonDe, ...commonRo, ...kebabDe, ...kebabRo },
   },
   loo: {
-    en: { ...foodFallback, ...commonDe, ...commonEn, ...looDe, ...looEn },
-    de: { ...foodFallback, ...commonDe, ...looDe },
-    ro: { ...foodFallback, ...commonDe, ...commonRo, ...looDe, ...looRo },
+    en: {
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonEn,
+      ...looDe,
+      ...looEn,
+    },
+    de: { ...waterFallback, ...foodFallback, ...commonDe, ...looDe },
+    ro: {
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonRo,
+      ...looDe,
+      ...looRo,
+    },
   },
   kippe: {
-    en: { ...foodFallback, ...commonDe, ...commonEn, ...kippeDe, ...kippeEn },
-    de: { ...foodFallback, ...commonDe, ...kippeDe },
-    ro: { ...foodFallback, ...commonDe, ...commonRo, ...kippeDe, ...kippeRo },
+    en: {
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonEn,
+      ...kippeDe,
+      ...kippeEn,
+    },
+    de: { ...waterFallback, ...foodFallback, ...commonDe, ...kippeDe },
+    ro: {
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonRo,
+      ...kippeDe,
+      ...kippeRo,
+    },
   },
 };
 export const dictionaries = siteDictionaries.loo;

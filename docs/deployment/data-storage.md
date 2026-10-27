@@ -5,7 +5,7 @@ There is intentionally no `data/` folder in `/home/oliver/stack/bloli-nearby` fo
 ## What is downloaded
 
 - **Visible map background:** browsers load raster tiles directly from OpenStreetMap. The VM does not bulk-download or serve Germany map tiles.
-- **Germany OSM source:** the importer downloads Germany's `.osm.pbf` dataset from Geofabrik, verifies its published checksum and extracts toilets, tobacco sellers, kebab venues and settlements.
+- **Germany OSM source:** the importer downloads Germany's `.osm.pbf` dataset from Geofabrik, verifies its published checksum and extracts toilets, tobacco sellers, kebab venues, drinking-water/refill points and settlements.
 - **Search database:** normalized facility and settlement records, coverage, source dates and import job history are stored in PostGIS.
 
 ## Exact VM paths
@@ -74,3 +74,5 @@ An initial download does not immediately make the data searchable. The importer 
 Datasets, database files, dumps, screenshots, built assets and secrets are not committed to Git. See [production updates](production-updates.md) and [the deployment protocol](protocol-2026-10-26.md).
 
 The legacy `find-a-loo_*` volumes were the pre-rename sources. The 2026-10-27 rollout uses verified copies under the generic names; original unmounted copies are retained for rollback. See [volume migration](volume-name-migration.md) and the [Kebab protocol](protocol-2026-10-27-kebab.md). Never copy a running PostgreSQL volume.
+
+Water uses the same `bloli-nearby_import_data` volume and `/data/source.osm.pbf`; there is no separate water map download. Refiltering is required when adding Water because previous filters omitted its tags. Initial rollout reuses a verified retained snapshot; regular refresh then updates all four categories.

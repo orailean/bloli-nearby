@@ -748,6 +748,139 @@ test(
           );
         },
       );
+      await t.test(
+        "Water fourth category publishes atomically and preserves prior categories",
+        async () => {
+          const options = {
+            ...opts,
+            categories: ["toilets", "tobacco", "kebab", "water"] as const,
+            minimumSellers: 1,
+            minimumKebabs: 1,
+            minimumWaterPoints: 1,
+            minimumRatio: 0.5,
+          };
+          async function* four() {
+            yield* records();
+            for (let i = 0; i < 4; i++) {
+              yield {
+                kind: "seller",
+                sourceType: "node",
+                sourceId: String(900 + i),
+                lat: 52.52,
+                lon: 13.405,
+                tags: { shop: "tobacco" },
+              };
+              yield {
+                kind: "kebab",
+                sourceType: "node",
+                sourceId: String(910 + i),
+                lat: 52.52,
+                lon: 13.405,
+                tags: { amenity: "fast_food", cuisine: "kebab" },
+              };
+              yield {
+                kind: "water",
+                sourceType: "node",
+                sourceId: String(920 + i),
+                lat: 52.52,
+                lon: 13.405 + i * 0.0001,
+                tags: {
+                  amenity: "drinking_water",
+                  fee: i === 0 ? "no" : "yes",
+                  opening_hours: "24/7",
+                  ...(i === 0 ? { seasonal: "yes" } : {}),
+                },
+              };
+              yield {
+                kind: "settlement",
+                sourceType: "node",
+                sourceId: String(930 + i),
+                lat: 52.52,
+                lon: 13.405,
+                tags: { name: `Water fixture ${i}`, place: "village" },
+              };
+            }
+          }
+          const runOptions = {
+            ...options,
+            categories: [...options.categories],
+          };
+          const result = await importDataset(pool, four(), runOptions);
+          assert.equal(result.waterPoints, 4);
+          await migrate(pool);
+          await migrate(pool);
+          const request = (path: string) =>
+            new Promise<{ status: number; body: any }>((resolve, reject) => {
+              httpGet(
+                `http://127.0.0.1:${address.port}${path}`,
+                { headers: { Host: "water.bloli.com" } },
+                (r) => {
+                  let data = "";
+                  r.on("data", (chunk) => (data += chunk));
+                  r.on("end", () =>
+                    resolve({ status: r.statusCode!, body: JSON.parse(data) }),
+                  );
+                },
+              ).on("error", reject);
+            });
+          assert.equal((await request("/api/ready")).body.count, 4);
+          const all = await request("/api/locations?lat=52.52&lon=13.405");
+          assert.equal(all.body.items.length, 4);
+          assert.ok(all.body.items.every((x: any) => x.category === "water"));
+          assert.equal(
+            (await request("/api/locations?lat=52.52&lon=13.405&fee=free")).body
+              .items.length,
+            1,
+          );
+          assert.equal(
+            (await request("/api/locations?lat=52.52&lon=13.405&openNow=true"))
+              .body.items.length,
+            3,
+          );
+          assert.equal(
+            (
+              await request(
+                "/api/locations?lat=52.52&lon=13.405&sellerType=all",
+              )
+            ).status,
+            400,
+          );
+          assert.equal(
+            (
+              await request(
+                "/api/locations?lat=52.52&lon=13.405&category=tobacco",
+              )
+            ).status,
+            400,
+          );
+          const before = (
+            await pool.query(
+              "SELECT category,location_count,imported_at FROM category_datasets ORDER BY category",
+            )
+          ).rows;
+          await assert.rejects(
+            importDataset(pool, four(), {
+              ...runOptions,
+              minimumWaterPoints: 99,
+            }),
+          );
+          await assert.rejects(
+            importDataset(pool, records(), {
+              ...opts,
+              categories: ["toilets", "tobacco", "kebab"],
+            }),
+            (e: any) => e.code === "PARTIAL_CATEGORY_IMPORT",
+          );
+          assert.deepEqual(
+            (
+              await pool.query(
+                "SELECT category,location_count,imported_at FROM category_datasets ORDER BY category",
+              )
+            ).rows,
+            before,
+          );
+        },
+      );
     } finally {
       server.close();
       await pool.end();

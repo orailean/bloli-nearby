@@ -9,7 +9,7 @@ const dataset = {
   stale: false,
   latestJob: null,
 };
-for (const id of ["loo", "kippe", "kebab"] as const) {
+for (const id of ["loo", "kippe", "kebab", "water"] as const) {
   for (const width of [1440, 320, 390, 430]) {
     test(`${id} ${width}px shares search, keeps its category and fits every locale`, async ({
       page,
@@ -36,8 +36,11 @@ for (const id of ["loo", "kippe", "kebab"] as const) {
       await page.route("**/api/locations?*", (route) => {
         const q = new URL(route.request().url()).searchParams;
         expect(q.get("radius")).toMatch(/^(500|1000|2000|3000|5000)$/);
-        expect(q.has(id === "loo" ? "sellerType" : "fee")).toBe(false);
-        if (id === "kebab") expect(q.has("sellerType")).toBe(false);
+        expect(
+          q.has(["loo", "water"].includes(id) ? "sellerType" : "fee"),
+        ).toBe(false);
+        if (["kebab", "water"].includes(id))
+          expect(q.has("sellerType")).toBe(false);
         const items = ["machine", "shop", "fuel"]
           .filter(
             (type) =>
@@ -57,6 +60,15 @@ for (const id of ["loo", "kippe", "kebab"] as const) {
                 ? `Döner Kebab Spezialitäten und vegetarische Küche am langen Straßenbahnhof ${type}`
                 : `Fixture ${type}`,
             fee: "free",
+            ...(id === "water"
+              ? {
+                  category: "water",
+                  waterType: "refill",
+                  bottle: "no",
+                  seasonal: "yes",
+                  refillNetwork: "Refill",
+                }
+              : {}),
             charge: null,
             feeText: null,
             access: "public",
@@ -100,6 +112,14 @@ for (const id of ["loo", "kippe", "kebab"] as const) {
       await page.getByRole("button", { name: "Bremen", exact: true }).click();
       await expect(page.locator(".result-row")).toHaveCount(3);
       await expect(page.locator(".radius-control select")).toHaveValue("500");
+      if (id === "water") {
+        await expect(page.locator(".fee-filters")).toBeVisible();
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel")).toContainText(
+          "Bottle filling",
+        );
+        await expect(page.locator(".detail-panel")).toContainText("Refill");
+      }
       if (id === "kebab") {
         await expect(page.locator(".fee-filters")).toHaveCount(0);
         await page.locator(".result-select").first().click();
