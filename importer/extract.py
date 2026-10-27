@@ -202,12 +202,13 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             tags = dict(obj.tags)
             source_type = 'way' if obj.from_way() else 'relation'
             member_key = ('w' if obj.from_way() else 'r', obj.orig_id())
-            if not kinds(tags) and member_key not in member_keys:
+            area_kinds = object_kinds(tags, source_type, obj.orig_id())
+            if not area_kinds and member_key not in member_keys:
                 return
             point = shape(json.loads(factory.create_multipolygon(obj))).representative_point()
             if member_key in member_keys:
                 member_points[member_key] = point
-            if kinds(tags):
+            if area_kinds:
                 self.write(source_type, obj.orig_id(), tags, point)
                 self.completed.add((source_type, obj.orig_id()))
 

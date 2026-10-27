@@ -57,3 +57,15 @@ class TransitTests(unittest.TestCase):
    self.assertEqual(records[0]['sourceId'],'30')
    self.assertAlmostEqual(records[0]['lat'],48.0005)
    self.assertEqual(records[0]['lon'],11)
+
+ def test_closed_generic_entrance_in_station_group_keeps_area_geometry(self):
+  xml='''<osm version="0.6"><node id="1" version="1" lat="48" lon="11"/><node id="2" version="1" lat="48.001" lon="11"/><node id="3" version="1" lat="48.001" lon="11.001"/><node id="4" version="1" lat="48" lon="11.001"/><way id="5" version="1"><nd ref="1"/><nd ref="2"/><nd ref="3"/><nd ref="4"/><nd ref="1"/><tag k="entrance" v="yes"/><tag k="building:part" v="elevator"/><tag k="highway" v="elevator"/></way><relation id="10" version="1"><member type="way" ref="5" role="entrance"/><tag k="type" v="public_transport"/><tag k="public_transport" v="stop_area"/><tag k="train" v="yes"/></relation></osm>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(xml);out=io.StringIO()
+   extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(x) for x in out.getvalue().splitlines()]
+   record=next(x for x in rows if x.get('kind')=='transit')
+   self.assertEqual((record['sourceType'],record['sourceId']),('way','5'))
+   self.assertTrue(48 < record['lat'] < 48.001)
+   self.assertEqual(record['transport']['groups'][0]['id'],'relation/10')
+   self.assertEqual(rows[-1]['kind'],'complete')
