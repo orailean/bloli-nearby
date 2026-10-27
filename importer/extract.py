@@ -72,7 +72,7 @@ def transit_candidate(t):
 
 def kinds(tags):
     # Routes describe onboard toilets; collections group separate locations.
-    if tags.get('type') in ('route', 'route_master', 'collection'):
+    if tags.get('type') in ('route', 'route_master', 'collection', 'destination_sign') or tags.get('public_transport') in ('stop_area', 'stop_area_group'):
         return []
     result = []
     if transit_candidate(tags):
@@ -113,10 +113,17 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     sites = {}
     member_keys = set()
     building_member_keys = set()
+    relation_members = {}
+    transit_relations = {}
 
     class SiteMembers(osmium.SimpleHandler):
         def relation(self, obj):
             tags = dict(obj.tags)
+            # Collections and routes supply context, never passenger coordinates.
+            if tags.get('type') not in ('route', 'route_master', 'collection', 'destination_sign') and tags.get('public_transport') not in ('stop_area', 'stop_area_group'):
+                relation_members[obj.id] = [(m.type, m.ref) for m in obj.members if m.type in ('n', 'w', 'r')]
+            if 'transit' in kinds(tags):
+                transit_relations[obj.id] = tags
             if tags.get('type') in ('site', 'building') and kinds(tags):
                 members = [(m.type, m.ref) for m in obj.members if m.type in ('n', 'w')]
                 if tags.get('type') == 'building':
@@ -131,6 +138,19 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     # Relations follow their members in OSM files. Collect only fixed site/building references
     # first, then retain coordinates for those members during the main pass.
     SiteMembers().apply_file(filename)
+    # Resolve only dependencies of physical passenger features, not route paths.
+    pending = list(transit_relations)
+    needed_relations = set()
+    while pending:
+        source_id = pending.pop()
+        if source_id in needed_relations:
+            continue
+        needed_relations.add(source_id)
+        for member_type, member_id in relation_members.get(source_id, []):
+            member_keys.add((member_type, member_id))
+            if member_type == 'r':
+                pending.append(member_id)
+    relation_members = {key: value for key, value in relation_members.items() if key in needed_relations}
     member_points = {}
 
     class Extractor(osmium.SimpleHandler):
@@ -180,12 +200,16 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
 
         def area(self, obj):
             tags = dict(obj.tags)
-            if not kinds(tags):
-                return
             source_type = 'way' if obj.from_way() else 'relation'
+            member_key = ('w' if obj.from_way() else 'r', obj.orig_id())
+            if not kinds(tags) and member_key not in member_keys:
+                return
             point = shape(json.loads(factory.create_multipolygon(obj))).representative_point()
-            self.write(source_type, obj.orig_id(), tags, point)
-            self.completed.add((source_type, obj.orig_id()))
+            if member_key in member_keys:
+                member_points[member_key] = point
+            if kinds(tags):
+                self.write(source_type, obj.orig_id(), tags, point)
+                self.completed.add((source_type, obj.orig_id()))
 
     handler = Extractor()
     with tempfile.TemporaryDirectory(prefix='loo-locations-') as temporary:
@@ -199,6 +223,34 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             point = min(points, key=lambda p: (p.x-x)**2 + (p.y-y)**2)
             handler.write('relation', source_id, tags, point)
             handler.completed.add(('relation', source_id))
+    def passenger_member_point(source_id, visiting):
+        key = ('r', source_id)
+        if key in member_points:
+            return member_points[key]
+        if source_id in visiting:
+            return None
+        visiting.add(source_id)
+        points = []
+        for member_type, member_id in relation_members.get(source_id, []):
+            point = passenger_member_point(member_id, visiting) if member_type == 'r' else member_points.get((member_type, member_id))
+            if point is not None:
+                points.append(point)
+        visiting.remove(source_id)
+        if not points:
+            return None
+        x = sum(p.x for p in points) / len(points)
+        y = sum(p.y for p in points) / len(points)
+        # Keep an actual mapped member point, including for non-area relations.
+        point = min(points, key=lambda p: (p.x-x)**2 + (p.y-y)**2)
+        member_points[key] = point
+        return point
+
+    for source_id, tags in transit_relations.items():
+        if ('relation', source_id) not in handler.completed:
+            point = passenger_member_point(source_id, set())
+            if point is not None:
+                handler.write('relation', source_id, tags, point)
+                handler.completed.add(('relation', source_id))
     missing = set(handler.expected) - handler.completed
     broken_facilities = [key for key in missing if 'facility' in handler.expected[key]]
     if broken_facilities:

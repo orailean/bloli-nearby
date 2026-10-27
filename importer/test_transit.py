@@ -26,3 +26,34 @@ class TransitTests(unittest.TestCase):
    p=Path(d)/'fixture.osm';p.write_text(xml);out=io.StringIO()
    with self.assertRaisesRegex(ValueError,'Incomplete transit geometries'):extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
    self.assertNotIn('"kind": "complete"',out.getvalue())
+
+ def test_tagged_station_groups_and_direction_signs_are_context_not_locations(self):
+  xml='''<osm version="0.6"><node id="1" version="1" lat="48" lon="11"><tag k="public_transport" v="platform"/><tag k="train" v="yes"/></node><relation id="10" version="1"><member type="node" ref="1" role="platform"/><tag k="type" v="public_transport"/><tag k="public_transport" v="stop_area"/><tag k="railway" v="station"/><tag k="name" v="Hub"/></relation><relation id="11" version="1"><member type="relation" ref="10" role="stop_area"/><tag k="type" v="public_transport"/><tag k="public_transport" v="stop_area_group"/><tag k="amenity" v="bus_station"/></relation><relation id="12" version="1"><member type="node" ref="1" role="sign"/><tag k="type" v="destination_sign"/><tag k="public_transport" v="station"/></relation></osm>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(xml);out=io.StringIO()
+   extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(x) for x in out.getvalue().splitlines()]
+   records=[x for x in rows if x.get('kind')=='transit']
+   self.assertEqual([x['sourceId'] for x in records],['1'])
+   self.assertEqual(records[0]['transport']['groups'][0]['id'],'relation/10')
+   self.assertEqual(rows[-1]['kind'],'complete')
+ def test_non_area_passenger_relation_uses_actual_member_geometry(self):
+  xml='''<osm version="0.6"><node id="1" version="1" lat="48" lon="11"/><relation id="10" version="1"><member type="node" ref="1" role="platform"/><tag k="type" v="public_transport"/><tag k="public_transport" v="platform"/><tag k="train" v="yes"/></relation></osm>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(xml);out=io.StringIO()
+   extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(x) for x in out.getvalue().splitlines()]
+   record=next(x for x in rows if x.get('kind')=='transit')
+   self.assertEqual((record['sourceType'],record['sourceId'],record['lat'],record['lon']),('relation','10',48,11))
+   self.assertEqual(rows[-1]['kind'],'complete')
+
+ def test_nested_passenger_platform_relations_resolve_member_geometry(self):
+  xml='''<osm version="0.6"><node id="1" version="1" lat="48" lon="11"/><node id="2" version="1" lat="48.001" lon="11"/><way id="5" version="1"><nd ref="1"/><nd ref="2"/></way><relation id="20" version="1"><member type="way" ref="5" role="outer"/><tag k="type" v="multilinestring"/></relation><relation id="30" version="1"><member type="relation" ref="20" role="outer"/><tag k="type" v="multipolygon"/><tag k="public_transport" v="platform"/><tag k="train" v="yes"/></relation></osm>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(xml);out=io.StringIO()
+   extract(str(p),{},out,'fixture','2026-10-25T00:00:00Z')
+   records=[json.loads(x) for x in out.getvalue().splitlines() if '"kind": "transit"' in x]
+   self.assertEqual(len(records),1)
+   self.assertEqual(records[0]['sourceId'],'30')
+   self.assertAlmostEqual(records[0]['lat'],48.0005)
+   self.assertEqual(records[0]['lon'],11)
