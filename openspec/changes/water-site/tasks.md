@@ -28,8 +28,8 @@
 ## 5. Production rollout
 
 - [x] 5.1 Record actual VM revisions/images/counts/source/mounts/timers and private config; take and verify a pre-change backup.
-- [ ] 5.2 Build/deploy compatible Water services and reprocess the retained verified Germany PBF; measure Water counts, set production floor and publish all four categories atomically.
-- [ ] 5.3 Compare existing counts for the same source, verify Water readiness and take a verified post-import backup.
-- [ ] 5.4 Issue Water TLS via existing ACME infrastructure, extend the shared renewal hook, validate/gracefully reload Nginx and verify renewal dry-runs for all four domains.
-- [ ] 5.5 Verify all four public sites, category isolation, real tiles, translations, details, radii and phone widths; confirm refresh/backup scheduling remains operational.
-- [ ] 5.6 Save a dated actual VM protocol and update/rollback instructions, commit/push source-only changes, sync production and stop temporary local debug services without deleting data.
+- [x] 5.2 Build/deploy compatible Water services and reprocess the retained verified Germany PBF; measure Water counts, set production floor and publish all four categories atomically.
+- [x] 5.3 Compare existing counts for the same source, verify Water readiness and take a verified post-import backup.
+- [x] 5.4 Issue Water TLS via existing ACME infrastructure, extend the shared renewal hook, validate/gracefully reload Nginx and verify renewal dry-runs for all four domains.
+- [x] 5.5 Verify all four public sites, category isolation, real tiles, translations, details, radii and phone widths; confirm refresh/backup scheduling remains operational.
+- [x] 5.6 Save a dated actual VM protocol and update/rollback instructions, commit/push source-only changes, sync production and stop temporary local debug services without deleting data.

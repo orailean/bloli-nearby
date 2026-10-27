@@ -37,6 +37,6 @@ DE/EN/RO separate files; German fallback; 0.5 km default; radii 0.5/1/2/3/5 km; 
 ### Task 4: Review and rollout
 **Files:** deploy/nginx/water.bloli.com.*.conf; scripts/check-multi-site-production.mjs; README.md; docs/deployment/water-site.md and dated actual VM protocol.
 - [x] Add shared-proxy vhosts and update docs/checks. Run a fresh whole-change review, fix important findings with regressions and rerun relevant suites.
-- [ ] Commit/push approved feature; snapshot VM counts/config/images and verify backup; build images, deploy compatible API/web, import retained same-source Germany data with four categories and verify counts/backups.
-- [ ] Issue Water TLS with existing webroot/account, extend shared renewal hook, test/gracefully reload Nginx, verify four-site public behavior and all renewal dry-runs; record exact protocol and synchronize final source-only commit.
-- [ ] Stop local debug services and completed production helpers, retaining data and old rollback volumes.
+- [x] Commit/push approved feature; snapshot VM counts/config/images and verify backup; build images, deploy compatible API/web, import retained same-source Germany data with four categories and verify counts/backups.
+- [x] Issue Water TLS with existing webroot/account, extend shared renewal hook, test/gracefully reload Nginx, verify four-site public behavior and all renewal dry-runs; record exact protocol and synchronize final source-only commit.
+- [x] Stop local debug services and completed production helpers, retaining data and old rollback volumes.
