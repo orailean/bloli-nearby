@@ -1,3 +1,4 @@
+import { transitRows } from "./transit-repository.js";
 import type { Category } from "../shared/sites.js";
 import type pg from "pg";
 import type {
@@ -72,7 +73,9 @@ export async function searchLocations(
       q.sellerType ?? "all",
     ];
     let rows: Array<{ data: Facility; distance: number }>;
-    if (q.openNow) {
+    if (category === "transit") {
+      rows = await transitRows(db, q);
+    } else if (q.openNow) {
       // Evaluate every candidate before applying the result cap. A cursor bounds
       // memory even when many closer locations are closed or lack known hours.
       await db.query(

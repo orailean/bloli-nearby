@@ -4,6 +4,13 @@ const template = await readFile(
   "utf8",
 );
 const profiles = {
+  transit: {
+    domain: "transit.bloli.com",
+    title: "Transit · Der nächste Halt. Dein nächster Schritt.",
+    description:
+      "Finde Bahnhöfe, U-Bahn, S-Bahn, Tram, Bus, Taxi, Fähren und Seilbahnen in Deutschland. Erfasste Haltestellen und Zugänge aus OpenStreetMap.",
+    color: "#007b7f",
+  },
   water: {
     domain: "water.bloli.com",
     title: "Water · Kurz auffüllen. Weiter geht’s.",

@@ -15,11 +15,15 @@ import kebabRo from "./sites/kebab/locales/ro.json";
 import waterEn from "./sites/water/locales/en.json";
 import waterDe from "./sites/water/locales/de.json";
 import waterRo from "./sites/water/locales/ro.json";
+import transitEn from "./sites/transit/locales/en.json";
+import transitDe from "./sites/transit/locales/de.json";
+import transitRo from "./sites/transit/locales/ro.json";
 type Dictionary = Record<
   | keyof typeof commonEn
   | keyof typeof looEn
   | keyof typeof kebabEn
-  | keyof typeof waterEn,
+  | keyof typeof waterEn
+  | keyof typeof transitEn,
   string
 >;
 // Food labels extend the shared presentation type; existing sites keep their own copy.
@@ -39,19 +43,81 @@ const waterFallback = Object.fromEntries(
   typeof waterDe,
   Exclude<keyof typeof waterDe, keyof typeof commonDe | keyof typeof looDe>
 >;
+const transitFallback = Object.fromEntries(
+  Object.entries(transitDe).filter(
+    ([key]) =>
+      !Object.hasOwn(commonDe, key) &&
+      !Object.hasOwn(looDe, key) &&
+      !Object.hasOwn(kebabDe, key),
+  ),
+) as Pick<
+  typeof transitDe,
+  Exclude<
+    keyof typeof transitDe,
+    keyof typeof commonDe | keyof typeof looDe | keyof typeof kebabDe
+  >
+>;
 export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
+  transit: {
+    en: {
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonEn,
+      ...transitDe,
+      ...transitEn,
+    },
+    de: { ...waterFallback, ...foodFallback, ...commonDe, ...transitDe },
+    ro: {
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonRo,
+      ...transitDe,
+      ...transitRo,
+    },
+  },
   water: {
-    en: { ...foodFallback, ...commonDe, ...commonEn, ...waterDe, ...waterEn },
-    de: { ...foodFallback, ...commonDe, ...waterDe },
-    ro: { ...foodFallback, ...commonDe, ...commonRo, ...waterDe, ...waterRo },
+    en: {
+      ...transitFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonEn,
+      ...waterDe,
+      ...waterEn,
+    },
+    de: { ...transitFallback, ...foodFallback, ...commonDe, ...waterDe },
+    ro: {
+      ...transitFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonRo,
+      ...waterDe,
+      ...waterRo,
+    },
   },
   kebab: {
-    en: { ...waterFallback, ...commonDe, ...commonEn, ...kebabDe, ...kebabEn },
-    de: { ...waterFallback, ...commonDe, ...kebabDe },
-    ro: { ...waterFallback, ...commonDe, ...commonRo, ...kebabDe, ...kebabRo },
+    en: {
+      ...transitFallback,
+      ...waterFallback,
+      ...commonDe,
+      ...commonEn,
+      ...kebabDe,
+      ...kebabEn,
+    },
+    de: { ...transitFallback, ...waterFallback, ...commonDe, ...kebabDe },
+    ro: {
+      ...transitFallback,
+      ...waterFallback,
+      ...commonDe,
+      ...commonRo,
+      ...kebabDe,
+      ...kebabRo,
+    },
   },
   loo: {
     en: {
+      ...transitFallback,
       ...waterFallback,
       ...foodFallback,
       ...commonDe,
@@ -59,8 +125,15 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...looDe,
       ...looEn,
     },
-    de: { ...waterFallback, ...foodFallback, ...commonDe, ...looDe },
+    de: {
+      ...transitFallback,
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...looDe,
+    },
     ro: {
+      ...transitFallback,
       ...waterFallback,
       ...foodFallback,
       ...commonDe,
@@ -71,6 +144,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
   },
   kippe: {
     en: {
+      ...transitFallback,
       ...waterFallback,
       ...foodFallback,
       ...commonDe,
@@ -78,8 +152,15 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...kippeDe,
       ...kippeEn,
     },
-    de: { ...waterFallback, ...foodFallback, ...commonDe, ...kippeDe },
+    de: {
+      ...transitFallback,
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...kippeDe,
+    },
     ro: {
+      ...transitFallback,
       ...waterFallback,
       ...foodFallback,
       ...commonDe,

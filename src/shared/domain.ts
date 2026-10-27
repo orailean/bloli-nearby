@@ -1,3 +1,4 @@
+import { TRANSIT_MODES } from "./transit-modes.js";
 import type { Category } from "./sites.js";
 import type { Facility, SourceRecord, SearchQuery } from "./types.js";
 export class AppError extends Error {
@@ -102,6 +103,14 @@ export function parseSearch(
     (category !== "tobacco" && p.has("sellerType"))
   )
     throw new AppError("INVALID_QUERY");
+  if (
+    (category !== "transit" && p.has("mode")) ||
+    (category === "transit" && p.has("openNow"))
+  )
+    throw new AppError("INVALID_QUERY");
+  const mode = p.get("mode") ?? "all";
+  if (!["all", ...TRANSIT_MODES].includes(mode) || p.getAll("mode").length > 1)
+    throw new AppError("INVALID_QUERY");
   const sellerType = p.get("sellerType") ?? "all";
   if (
     !["all", "machine", "shop", "fuel"].includes(sellerType) ||
@@ -123,6 +132,7 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   return {
+    ...(category === "transit" ? { mode: mode as SearchQuery["mode"] } : {}),
     lat,
     lon,
     radius,

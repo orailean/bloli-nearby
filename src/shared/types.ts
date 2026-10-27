@@ -1,3 +1,8 @@
+import type {
+  TransitContext,
+  TransitData,
+  TransitMode,
+} from "./transit-modes.js";
 import type { Category, SiteProfile, SellerType } from "./sites.js";
 export type Locale = "en" | "de" | "ro";
 export type Fee = "free" | "paid" | "unknown";
@@ -7,6 +12,7 @@ export interface SourceRecord {
   sourceId: string;
   lat: number;
   lon: number;
+  transport?: TransitContext;
   tags: Record<string, string>;
 }
 export interface Facility {
@@ -33,6 +39,7 @@ export interface Facility {
   tobaccoSales?: "mapped" | "unconfirmed";
   paymentMethods?: Record<string, string>;
   brand?: string | null;
+  transit?: TransitData;
   waterType?: "point" | "refill";
   bottle?: string | null;
   seasonal?: string | null;
@@ -61,6 +68,7 @@ export interface SearchQuery {
   limit: number;
   fee: FeeFilter;
   openNow: boolean;
+  mode?: TransitMode | "all";
   sellerType?: SellerType | "all";
 }
 export interface Dataset {

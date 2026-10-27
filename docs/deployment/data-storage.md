@@ -76,3 +76,5 @@ Datasets, database files, dumps, screenshots, built assets and secrets are not c
 The legacy `find-a-loo_*` volumes were the pre-rename sources. The 2026-10-27 rollout uses verified copies under the generic names; original unmounted copies are retained for rollback. See [volume migration](volume-name-migration.md) and the [Kebab protocol](protocol-2026-10-27-kebab.md). Never copy a running PostgreSQL volume.
 
 Water uses the same `bloli-nearby_import_data` volume and `/data/source.osm.pbf`; there is no separate water map download. Refiltering is required when adding Water because previous filters omitted its tags. Initial rollout reuses a verified retained snapshot; regular refresh then updates all four categories.
+
+Transit adds a source-bound SQLite relation metadata sidecar in the same import volume: `/data/transit-context.sqlite` and `/data/transit-context.source`. It contains route labels/mode evidence and stop_area membership, not route path geometry or a second map. The source checksum/context version controls reuse; all five categories/context publish atomically. Source PBF and visible browser tiles retain their existing separate roles.

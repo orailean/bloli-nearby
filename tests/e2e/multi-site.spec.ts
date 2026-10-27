@@ -9,7 +9,7 @@ const dataset = {
   stale: false,
   latestJob: null,
 };
-for (const id of ["loo", "kippe", "kebab", "water"] as const) {
+for (const id of ["loo", "kippe", "kebab", "water", "transit"] as const) {
   for (const width of [1440, 320, 390, 430]) {
     test(`${id} ${width}px shares search, keeps its category and fits every locale`, async ({
       page,
@@ -39,8 +39,12 @@ for (const id of ["loo", "kippe", "kebab", "water"] as const) {
         expect(
           q.has(["loo", "water"].includes(id) ? "sellerType" : "fee"),
         ).toBe(false);
-        if (["kebab", "water"].includes(id))
+        if (["kebab", "water", "transit"].includes(id))
           expect(q.has("sellerType")).toBe(false);
+        if (id === "transit") {
+          expect(q.has("openNow")).toBe(false);
+          expect(q.has("mode")).toBe(true);
+        }
         const items = ["machine", "shop", "fuel"]
           .filter(
             (type) =>
@@ -60,6 +64,26 @@ for (const id of ["loo", "kippe", "kebab", "water"] as const) {
                 ? `Döner Kebab Spezialitäten und vegetarische Küche am langen Straßenbahnhof ${type}`
                 : `Fixture ${type}`,
             fee: "free",
+            ...(id === "transit"
+              ? {
+                  category: "transit",
+                  transit: {
+                    modes: [(["train", "subway", "bus"] as const)[i]],
+                    kind: i === 2 ? "position" : "platform",
+                    groupId: null,
+                    groupName: null,
+                    groupNames: {},
+                    routes: [],
+                    groupRoutes: [],
+                    localRef: "A",
+                    network: "Fixture",
+                    componentId: `node/${i}`,
+                    componentCount: 1,
+                    directionsAvailable: i !== 2,
+                    approximate: i === 2,
+                  },
+                }
+              : {}),
             ...(id === "water"
               ? {
                   category: "water",
@@ -100,6 +124,13 @@ for (const id of ["loo", "kippe", "kebab", "water"] as const) {
           }))
           .filter(
             (item) =>
+              id !== "transit" ||
+              !q.get("mode") ||
+              q.get("mode") === "all" ||
+              item.transit?.modes.includes(q.get("mode") as any),
+          )
+          .filter(
+            (item) =>
               q.get("openNow") !== "true" || item.openingHours === "24/7",
           );
         return route.fulfill({ json: { items, dataset, truncated: false } });
@@ -112,6 +143,18 @@ for (const id of ["loo", "kippe", "kebab", "water"] as const) {
       await page.getByRole("button", { name: "Bremen", exact: true }).click();
       await expect(page.locator(".result-row")).toHaveCount(3);
       await expect(page.locator(".radius-control select")).toHaveValue("500");
+      if (id === "transit") {
+        await expect(page.locator(".open-now-control")).toHaveCount(0);
+        await expect(page.locator(".transit-mode-control")).toBeVisible();
+        await page.locator(".transit-mode-control select").selectOption("bus");
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel .walk-button")).toHaveCount(0);
+        await expect(page.locator(".detail-panel")).toContainText(
+          "stopping-position",
+        );
+        await page.locator(".transit-mode-control select").selectOption("all");
+      }
       if (id === "water") {
         await expect(page.locator(".fee-filters")).toBeVisible();
         await page.locator(".result-select").first().click();
@@ -175,8 +218,10 @@ for (const id of ["loo", "kippe", "kebab", "water"] as const) {
       }
       await page.locator(".radius-control select").selectOption("5000");
       await expect(page.locator(".search-boundary")).toHaveCount(1);
-      await page.locator(".open-now-control input").check();
-      await expect(page.locator(".result-row")).toHaveCount(1);
+      if (id !== "transit") {
+        await page.locator(".open-now-control input").check();
+        await expect(page.locator(".result-row")).toHaveCount(1);
+      }
       for (const locale of ["de", "ro", "en"]) {
         await page.locator("#language").selectOption(locale);
         await page.evaluate(() => document.fonts.ready);

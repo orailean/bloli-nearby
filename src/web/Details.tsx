@@ -84,16 +84,18 @@ export default function Details({
       </dl>
       <p className="fineprint">{t.sourceHours}</p>
       {item.notes && <p className="source-note">{item.notes}</p>}
-      <a
-        className="walk-button"
-        href={directionsUrl(item.lat, item.lon)}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <Navigation size={18} aria-hidden="true" />
-        {t.directions}
-        <ArrowUpRight size={18} aria-hidden="true" />
-      </a>
+      {item.transit?.directionsAvailable !== false && (
+        <a
+          className="walk-button"
+          href={directionsUrl(item.lat, item.lon)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Navigation size={18} aria-hidden="true" />
+          {t.directions}
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </a>
+      )}
       <a
         className="source-link"
         href={`https://www.openstreetmap.org/${item.sourceType}/${item.sourceId}`}

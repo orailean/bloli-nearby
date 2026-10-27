@@ -2466,3 +2466,262 @@ html[data-site="kebab"] {
     scroll-behavior: auto !important;
   }
 }
+/* Transit: neighbourhood wayfinding, with clear transport semantics. */
+[data-site="transit"] {
+  --ink: #172d35;
+  --mint: #e1f0ef;
+  --yellow: #ffe7a8;
+  --line: #d6e0e3;
+  --muted: #51666e;
+  --display: "Rubik Variable", sans-serif;
+  background: #f2f5f6;
+  color: var(--ink);
+}
+[data-site="transit"] .site-header {
+  background: #fff;
+}
+[data-site="transit"] .brand-mark {
+  background: #007b7f;
+  color: #fff;
+  border-radius: 10px;
+  transform: none;
+}
+[data-site="transit"] .brand-dot {
+  color: #d94a16;
+}
+[data-site="transit"] .hero {
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+  min-height: 420px;
+}
+[data-site="transit"] .hero h1 {
+  font-size: clamp(40px, 4.6vw, 67px);
+  line-height: 1.08;
+  letter-spacing: -2.4px;
+  font-weight: 750;
+}
+[data-site="transit"] .hero-copy > p {
+  max-width: 520px;
+}
+[data-site="transit"] .hero-art::before {
+  display: none;
+}
+[data-site="transit"] .transit-scene {
+  width: 100%;
+  max-width: 400px;
+  height: 310px;
+}
+[data-site="transit"] .art-caption {
+  background: #ffe7a8;
+  color: var(--ink);
+  border-radius: 3px;
+  bottom: -3px;
+  right: 10px;
+  left: auto;
+  transform: rotate(-2deg);
+  font-size: 13px;
+}
+[data-site="transit"] .country-tag {
+  background: #e1f0ef;
+}
+[data-site="transit"] .country-dot {
+  background: #007b7f;
+}
+[data-site="transit"] .search-dock {
+  border-radius: 10px;
+  box-shadow: 0 7px 0 #d6e8e8;
+  background: #fff;
+}
+[data-site="transit"] .locate-button,
+[data-site="transit"] .search-submit,
+[data-site="transit"] .walk-button {
+  background: #007b7f;
+  color: #fff;
+}
+[data-site="transit"] .workspace {
+  border-radius: 10px;
+  background: #fff;
+}
+[data-site="transit"] .workspace-toolbar {
+  justify-content: space-between;
+}
+.transit-mode-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 650;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.transit-mode-control select {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 11px;
+  border-radius: 6px;
+  max-width: 100%;
+}
+.transit-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.transit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e1f0ef;
+  color: #124b4e;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.transit-badge.mode-subway {
+  background: #e6eefb;
+  color: #214775;
+}
+.transit-badge.mode-suburban_rail {
+  background: #e5f3dd;
+  color: #315b22;
+}
+.transit-badge.mode-bus {
+  background: #f0e9f6;
+  color: #58426a;
+}
+.transit-badge.mode-tram {
+  background: #fff0e5;
+  color: #813815;
+}
+[data-site="transit"] .result-info strong {
+  overflow-wrap: anywhere;
+}
+[data-site="transit"] .result-row {
+  border-bottom: 1px solid var(--line);
+}
+[data-site="transit"] .result-row.selected {
+  background: #edf6f5;
+}
+[data-site="transit"] .result-number {
+  border-radius: 5px;
+  background: #e1f0ef;
+  color: var(--ink);
+}
+[data-site="transit"] .map-pin {
+  background: #007b7f;
+  border-radius: 6px;
+}
+[data-site="transit"] .map-pin.active {
+  background: #ffe7a8;
+  color: #172d35;
+}
+.transit-lines,
+.transit-components {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.transit-lines span {
+  font-size: 12px;
+}
+.transit-components span {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.transit-approximate {
+  color: #813815;
+}
+[data-site="transit"] .detail-panel {
+  animation: transit-reveal 0.25s ease-out;
+}
+[data-site="transit"] .is-searching .transit-vehicle {
+  animation: transit-arrival 0.5s ease-out;
+}
+@keyframes transit-arrival {
+  from {
+    transform: translateX(35px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes transit-reveal {
+  from {
+    border-left: 5px solid #d94a16;
+  }
+  to {
+    border-left: 0 solid #d94a16;
+  }
+}
+[data-site="transit"] .site-footer {
+  background: #172d35;
+  color: #fff;
+}
+[data-site="transit"] .footer-main p,
+[data-site="transit"] .footer-bottom {
+  color: #d7e7eb;
+}
+[data-site="transit"] .footer-main {
+  border-bottom-color: #52636a;
+}
+@media (max-width: 760px) {
+  [data-site="transit"] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding-top: 28px;
+    padding-bottom: 24px;
+  }
+  [data-site="transit"] .hero h1 {
+    font-size: clamp(34px, 9vw, 58px);
+    letter-spacing: -1.5px;
+    max-width: 100%;
+  }
+  [data-site="transit"] .hero-art {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    transform: none;
+    margin-top: 12px;
+  }
+  [data-site="transit"] .transit-scene {
+    height: 185px;
+    width: 245px;
+  }
+  [data-site="transit"] .art-caption {
+    bottom: 0;
+    right: 0;
+    max-width: 150px;
+    font-size: 11px;
+  }
+  [data-site="transit"] .hero-copy > p {
+    font-size: 14px;
+  }
+  [data-site="transit"] .workspace-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px;
+  }
+  .transit-mode-control {
+    width: 100%;
+    font-size: 13px;
+  }
+  .transit-mode-control select {
+    width: 100%;
+  }
+  [data-site="transit"] .radius-control {
+    margin-left: auto;
+  }
+  [data-site="transit"] .locate-button {
+    white-space: normal;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-site="transit"] *,
+  [data-site="transit"] *::before,
+  [data-site="transit"] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

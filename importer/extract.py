@@ -5,6 +5,7 @@ import sys
 import tempfile
 from pathlib import Path
 import osmium
+from transit_context import build_context, TransportContext
 from shapely.geometry import shape, Polygon
 
 
@@ -65,11 +66,17 @@ def water_candidate(tags):
     return tags.get('amenity') == 'drinking_water' or tags.get('drinking_water') == 'yes' or (tags.get('amenity') == 'fountain' and tags.get('fountain') == 'drinking') or tags.get('drinking_water:refill') == 'yes'
 
 
+def transit_candidate(t):
+    return t.get('railway') in ('station','halt','tram_stop','platform','subway_entrance','train_station_entrance') or t.get('highway') in ('bus_stop','platform') or t.get('amenity') in ('bus_station','taxi','ferry_terminal') or t.get('aerialway') == 'station' or t.get('public_transport') in ('station','platform','stop_position','entrance')
+
+
 def kinds(tags):
     # Routes describe onboard toilets; collections group separate locations.
     if tags.get('type') in ('route', 'route_master', 'collection'):
         return []
     result = []
+    if transit_candidate(tags):
+        result.append("transit")
     if tags.get('amenity') == 'toilets' or tags.get('toilets') == 'yes':
         result.append('facility')
     if seller_candidate(tags):
@@ -83,7 +90,7 @@ def kinds(tags):
     return result
 
 
-def extract(filename, coverage, output, source, dataset_at=None):
+def _extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None):
     if not dataset_at:
         reader = osmium.io.Reader(filename)
         try:
@@ -95,7 +102,13 @@ def extract(filename, coverage, output, source, dataset_at=None):
     def emit(record):
         output.write(json.dumps(record, ensure_ascii=False) + '\n')
     emit({'kind': 'metadata', 'source': source, 'datasetAt': dataset_at, 'coverage': coverage,
-          'categories': ['toilets', 'tobacco', 'kebab', 'water']})
+          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit'], 'transitContextComplete': True})
+    transport_context=TransportContext(context_path,fingerprint)
+    def object_kinds(tags,source_type,source_id):
+        result=kinds(tags)
+        if tags.get('entrance') and tags.get('entrance') != 'no' and 'transit' not in result and transport_context.get(source_type,str(source_id))['groups']:
+            result.append('transit')
+        return result
     factory = osmium.geom.GeoJSONFactory()
     sites = {}
     member_keys = set()
@@ -128,18 +141,18 @@ def extract(filename, coverage, output, source, dataset_at=None):
             self.count = 0
 
         def write(self, source_type, source_id, tags, point):
-            for kind in kinds(tags):
+            for kind in object_kinds(tags, source_type, source_id):
                 emit({'kind': kind, 'sourceType': source_type, 'sourceId': str(source_id),
-                      'lat': point.y, 'lon': point.x, 'tags': tags})
+                      'lat': point.y, 'lon': point.x, 'tags': tags, **({'transport':transport_context.get(source_type,str(source_id))} if kind == 'transit' else {})})
                 self.count += 1
 
         def node(self, obj):
             tags = dict(obj.tags)
-            if kinds(tags) or ('n', obj.id) in member_keys:
+            if object_kinds(tags,'node',obj.id) or ('n', obj.id) in member_keys:
                 point = shape(json.loads(factory.create_point(obj)))
                 if ('n', obj.id) in member_keys:
                     member_points[('n', obj.id)] = point
-                if kinds(tags):
+                if object_kinds(tags,'node',obj.id):
                     self.write('node', obj.id, tags, point)
 
         def way(self, obj):
@@ -153,10 +166,10 @@ def extract(filename, coverage, output, source, dataset_at=None):
                     member_points[('w', obj.id)] = polygon.representative_point()
                 else:
                     member_points[('w', obj.id)] = line.interpolate(0.5, normalized=True)
-            if not kinds(tags):
+            if not object_kinds(tags,'way',obj.id):
                 return
             if obj.is_closed() and tags.get("area") != "no":
-                self.expected[('way', obj.id)] = kinds(tags)
+                self.expected[('way', obj.id)] = object_kinds(tags,'way',obj.id)
             else:
                 line = shape(json.loads(factory.create_linestring(obj)))
                 self.write('way', obj.id, tags, line.interpolate(0.5, normalized=True))
@@ -199,8 +212,20 @@ def extract(filename, coverage, output, source, dataset_at=None):
     broken_water = [key for key in missing if 'water' in handler.expected[key]]
     if broken_water:
         raise ValueError(f'Incomplete water geometries: {len(broken_water)}; sources: {sorted(broken_water)[:30]}')
+    broken_transit=[key for key in missing if 'transit' in handler.expected[key]]
+    if broken_transit:
+        raise ValueError(f'Incomplete transit geometries: {len(broken_transit)}; sources: {sorted(broken_transit)[:30]}')
+    transport_context.close()
     emit({'kind': 'complete', 'records': handler.count, 'skippedSettlementGeometries': len(missing)})
     return handler.count
+
+
+def extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None):
+    with tempfile.TemporaryDirectory(prefix='transit-context-') as temporary:
+        if context_path is None:
+            context_path=str(Path(temporary)/'context.sqlite')
+            build_context(filename,context_path,'fixture')
+        return _extract(filename,coverage,output,source,dataset_at,context_path,fingerprint)
 
 
 if __name__ == '__main__':
@@ -208,5 +233,7 @@ if __name__ == '__main__':
     parser.add_argument('pbf')
     parser.add_argument('poly')
     parser.add_argument('--source', default='https://download.geofabrik.de/europe/germany-latest.osm.pbf')
+    parser.add_argument('--transport-context')
+    parser.add_argument('--context-fingerprint')
     args = parser.parse_args()
-    extract(args.pbf, poly_geojson(Path(args.poly).read_text()), sys.stdout, args.source)
+    extract(args.pbf, poly_geojson(Path(args.poly).read_text()), sys.stdout, args.source, context_path=args.transport_context, fingerprint=args.context_fingerprint)

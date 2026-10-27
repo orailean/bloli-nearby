@@ -1,3 +1,4 @@
+import type { TransitMode } from "../shared/transit-modes.js";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowDown,
@@ -79,6 +80,7 @@ export default function App() {
     [configError, setConfigError] = useState(false),
     [dataset, setDataset] = useState<Dataset | null>(null);
   const [origin, setOrigin] = useState<Origin | null>(null),
+    [mode, setMode] = useState<TransitMode | "all">("all"),
     [fee, setFee] = useState<FeeFilter>("all"),
     [sellerType, setSellerType] = useState<SellerType | "all">("all"),
     [radius, setRadius] = useState<number>(SEARCH_RADII[0]),
@@ -154,7 +156,7 @@ export default function App() {
     setSelected(null);
     setTruncated(false);
     request<SearchResponse>(
-      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), openNow: String(openNow) })}`,
+      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), ...(site.capabilities.openNow ? { openNow: String(openNow) } : {}), ...(site.id === "transit" ? { mode } : {}) })}`,
       c.signal,
     )
       .then((r) => {
@@ -172,7 +174,7 @@ export default function App() {
         if (!c.signal.aborted) setLoading(false);
       });
     return () => c.abort();
-  }, [origin?.lat, origin?.lon, fee, sellerType, radius, openNow, retry]);
+  }, [origin?.lat, origin?.lon, fee, sellerType, radius, openNow, mode, retry]);
   useEffect(() => {
     const d = dialogRef.current;
     if (!d) return;
@@ -455,25 +457,29 @@ export default function App() {
             <div className="workspace-toolbar">
               <Filters
                 t={t}
+                mode={mode}
+                onMode={setMode}
                 fee={fee}
                 onFee={setFee}
                 sellerType={sellerType}
                 onSellerType={setSellerType}
               />
-              <label className="open-now-control" title={t.openNowHint}>
-                <input
-                  type="checkbox"
-                  aria-label={t.openNow}
-                  checked={openNow}
-                  onChange={(event) => setOpenNow(event.target.checked)}
-                  aria-describedby="open-now-hint"
-                />
-                <Clock size={17} aria-hidden="true" />
-                <span>{t.openNow}</span>
-                <span id="open-now-hint" className="sr-only">
-                  {t.openNowHint}
-                </span>
-              </label>
+              {site.capabilities.openNow && (
+                <label className="open-now-control" title={t.openNowHint}>
+                  <input
+                    type="checkbox"
+                    aria-label={t.openNow}
+                    checked={openNow}
+                    onChange={(event) => setOpenNow(event.target.checked)}
+                    aria-describedby="open-now-hint"
+                  />
+                  <Clock size={17} aria-hidden="true" />
+                  <span>{t.openNow}</span>
+                  <span id="open-now-hint" className="sr-only">
+                    {t.openNowHint}
+                  </span>
+                </label>
+              )}
               <label className="radius-control">
                 {t.radius}
                 <select

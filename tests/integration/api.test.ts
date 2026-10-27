@@ -81,7 +81,7 @@ test(
   async (t) => {
     await migrate(pool);
     await pool.query(
-      "TRUNCATE location_categories,locations,category_datasets,facilities,settlements,dataset,import_jobs",
+      "TRUNCATE transit_components,location_categories,locations,category_datasets,facilities,settlements,dataset,import_jobs",
     );
     const server = createApi(pool);
     server.listen(0, "127.0.0.1");
@@ -875,6 +875,159 @@ test(
             (
               await pool.query(
                 "SELECT category,location_count,imported_at FROM category_datasets ORDER BY category",
+              )
+            ).rows,
+            before,
+          );
+        },
+      );
+      await t.test(
+        "Transit groups before limit and selects mode-specific boarding points",
+        async () => {
+          const saved = (
+            await pool.query("SELECT category,data FROM location_categories")
+          ).rows;
+          const opts5 = {
+            ...opts,
+            categories: [
+              "toilets",
+              "tobacco",
+              "kebab",
+              "water",
+              "transit",
+            ] as any,
+            minimumSellers: 1,
+            minimumKebabs: 1,
+            minimumWaterPoints: 1,
+            minimumTransit: 1,
+          };
+          const group = {
+            id: "relation/10001",
+            tags: { name: "Interchange" },
+            routes: [],
+          };
+          const tr = (
+            id: string,
+            lon: number,
+            tags: Record<string, string>,
+            groups: any[] = [group],
+          ) => ({
+            kind: "transit",
+            sourceType: "node",
+            sourceId: id,
+            lat: 52.52,
+            lon,
+            tags,
+            transport: { groups, routes: [] },
+          });
+          async function* five() {
+            for (const x of saved)
+              yield {
+                kind: (
+                  {
+                    toilets: "facility",
+                    tobacco: "seller",
+                    kebab: "kebab",
+                    water: "water",
+                  } as any
+                )[x.category],
+                sourceType: x.data.sourceType,
+                sourceId: x.data.sourceId,
+                lat: x.data.lat,
+                lon: x.data.lon,
+                tags: x.data.tags,
+              };
+            for (let i = 0; i < 5; i++)
+              yield {
+                kind: "settlement",
+                sourceType: "node",
+                sourceId: String(20000 + i),
+                lat: 52.52,
+                lon: 13.405,
+                tags: { name: "Fixture", place: "city" },
+              };
+            yield tr("10001", 13.405, { railway: "station", subway: "yes" });
+            yield tr("10002", 13.415, {
+              public_transport: "platform",
+              subway: "yes",
+              local_ref: "U1",
+            });
+            yield tr("10003", 13.406, {
+              railway: "subway_entrance",
+              subway: "yes",
+              wheelchair: "yes",
+            });
+            yield tr("10004", 13.407, {
+              public_transport: "platform",
+              bus: "yes",
+              local_ref: "Bus A",
+            });
+            yield tr("10005", 13.405, {
+              public_transport: "stop_position",
+              subway: "yes",
+            });
+            yield tr(
+              "10006",
+              13.4055,
+              { amenity: "taxi", name: "Interchange" },
+              [],
+            );
+            yield tr(
+              "10007",
+              13.4056,
+              { public_transport: "stop_position", train: "yes" },
+              [],
+            );
+          }
+          await importDataset(pool, five(), opts5);
+          await migrate(pool);
+          const req = (query: string) =>
+            new Promise<any>((resolve, reject) => {
+              httpGet(
+                `http://127.0.0.1:${address.port}/api/locations?lat=52.52&lon=13.405&${query}`,
+                { headers: { Host: "transit.bloli.com" } },
+                (r) => {
+                  let b = "";
+                  r.on("data", (c) => (b += c));
+                  r.on("end", () =>
+                    resolve({ status: r.statusCode, body: JSON.parse(b) }),
+                  );
+                },
+              ).on("error", reject);
+            });
+          const sub = await req("radius=500&mode=subway");
+          assert.equal(sub.status, 200);
+          assert.equal(sub.body.items.length, 1);
+          assert.equal(sub.body.items[0].id, "relation/10001");
+          assert.equal(sub.body.items[0].transit.componentId, "node/10003");
+          assert.ok(sub.body.items[0].distance > 50);
+          assert.equal(sub.body.items[0].lon, 13.406);
+          const bus = await req("mode=bus");
+          assert.equal(bus.body.items[0].transit.componentId, "node/10004");
+          const all = await req("limit=1");
+          assert.equal(all.body.items.length, 1);
+          assert.equal(all.body.truncated, true);
+          const pos = await req("mode=train");
+          assert.equal(pos.body.items[0].transit.directionsAvailable, false);
+          for (const query of [
+            "openNow=false",
+            "fee=all",
+            "sellerType=all",
+            "mode=bad",
+          ])
+            assert.equal((await req(query)).status, 400);
+          const before = (
+            await pool.query(
+              "SELECT * FROM transit_components ORDER BY location_id",
+            )
+          ).rows;
+          await assert.rejects(
+            importDataset(pool, five(), { ...opts5, minimumTransit: 999 }),
+          );
+          assert.deepEqual(
+            (
+              await pool.query(
+                "SELECT * FROM transit_components ORDER BY location_id",
               )
             ).rows,
             before,

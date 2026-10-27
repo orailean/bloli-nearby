@@ -32,7 +32,15 @@ if [ "$reused" = false ]; then
 fi
 printf '%s\n' "$DATA_URL" > /data/source.url
 curl --silent --show-error --fail --location --retry 3 --output /data/coverage.poly "$POLY_URL"
-FILTER_EXPRESSIONS='nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco nwr/cuisine nwr/amenity=drinking_water nwr/drinking_water nwr/drinking_water:refill nwr/fountain=drinking'
+context_key="$DATA_URL|$expected|transit-context-v2"
+if [ ! -f /data/transit-context.sqlite ] || [ ! -f /data/transit-context.source ] || [ "$(cat /data/transit-context.source)" != "$context_key" ]; then
+  printf '[transit-context] Building bounded relation context\n'
+  python3 /app/importer/transit_context.py /data/source.osm.pbf /data/transit-context.sqlite --fingerprint "$context_key"
+  printf '%s\n' "$context_key" > /data/transit-context.source
+else
+  printf '[transit-context] Reusing source-bound relation context\n'
+fi
+FILTER_EXPRESSIONS='nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco nwr/cuisine nwr/amenity=drinking_water nwr/drinking_water nwr/drinking_water:refill nwr/fountain=drinking nwr/railway=station,halt,tram_stop,platform,subway_entrance,train_station_entrance nwr/highway=bus_stop,platform nwr/amenity=bus_station,taxi,ferry_terminal nwr/aerialway=station nwr/public_transport=station,platform,stop_position,entrance r/public_transport=stop_area'
 filter_key="$DATA_URL|$FILTER_EXPRESSIONS"
 if [ -f /data/filtered.osm.pbf ] && [ -f /data/filtered.source ] && [ "$(cat /data/filtered.source)" = "$filter_key" ]; then
   printf '[filter] Reusing completed filtered snapshot\n'
@@ -44,6 +52,6 @@ else
   printf '%s\n' "$filter_key" > /data/filtered.source
 fi
 printf '[geometry] Building complete facility, seller, kebab, water and settlement records\n'
-python3 /app/importer/extract.py /data/filtered.osm.pbf /data/coverage.poly --source "$DATA_URL" > /data/extracted.jsonl.part
+python3 /app/importer/extract.py /data/filtered.osm.pbf /data/coverage.poly --source "$DATA_URL" --transport-context /data/transit-context.sqlite --context-fingerprint "$context_key" > /data/extracted.jsonl.part
 mv /data/extracted.jsonl.part /data/extracted.jsonl
 printf '[publish] Source preparation complete\n'

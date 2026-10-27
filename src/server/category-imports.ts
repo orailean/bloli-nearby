@@ -4,19 +4,28 @@ import { normalizeFacility } from "../shared/domain.js";
 import { normalizeSeller } from "../shared/sellers.js";
 import { normalizeKebab } from "../shared/kebab.js";
 import { normalizeWater } from "../shared/water.js";
+import { normalizeTransit } from "../shared/transit.js";
 export type CategoryMinimum =
   | "minimumFacilities"
   | "minimumSellers"
   | "minimumKebabs"
-  | "minimumWaterPoints";
+  | "minimumWaterPoints"
+  | "minimumTransit";
 export interface CategoryImport {
   kind: string;
   minimum: CategoryMinimum;
   defaultMinimum: number;
-  count: "facilities" | "sellers" | "kebabs" | "waterPoints";
+  count: "facilities" | "sellers" | "kebabs" | "waterPoints" | "transitStops";
   normalize: (record: SourceRecord) => Facility | null;
 }
 export const categoryImports: Record<Category, CategoryImport> = {
+  transit: {
+    kind: "transit",
+    minimum: "minimumTransit",
+    defaultMinimum: 1000,
+    count: "transitStops",
+    normalize: normalizeTransit,
+  },
   water: {
     kind: "water",
     minimum: "minimumWaterPoints",

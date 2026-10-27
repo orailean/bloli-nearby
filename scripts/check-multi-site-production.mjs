@@ -3,7 +3,9 @@ import { chromium, expect } from "@playwright/test";
 const results = {};
 const browser = await chromium.launch();
 try {
-  for (const id of (process.env.SITES || "loo,kippe,kebab,water").split(",")) {
+  for (const id of (process.env.SITES || "loo,kippe,kebab,water,transit").split(
+    ",",
+  )) {
     const base = `https://${id}.bloli.com`;
     const htmlResponse = await fetch(base);
     assert.equal(htmlResponse.status, 200);
@@ -47,6 +49,31 @@ try {
       assert.ok(
         opened.items.every((item) => !!item.openingHours && !item.hoursAssumed),
       );
+    }
+    if (id === "transit") {
+      assert.ok(
+        all.items.every(
+          (item) => item.category === "transit" && item.transit?.modes?.length,
+        ),
+      );
+      for (const suffix of ["&fee=all", "&sellerType=all", "&openNow=false"])
+        assert.equal(
+          (await fetch(`${base}/api/locations?${query}${suffix}`)).status,
+          400,
+        );
+      for (const mode of [
+        "train",
+        "suburban_rail",
+        "subway",
+        "tram",
+        "bus",
+        "taxi",
+      ]) {
+        const r = await fetch(`${base}/api/locations?${query}&mode=${mode}`);
+        assert.equal(r.status, 200);
+        const d = await r.json();
+        assert.ok(d.items.every((item) => item.transit.modes.includes(mode)));
+      }
     }
     if (id === "water") {
       assert.ok(
@@ -155,7 +182,10 @@ try {
         .evaluate((el) => getComputedStyle(el).overflowY),
       "visible",
     );
-    await page.locator(".open-now-control input").check();
+    if (id === "transit") {
+      await expect(page.locator(".open-now-control")).toHaveCount(0);
+      await expect(page.locator(".transit-mode-control")).toBeVisible();
+    } else await page.locator(".open-now-control input").check();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     assert.deepEqual(errors, []);
     results[id] = {
@@ -167,7 +197,8 @@ try {
       initialHtml: true,
       mapImagesLoaded: true,
       mobileLocales: true,
-      openNowControl: true,
+      openNowControl: id !== "transit",
+      modeControl: id === "transit",
       pageErrors: errors,
     };
     await context.close();

@@ -8,6 +8,7 @@ for (const group of [
   "sites/kippe/locales",
   "sites/kebab/locales",
   "sites/water/locales",
+  "sites/transit/locales",
 ]) {
   test(`${group} has matching translated keys`, () => {
     const dictionaries = ["de", "en", "ro"].map((locale) =>
@@ -58,5 +59,15 @@ test("Water keeps its identity and mapped facts in every locale", () => {
     assert.equal(t.brandName, "water");
     assert.ok(t.bottleSuitability);
     assert.notEqual(t.hero, siteDictionaries.loo[locale].hero);
+  }
+});
+
+test("Transit retains mapped-service wording and all mode translations", () => {
+  for (const locale of ["de", "en", "ro"] as const) {
+    const t = siteDictionaries.transit[locale];
+    assert.equal(t.brandName, "transit");
+    assert.ok(t.mode_suburban_rail);
+    assert.ok(t.referenceOnly);
+    assert.notEqual(t.hero, siteDictionaries.water[locale].hero);
   }
 });
