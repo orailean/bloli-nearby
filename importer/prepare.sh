@@ -3,7 +3,7 @@ set -eu
 COUNTRY_CODE=${COUNTRY_CODE:-de}
 DATA_ROOT=${DATA_ROOT:-/data}
 case "$COUNTRY_CODE" in
-  de) default_name=germany; DATA_DIR=$DATA_ROOT ;;
+  de) default_name=germany; DATA_DIR=$DATA_ROOT/countries/de ;;
   ro) default_name=romania; DATA_DIR=$DATA_ROOT/countries/ro ;;
   at) default_name=austria; DATA_DIR=$DATA_ROOT/countries/at ;;
   hu) default_name=hungary; DATA_DIR=$DATA_ROOT/countries/hu ;;

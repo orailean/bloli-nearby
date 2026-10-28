@@ -13,7 +13,7 @@
   "details": "Detalii despre vânzător",
   "tileError": "Harta nu este disponibilă. Lista de vânzători funcționează în continuare.",
   "footerTitle": "Cunoaște cartierul.\nGăsește următoarea oprire.",
-  "footerText": "Automate, magazine și benzinării în toată Germania. Din date cartografice ale comunității.",
+  "footerText": "Automate, magazine și benzinării în {countries}. Din date cartografice ale comunității.",
   "howTitle": "Trei pași către următoarea oprire.",
   "how2": "Alege un vânzător",
   "how2Text": "Alege automate, magazine sau benzinării. Magazinele includ agenții Lotto, chioșcuri, magazine de cartier, puncte de presă și supermarketuri.",

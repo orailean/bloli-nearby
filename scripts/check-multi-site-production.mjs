@@ -222,6 +222,21 @@ try {
       for (const lang of ["de", "ro", "en"]) {
         await page.locator("#language").selectOption(lang);
         await page.evaluate(() => document.fonts.ready);
+        if (expectedCountries.includes("ro")) {
+          const coverage =
+            lang === "de"
+              ? ["Deutschland", "Rumänien"]
+              : lang === "ro"
+                ? ["Germania", "România"]
+                : ["Germany", "Romania"];
+          for (const name of coverage)
+            await expect(page.locator(".hero-copy > p")).toContainText(name);
+          await expect
+            .poll(() =>
+              page.locator('meta[name="description"]').getAttribute("content"),
+            )
+            .toContain(coverage[1]);
+        }
         assert.equal(
           await page.evaluate(
             () =>

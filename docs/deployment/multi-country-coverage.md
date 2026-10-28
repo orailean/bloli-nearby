@@ -10,7 +10,7 @@ The importer uses Geofabrik PBF files and matching `.poly` country coverage poly
 
 | Country | Code | Import-volume path | Time zone |
 | --- | --- | --- | --- |
-| Germany | `de` | `/data` (retained legacy cache) | `Europe/Berlin` |
+| Germany | `de` | `/data/countries/de` | `Europe/Berlin` |
 | Romania | `ro` | `/data/countries/ro` | `Europe/Bucharest` |
 | Austria | `at` | `/data/countries/at` | `Europe/Vienna` |
 | Hungary | `hu` | `/data/countries/hu` | `Europe/Budapest` |
@@ -78,7 +78,7 @@ The refresh timer and backup schedule remain the existing ones. To check them an
 ```bash
 systemctl list-timers --all bloli-nearby-refresh.timer bloli-nearby-backup.timer
 journalctl -u bloli-nearby-refresh.service --since '7 days ago'
-scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -c 'du -sh /data /data/countries/* 2>/dev/null || true'
+scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -c 'du -sh /data/countries/* 2>/dev/null || true'
 ```
 
 See [data storage](data-storage.md), [production updates](production-updates.md), and the [migration guide](bloli-nearby-migration.md) for backup, restore, deployment, and rollback details. Before an incompatible rollback, pause the refresh timer. Do not run an old Germany-only importer against the multi-country schema.

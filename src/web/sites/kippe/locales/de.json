@@ -13,7 +13,7 @@
   "details": "Details zur Verkaufsstelle",
   "tileError": "Die Karte ist nicht verfügbar. Die Liste funktioniert weiterhin.",
   "footerTitle": "Dein Viertel kennen.\nDen nächsten Stopp finden.",
-  "footerText": "Automaten, Geschäfte und Tankstellen in ganz Deutschland. Aus gemeinschaftlich gepflegten Kartendaten.",
+  "footerText": "Automaten, Geschäfte und Tankstellen in {countries}. Aus gemeinschaftlich gepflegten Kartendaten.",
   "howTitle": "In drei Schritten zum nächsten Stopp.",
   "how2": "Verkaufsstelle wählen",
   "how2Text": "Wähle Automaten, Geschäfte oder Tankstellen. Zu den Geschäften zählen Lotto-Annahmestellen, Kioske, Spätis, Zeitungsläden und Supermärkte.",

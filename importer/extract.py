@@ -173,6 +173,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             super().__init__()
             self.expected = {}
             self.completed = set()
+            self.area_fallback_points = {}
             self.count = 0
 
         def write(self, source_type, source_id, tags, point, version=None):
@@ -208,7 +209,21 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             if not object_kinds(tags,'way',obj.id):
                 return
             if obj.is_closed() and tags.get("area") != "no":
-                self.expected[('way', obj.id)] = object_kinds(tags,'way',obj.id)
+                key = ('way', obj.id)
+                member_key = ('w', obj.id)
+                kinds_for_way = object_kinds(tags,'way',obj.id)
+                self.expected[key] = kinds_for_way
+                line = shape(json.loads(factory.create_linestring(obj)))
+                point = line.interpolate(0.5, normalized=True)
+                self.area_fallback_points[member_key] = point
+                try:
+                    polygon = Polygon(line.coords)
+                    malformed = not polygon.is_valid or polygon.is_empty
+                except ValueError:
+                    malformed = True
+                if malformed:
+                    self.write('way', obj.id, tags, point, obj.version)
+                    self.completed.add(key)
             else:
                 line = shape(json.loads(factory.create_linestring(obj)))
                 self.write('way', obj.id, tags, line.interpolate(0.5, normalized=True), obj.version)
@@ -225,7 +240,15 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             area_kinds = object_kinds(tags, source_type, obj.orig_id())
             if not area_kinds and member_key not in member_keys:
                 return
-            point = shape(json.loads(factory.create_multipolygon(obj))).representative_point()
+            if source_type == 'way' and (source_type, obj.orig_id()) in self.completed:
+                return
+            try:
+                point = shape(json.loads(factory.create_multipolygon(obj))).representative_point()
+            except RuntimeError:
+                point = self.area_fallback_points.get(member_key) or member_points.get(member_key)
+                if point is None:
+                    raise
+                print(f'[geometry] Invalid {source_type}/{obj.orig_id()} polygon; using its mapped line geometry', file=sys.stderr)
             if member_key in member_keys:
                 member_points[member_key] = point
             if area_kinds:

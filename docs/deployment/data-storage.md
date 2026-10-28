@@ -5,7 +5,7 @@ There is intentionally no `data/` folder in `/home/oliver/stack/bloli-nearby` fo
 ## What is downloaded
 
 - **Visible map background:** browsers load raster tiles directly from OpenStreetMap. The VM does not bulk-download or serve Germany map tiles.
-- **OSM source data:** the importer downloads a country `.osm.pbf` dataset from Geofabrik, verifies its published checksum and extracts all six site categories and settlements. Germany retains the original `/data` cache; Romania, Austria and Hungary use isolated `/data/countries/{ro,at,hu}` caches in the same Docker volume.
+- **OSM source data:** the importer downloads a country `.osm.pbf` dataset from Geofabrik, verifies its published checksum and extracts all six site categories and settlements. Germany, Romania, Austria and Hungary use isolated `/data/countries/{de,ro,at,hu}` caches in the same Docker volume.
 - **Search database:** normalized facility and settlement records, coverage, source dates and import job history are stored in PostGIS.
 
 ## Exact VM paths
@@ -39,7 +39,7 @@ After it exits, or for scheduled imports with another container name, inspect th
 
 ```bash
 cd /home/oliver/stack/bloli-nearby
-scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -c 'du -sh /data /data/countries/* 2>/dev/null || true; find /data -maxdepth 3 -type f -printf "%p %s bytes\\n" | sort'
+scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -c 'du -sh /data/countries/* 2>/dev/null || true; find /data/countries -maxdepth 3 -type f -printf "%p %s bytes\\n" | sort'
 ```
 
 You can also inspect the host directory with `sudo ls -lh /var/lib/docker/volumes/bloli-nearby_import_data/_data`; do not change Docker volume files directly.
@@ -77,4 +77,4 @@ The legacy `find-a-loo_*` volumes were the pre-rename sources. The 2026-10-27 ro
 
 All country caches share the `bloli-nearby_import_data` volume. Germany's existing retained PBF is reused; each newly imported country keeps its own PBF and filters so a failed or pending import cannot replace another country's source. The scheduled refresh processes active countries one at a time. See [multi-country operations](multi-country-coverage.md) for exact paths and retry commands.
 
-Transit adds a source-bound SQLite relation metadata sidecar in the same import volume: `/data/transit-context.sqlite` and `/data/transit-context.source`. It contains route labels/mode evidence and stop_area membership, not route path geometry or a second map. The source checksum/context version controls reuse; all five categories/context publish atomically. Source PBF and visible browser tiles retain their existing separate roles.
+Transit adds a source-bound SQLite relation metadata sidecar in each country's cache, for example Germany's `/data/countries/de/transit-context.sqlite` and `/data/countries/de/transit-context.source`. It contains route labels/mode evidence and stop_area membership, not route path geometry or a second map. The source checksum/context version controls reuse; all six categories/context publish atomically. Source PBF and visible browser tiles retain their existing separate roles.

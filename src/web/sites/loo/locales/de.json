@@ -13,7 +13,7 @@
   "details": "WC-Details",
   "tileError": "Die Karte macht eine kurze Pause. Die WC-Liste funktioniert weiter.",
   "footerTitle": "Weniger suchen.\nMehr erleben.",
-  "footerText": "Für die kleinen Notfälle unterwegs. Für alle, die in Deutschland auf Entdeckungstour sind.",
+  "footerText": "Für die kleinen Notfälle unterwegs. Für alle, die in {countries} auf Entdeckungstour sind.",
   "howTitle": "Der kurze Weg zur Erleichterung.",
   "how2": "Finde das passende WC",
   "how2Text": "Filtere kostenlose oder kostenpflichtige Toiletten. Fehlende Angaben bleiben unbekannt.",

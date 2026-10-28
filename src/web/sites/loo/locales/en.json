@@ -13,7 +13,7 @@
   "details": "Toilet details",
   "tileError": "The map is taking a comfort break. The toilet list still works.",
   "footerTitle": "Less searching.\nMore exploring.",
-  "footerText": "For life’s little emergencies. Made for everyone out and about in Germany.",
+  "footerText": "For life’s little emergencies. Made for everyone out and about in {countries}.",
   "howTitle": "The shortest route to relief.",
   "how2": "Find your fit",
   "how2Text": "Filter free or paid toilets. Missing information stays unknown.",

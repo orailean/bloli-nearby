@@ -35,6 +35,7 @@ import type {
   Settlement,
 } from "../shared/types.js";
 import type { CountryCode } from "../shared/countries.js";
+import { fillCountryCoverage, formatCountryList } from "./coverage.js";
 import {
   siteDictionaries,
   chooseLocale,
@@ -130,10 +131,16 @@ export default function App() {
   const activeCountries = (dataset?.countries || []).filter(
     (country) => country.status === "active" && country.ready,
   );
+  const coverageCountries = activeCountries.length
+    ? activeCountries.map((country) => countryName(country.code))
+    : [countryName("de")];
+  const coverageCountriesText = formatCountryList(coverageCountries, locale);
+  const coverageCopy = (copy: string) =>
+    fillCountryCoverage(copy, coverageCountries, locale);
   const listedCountries = dataset?.countries || [];
   const coverageLabel =
     activeCountries.length > 1
-      ? `${t.coverageFrom} ${activeCountries.map((country) => countryName(country.code)).join(", ")}`
+      ? `${t.coverageFrom} ${coverageCountriesText}`
       : t.germany;
   useEffect(() => {
     const title =
@@ -141,6 +148,14 @@ export default function App() {
         ? "Find a Loo"
         : `${t.brandName[0].toUpperCase()}${t.brandName.slice(1)}`;
     document.title = `${title} · ${t.hero.replace(/\n/g, " ")}`;
+    const description = document.querySelector<HTMLMetaElement>(
+      'meta[name="description"]',
+    );
+    if (description) description.content = coverageCopy(t.intro);
+    const socialDescription = document.querySelector<HTMLMetaElement>(
+      'meta[property="og:description"]',
+    );
+    if (socialDescription) socialDescription.content = coverageCopy(t.intro);
     const theme = document.querySelector<HTMLMetaElement>(
       'meta[name="theme-color"]',
     );
@@ -157,7 +172,7 @@ export default function App() {
                 : site.id === "kippe"
                   ? "#b52d3b"
                   : "#123f3b";
-  }, [locale, t]);
+  }, [locale, t, coverageCountriesText]);
   const {
     Icon: SiteIcon,
     Artwork,
@@ -397,7 +412,7 @@ export default function App() {
               {coverageLabel}
             </div>
             <h1 id="hero-title">{t.hero}</h1>
-            <p>{t.intro}</p>
+            <p>{coverageCopy(t.intro)}</p>
             <div className="hero-assurance">
               <ShieldCheck size={17} aria-hidden="true" />
               {t.noAccount}
@@ -808,7 +823,7 @@ export default function App() {
               </span>
               <span translate="no">{t.brandName}.</span>
             </a>
-            <p>{t.footerText}</p>
+            <p>{coverageCopy(t.footerText)}</p>
           </div>
           <h2>{t.footerTitle}</h2>
           <div className="footer-links">

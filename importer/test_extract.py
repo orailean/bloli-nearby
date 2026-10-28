@@ -50,6 +50,17 @@ class ExtractTests(unittest.TestCase):
    ways=[json.loads(line) for line in out.getvalue().splitlines() if '"sourceType": "way"' in line]
    self.assertEqual(len(ways),1)
    self.assertTrue(53.07<=ways[0]['lat']<=53.071)
+ def test_malformed_closed_facility_area_falls_back_to_its_mapped_line(self):
+  extra='''<node id="7" lat="53.072" lon="8.803"/><node id="8" lat="53.073" lon="8.804"/><node id="9" lat="53.073" lon="8.803"/><node id="10" lat="53.072" lon="8.804"/>
+  <way id="12" version="1"><nd ref="7"/><nd ref="8"/><nd ref="9"/><nd ref="10"/><nd ref="7"/><tag k="amenity" v="toilets"/></way>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>',extra+'</osm>'))
+   out=io.StringIO();extract(str(p), {'type':'MultiPolygon','coordinates':[[[[5,47],[16,47],[16,56],[5,56],[5,47]]]]},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   malformed=[r for r in rows if r.get('sourceId')=='12']
+   self.assertEqual(len(malformed),1)
+   self.assertEqual(malformed[0]['kind'],'facility')
+   self.assertEqual(rows[-1]['kind'],'complete')
  def test_train_route_with_onboard_toilets_is_not_a_fixed_facility(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>', '<relation id="98" version="1"><member type="way" ref="11" role=""/><tag k="type" v="route"/><tag k="route" v="train"/><tag k="toilets" v="yes"/></relation></osm>'))

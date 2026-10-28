@@ -36,6 +36,6 @@ After TLS is ready, verify `https://charge.bloli.com` serves the Charge shell, `
 
 ## Routine updates and rollback
 
-Use [the regular production update procedure](production-updates.md) to deploy application code. Use the existing weekly refresh service for all six categories; do not run a legacy five-category importer after Charge has been published. See the [map data storage guide](data-storage.md) for the retained `/data/source.osm.pbf` and `/data/transit-context.sqlite` paths; these are not rendered map tiles.
+Use [the regular production update procedure](production-updates.md) to deploy application code. Use the existing weekly refresh service for all six categories; do not run a legacy five-category importer after Charge has been published. See the [map data storage guide](data-storage.md) for Germany's retained files under `/data/countries/de/`; these are not rendered map tiles.
 
 For rollback, pause the shared refresh timer first. Prefer a compatible code rollback that still understands all six active categories. Do not restore a pre-Charge five-category dump over the current schema with `pg_restore --clean`; restore it into a fresh separate database, verify it, and switch the application only with compatible older images and importer paused. Preserve the active volume and a fresh post-Charge backup until rollback is fully verified.

@@ -8,7 +8,7 @@ const pool = createPool();
 try {
   await migrate(pool);
   const countryCode = (process.env.COUNTRY_CODE || "de") as CountryCode;
-  const dataDir = countryCode === "de" ? "/data" : `/data/countries/${countryCode}`;
+  const dataDir = `/data/countries/${countryCode}`;
   const result = await runRefresh(
     pool,
     process.env.DATA_URL ||
