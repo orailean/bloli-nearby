@@ -26,6 +26,8 @@ test("every site's localized intro and footer reflect the active country set", (
           : locale === "ro"
             ? ["Germania", "România"]
             : ["Germany", "Romania"];
+      assert.ok(copy.intro.includes("{countries}"));
+      assert.ok(copy.footerText.includes("{countries}"));
       for (const text of [copy.intro, copy.footerText]) {
         const rendered = fillCountryCoverage(text, countries, locale);
         assert.ok(!rendered.includes("{countries}"));

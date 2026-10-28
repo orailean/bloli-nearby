@@ -2,7 +2,7 @@
   "find": "Verkaufsstelle finden",
   "how": "So geht’s",
   "hero": "Dein nächster Stopp.\nGleich um die Ecke.",
-  "intro": "Finde Zigarettenautomaten, Tabakläden, Kioske, Lotto-Annahmestellen, Spätis, Supermärkte und Tankstellen in deiner Nähe. Wähle deinen Standort und schau auf die Karte.",
+  "intro": "Finde Zigarettenautomaten, Tabakläden, Kioske, Lotto-Annahmestellen, Spätis, Supermärkte und Tankstellen in deiner Nähe in {countries}. Wähle deinen Standort und schau auf die Karte.",
   "sticker": "Ein Stopp um die Ecke.",
   "locate": "Verkaufsstellen in meiner Nähe",
   "all": "Alle Verkaufsstellen",

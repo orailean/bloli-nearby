@@ -2,7 +2,7 @@
   "find": "Găsește o toaletă",
   "how": "Cum funcționează",
   "hero": "Te cheamă natura.\nGăsim o soluție.",
-  "intro": "O zi frumoasă merită pauze fără griji. Găsește o toaletă publică în apropiere, fără o cafea cumpărată de nevoie.",
+  "intro": "O zi frumoasă merită pauze fără griji. Găsește o toaletă publică în {countries}, fără o cafea cumpărată de nevoie.",
   "sticker": "O mică ușurare, aproape.",
   "locate": "Găsește-mă pe hartă",
   "all": "Toate toaletele",
