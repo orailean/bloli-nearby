@@ -3,6 +3,12 @@ import { chromium, expect } from "@playwright/test";
 const results = {};
 const expectedCountries = (process.env.EXPECTED_COUNTRIES || "de,ro")
   .split(",").map((value) => value.trim()).filter(Boolean);
+const countryLabels = {
+  de: { de: "Deutschland", en: "Germany", ro: "Germania" },
+  ro: { de: "Rumänien", en: "Romania", ro: "România" },
+  at: { de: "Österreich", en: "Austria", ro: "Austria" },
+  hu: { de: "Ungarn", en: "Hungary", ro: "Ungaria" },
+};
 const browser = await chromium.launch();
 try {
   for (const id of (
@@ -46,12 +52,21 @@ try {
           (id === "kippe" ? !!item.sellerType : !item.sellerType),
       ),
     );
-    if (expectedCountries.includes("ro")) {
-      const bucharest = await fetch(`${base}/api/locations?lat=44.4268&lon=26.1025&radius=5000`).then((r) => r.json());
-      assert.ok(bucharest.items.length > 0, `${id}: Bucharest results`);
-      assert.ok(bucharest.items.every((item) => item.countryCode === "ro"), `${id}: Bucharest results must identify Romania`);
+    const countrySearches = {
+      ro: { name: "Bucharest", lat: 44.4268, lon: 26.1025 },
+      at: { name: "Vienna", lat: 48.2082, lon: 16.3738 },
+      hu: { name: "Budapest", lat: 47.4979, lon: 19.0402 },
+    };
+    for (const code of expectedCountries.filter((country) => country !== "de")) {
+      const city = countrySearches[code];
+      assert.ok(city, `${code}: a city probe is configured`);
+      const results = await fetch(`${base}/api/locations?lat=${city.lat}&lon=${city.lon}&radius=5000`).then((r) => r.json());
+      assert.ok(results.items.length > 0, `${id}: ${city.name} results`);
+      assert.ok(results.items.every((item) => item.countryCode === code), `${id}: ${city.name} results must identify ${code}`);
+      if (code === "ro") {
       const settlements = await fetch(`${base}/api/settlements?q=bucuresti&country=ro`).then((r) => r.json());
       assert.ok(settlements.items.some((item) => item.countryCode === "ro"), `${id}: unaccented Romanian settlement match`);
+      }
     }
     if (id === "kebab") {
       assert.ok(
@@ -222,20 +237,16 @@ try {
       for (const lang of ["de", "ro", "en"]) {
         await page.locator("#language").selectOption(lang);
         await page.evaluate(() => document.fonts.ready);
-        if (expectedCountries.includes("ro")) {
-          const coverage =
-            lang === "de"
-              ? ["Deutschland", "Rumänien"]
-              : lang === "ro"
-                ? ["Germania", "România"]
-                : ["Germany", "Romania"];
-          for (const name of coverage)
+        if (expectedCountries.length > 1) {
+          const coverage = expectedCountries.map((code) => countryLabels[code][lang]);
+          for (const name of coverage) {
             await expect(page.locator(".hero-copy > p")).toContainText(name);
+          }
           await expect
             .poll(() =>
               page.locator('meta[name="description"]').getAttribute("content"),
             )
-            .toContain(coverage[1]);
+            .toContain(coverage[coverage.length - 1]);
         }
         assert.equal(
           await page.evaluate(
