@@ -144,6 +144,8 @@ CREATE TABLE IF NOT EXISTS country_settlement_memberships (
  source_version integer NOT NULL DEFAULT 0 CHECK(source_version >= 0),
  PRIMARY KEY(country_code,settlement_id)
 );
+CREATE INDEX IF NOT EXISTS country_settlement_membership_lookup_idx
+ ON country_settlement_memberships(settlement_id,country_code);
 
 -- Existing live data belongs to Germany. Do not rewrite locations, JSON or IDs.
 INSERT INTO country_datasets(country_code,category,dataset_at,imported_at,source,location_count,settlement_count,coverage,boundary_source,boundary_checksum)
@@ -171,3 +173,28 @@ ALTER TABLE import_jobs ALTER COLUMN country_code SET NOT NULL;
 CREATE INDEX IF NOT EXISTS import_jobs_country_recent_idx ON import_jobs(country_code,id DESC);
 
 CREATE EXTENSION IF NOT EXISTS unaccent;
+
+-- Persist the accent-folded key so place autocomplete can use a prefix index.
+ALTER TABLE settlements ADD COLUMN IF NOT EXISTS search_name text;
+UPDATE settlements SET search_name=unaccent(lower(name)) WHERE search_name IS NULL;
+CREATE INDEX IF NOT EXISTS settlement_search_name_prefix_idx
+ ON settlements(search_name text_pattern_ops);
+CREATE OR REPLACE FUNCTION set_settlement_search_name() RETURNS trigger
+ LANGUAGE plpgsql AS $$
+BEGIN
+ NEW.search_name := unaccent(lower(NEW.name));
+ RETURN NEW;
+END;
+$$;
+DO $$
+BEGIN
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_trigger
+  WHERE tgrelid='settlements'::regclass AND tgname='settlement_search_name_write'
+ ) THEN
+  CREATE TRIGGER settlement_search_name_write
+   BEFORE INSERT OR UPDATE OF name ON settlements
+   FOR EACH ROW EXECUTE FUNCTION set_settlement_search_name();
+ END IF;
+END;
+$$;

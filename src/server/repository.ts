@@ -11,6 +11,7 @@ import type {
 import { applySellerDefaults } from "../shared/sellers.js";
 import { isOpenNow } from "./opening-hours.js";
 import { AppError } from "../shared/domain.js";
+import { normalizeSettlementSearch } from "../shared/settlement-search.js";
 export async function datasetStatus(
   pool: pg.Pool,
   category: Category = "toilets",
@@ -243,29 +244,31 @@ export async function searchSettlements(
     if (!activeCountry) throw new AppError("COUNTRY_NOT_ACTIVE");
   }
   const escaped = query.replace(/[\\%_]/g, "\\$&");
+  const normalized = normalizeSettlementSearch(query);
+  const escapedNormalized = normalized.replace(/[\\%_]/g, "\\$&");
   const rows = (
     await pool.query(
-      `SELECT * FROM (
-         SELECT DISTINCT ON(s.id) s.id,s.name,s.postcode,s.region,s.names,
+      `SELECT id,name,postcode,region,names,lat,lon,"countryCode","countryName","nearCity" FROM (
+         SELECT DISTINCT ON(s.id) s.id,s.name,s.search_name,s.postcode,s.region,s.names,
            ST_Y(s.location::geometry) AS lat,ST_X(s.location::geometry) AS lon,
            m.country_code AS "countryCode",c.name AS "countryName",
            CASE WHEN s.place_type IN ('city','town') THEN NULL ELSE (
              SELECT city.name FROM settlements city
              JOIN country_settlement_memberships cm ON cm.settlement_id=city.id AND cm.country_code=m.country_code
-             JOIN country_datasets cd ON cd.country_code=cm.country_code AND cd.category=$4
+             JOIN country_datasets cd ON cd.country_code=cm.country_code AND cd.category=$5
              WHERE city.place_type IN ('city','town') AND city.id<>s.id
              ORDER BY city.location <-> s.location LIMIT 1
            ) END AS "nearCity"
          FROM settlements s
          JOIN country_settlement_memberships m ON m.settlement_id=s.id
          JOIN countries c ON c.code=m.country_code AND c.status='active'
-         JOIN country_datasets d ON d.country_code=c.code AND d.category=$4
-         WHERE ($5='all' OR c.code=$5)
-           AND (unaccent(lower(s.name)) LIKE unaccent(lower($1)) OR s.postcode LIKE $2)
+         JOIN country_datasets d ON d.country_code=c.code AND d.category=$5
+         WHERE ($6='all' OR c.code=$6)
+           AND (s.search_name LIKE $1 OR s.postcode LIKE $2)
          ORDER BY s.id,m.source_version DESC,m.country_code
        ) matched
-       ORDER BY (unaccent(lower(name))=unaccent(lower($3))) DESC,(postcode=$3) DESC,name,id LIMIT 15`,
-      [`${escaped}%`, `${escaped}%`, query, category, country],
+       ORDER BY (search_name=$3) DESC,(postcode=$4) DESC,name,id LIMIT 15`,
+      [`${escapedNormalized}%`, `${escaped}%`, normalized, query, category, country],
     )
   ).rows;
   return rows;

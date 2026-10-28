@@ -83,6 +83,19 @@ test(
   { timeout: 30000 },
   async (t) => {
     await migrate(pool);
+    const lookupIndexes = (
+      await pool.query(
+        "SELECT indexname FROM pg_indexes WHERE schemaname=current_schema() AND indexname=ANY($1::text[])",
+        [[
+          "settlement_search_name_prefix_idx",
+          "country_settlement_membership_lookup_idx",
+        ]],
+      )
+    ).rows.map((row) => row.indexname).sort();
+    assert.deepEqual(lookupIndexes, [
+      "country_settlement_membership_lookup_idx",
+      "settlement_search_name_prefix_idx",
+    ]);
     await pool.query(
       "TRUNCATE transit_components,country_location_memberships,country_settlement_memberships,country_datasets,location_categories,locations,category_datasets,facilities,settlements,dataset,import_jobs",
     );
@@ -1318,6 +1331,10 @@ test(
         assert.equal(romanianSuggestion.status, 200);
         assert.equal(romanianSuggestion.body.items[0].name, "București");
         assert.equal(romanianSuggestion.body.items[0].countryCode, "ro");
+        assert.equal(
+          (await pool.query("SELECT search_name FROM settlements WHERE id='node/81007'")).rows[0].search_name,
+          "bucuresti",
+        );
         const bucharestSearch = await get("/api/locations?lat=44.43&lon=26.1&radius=500");
         assert.equal(bucharestSearch.status, 200);
         assert.equal(bucharestSearch.body.items[0].id, "node/81001");
