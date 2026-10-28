@@ -61,6 +61,17 @@ class ExtractTests(unittest.TestCase):
    self.assertEqual(len(malformed),1)
    self.assertEqual(malformed[0]['kind'],'facility')
    self.assertEqual(rows[-1]['kind'],'complete')
+ def test_incomplete_multipolygon_facility_uses_a_mapped_member_point(self):
+  extra='''<way id="12" version="1"><nd ref="2"/><nd ref="3"/></way><way id="13" version="1"><nd ref="4"/><nd ref="5"/></way>
+  <relation id="21" version="1"><member type="way" ref="12" role="outer"/><member type="way" ref="13" role="outer"/><tag k="type" v="multipolygon"/><tag k="amenity" v="toilets"/></relation>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>',extra+'</osm>'))
+   out=io.StringIO();extract(str(p), {'type':'MultiPolygon','coordinates':[[[[5,47],[16,47],[16,56],[5,56],[5,47]]]]},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   relation=[r for r in rows if r.get('sourceId')=='21']
+   self.assertEqual(len(relation),1)
+   self.assertEqual(relation[0]['kind'],'facility')
+   self.assertEqual(rows[-1]['kind'],'complete')
  def test_train_route_with_onboard_toilets_is_not_a_fixed_facility(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>', '<relation id="98" version="1"><member type="way" ref="11" role=""/><tag k="type" v="route"/><tag k="route" v="train"/><tag k="toilets" v="yes"/></relation></osm>'))

@@ -128,7 +128,10 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     member_keys = set()
     building_member_keys = set()
     relation_members = {}
+    area_relation_members = {}
+    area_relation_tags = {}
     transit_relations = {}
+    area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge'}
 
     class SiteMembers(osmium.SimpleHandler):
         def relation(self, obj):
@@ -137,6 +140,9 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             # Collections and routes supply context, never passenger coordinates.
             if tags.get('type') not in ('route', 'route_master', 'collection', 'destination_sign') and tags.get('public_transport') not in ('stop_area', 'stop_area_group'):
                 relation_members[obj.id] = [(m.type, m.ref) for m in obj.members if m.type in ('n', 'w', 'r')]
+            if tags.get('type') in ('multipolygon', 'boundary') and area_categories.intersection(kinds(tags)):
+                area_relation_members[obj.id] = relation_members.get(obj.id, [])
+                area_relation_tags[obj.id] = tags
             if 'transit' in kinds(tags):
                 transit_relations[obj.id] = tags
             if tags.get('type') in ('site', 'building') and kinds(tags):
@@ -153,6 +159,8 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     # Relations follow their members in OSM files. Collect only fixed site/building references
     # first, then retain coordinates for those members during the main pass.
     SiteMembers().apply_file(filename)
+    for members in area_relation_members.values():
+        member_keys.update(members)
     # Resolve only dependencies of physical passenger features, not route paths.
     pending = list(transit_relations)
     needed_relations = set()
@@ -167,6 +175,13 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
                 pending.append(member_id)
     relation_members = {key: value for key, value in relation_members.items() if key in needed_relations}
     member_points = {}
+
+    def representative_member_point(points):
+        if not points:
+            return None
+        x = sum(point.x for point in points) / len(points)
+        y = sum(point.y for point in points) / len(points)
+        return min(points, key=lambda point: (point.x-x)**2 + (point.y-y)**2)
 
     class Extractor(osmium.SimpleHandler):
         def __init__(self):
@@ -245,7 +260,14 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             try:
                 point = shape(json.loads(factory.create_multipolygon(obj))).representative_point()
             except RuntimeError:
-                point = self.area_fallback_points.get(member_key) or member_points.get(member_key)
+                point = self.area_fallback_points.get(member_key)
+                if point is None:
+                    point = member_points.get(member_key)
+                if point is None and source_type == 'relation':
+                    point = representative_member_point([
+                        member_points[key] for key in area_relation_members.get(obj.orig_id(), [])
+                        if key in member_points
+                    ])
                 if point is None:
                     raise
                 print(f'[geometry] Invalid {source_type}/{obj.orig_id()} polygon; using its mapped line geometry', file=sys.stderr)
@@ -258,6 +280,18 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     handler = Extractor()
     with tempfile.TemporaryDirectory(prefix='loo-locations-') as temporary:
         handler.apply_file(filename, locations=True, idx=f'sparse_file_array,{temporary}/nodes.idx')
+    for source_id, members in area_relation_members.items():
+        key = ('relation', source_id)
+        if key not in handler.expected or key in handler.completed:
+            continue
+        point = representative_member_point([
+            member_points[member] for member in members if member in member_points
+        ])
+        if point is not None:
+            handler.write('relation', source_id, kinds(area_relation_tags[source_id]), point,
+                          source_versions.get(key))
+            handler.completed.add(key)
+            print(f'[geometry] Missing {key[0]}/{key[1]} polygon; using its mapped member geometry', file=sys.stderr)
     for source_id, (tags, members) in sites.items():
         points = [member_points[key] for key in members if key in member_points]
         if points:
