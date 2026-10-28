@@ -11,6 +11,10 @@ export async function analyzePublishedDataset(
       "transit_components",
       "settlements",
       "facilities",
+      "countries",
+      "country_datasets",
+      "country_location_memberships",
+      "country_settlement_memberships",
     ])
       await db.query(`ANALYZE ${table}`);
     return { status: "success" };
