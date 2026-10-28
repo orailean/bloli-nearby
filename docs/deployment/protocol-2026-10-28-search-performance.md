@@ -10,6 +10,8 @@ The production execution plan then exposed stale country statistics: the planner
 
 Measured public responses afterward: `mun` warmed to 0.40–0.48 seconds; `mün` 0.37–0.41 seconds; `bucuresti` 0.30–0.37 seconds; two-character `bu` 0.64–0.71 seconds. These include network time and are samples, not latency guarantees.
 
+The six-domain check exposed an additional cost: autocomplete called the full dataset status/count operation to check readiness. Transit took about 7 seconds because that counted its million memberships. Replaced that call with an indexed existence check. Final `bucuresti&country=ro` checks succeeded through all six domains, with repeated requests at 0.14–0.28 seconds (first Loo request 0.48 seconds). The final readiness change also passed all 17 PostGIS integration checks. The production API is healthy and the importer image includes the routine statistics fix.
+
 Verified backup before migration: `backups/bloli-nearby-20261028T173807Z.dump`, 263,607,375 bytes, SHA-256 `64b23d885a0a32e37156c87322691db87ff341491a5b6f5556eb2829b3ef6ee0`; `pg_restore --list` returned 96 entries. API and importer images were rebuilt. The API migration completed and its health check passed.
 
 Validation: production build, 78 unit tests and 17 PostGIS integration checks passed. Integration checks used only disposable local database `bloli_nearby_perf_20261028`; it was dropped afterward and the local development database container was stopped. Existing local development/integration databases and volumes were preserved.
