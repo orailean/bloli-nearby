@@ -72,6 +72,16 @@ class ExtractTests(unittest.TestCase):
    self.assertEqual(len(relation),1)
    self.assertEqual(relation[0]['kind'],'facility')
    self.assertEqual(rows[-1]['kind'],'complete')
+ def test_multipolygon_without_constructible_area_uses_member_tags_for_fallback(self):
+  extra='''<relation id="22" version="1"><member type="node" ref="2" role="outer"/><tag k="type" v="multipolygon"/><tag k="amenity" v="toilets"/></relation>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>',extra+'</osm>'))
+   out=io.StringIO();extract(str(p), {},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   relation=[r for r in rows if r.get('sourceId')=='22']
+   self.assertEqual(len(relation),1)
+   self.assertEqual(relation[0]['kind'],'facility')
+   self.assertEqual(rows[-1]['kind'],'complete')
  def test_train_route_with_onboard_toilets_is_not_a_fixed_facility(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>', '<relation id="98" version="1"><member type="way" ref="11" role=""/><tag k="type" v="route"/><tag k="route" v="train"/><tag k="toilets" v="yes"/></relation></osm>'))

@@ -288,7 +288,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             member_points[member] for member in members if member in member_points
         ])
         if point is not None:
-            handler.write('relation', source_id, kinds(area_relation_tags[source_id]), point,
+            handler.write('relation', source_id, area_relation_tags[source_id], point,
                           source_versions.get(key))
             handler.completed.add(key)
             print(f'[geometry] Missing {key[0]}/{key[1]} polygon; using its mapped member geometry', file=sys.stderr)
