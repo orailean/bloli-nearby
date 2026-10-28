@@ -1,6 +1,6 @@
 # Updating Bloli Nearby in production
 
-Current six-site deployment: see [Bloli Nearby migration and updates](bloli-nearby-migration.md), [Water setup](water-site.md), [Transit setup](transit-site.md) and [Charge setup](charge-site.md).
+Current six-site deployment: see [Bloli Nearby migration and updates](bloli-nearby-migration.md), [multi-country operations](multi-country-coverage.md), [Water setup](water-site.md), [Transit setup](transit-site.md) and [Charge setup](charge-site.md).
 
 Production path: `/home/oliver/stack/bloli-nearby` on `ssh-contabo`. Public sites: https://loo.bloli.com, https://kippe.bloli.com, https://kebab.bloli.com, https://water.bloli.com, https://transit.bloli.com and https://charge.bloli.com. The existing Docker Nginx owns ports 80/443; this app publishes no host ports. The production `.env` persists `COMPOSE_FILE=compose.yaml:compose.production.yaml` so operational commands retain the external `nginx_default` network and alias `bloli-nearby-web`.
 
@@ -47,7 +47,7 @@ cd /home/oliver/stack/bloli-nearby
 scripts/update.sh
 ```
 
-Failed imports preserve the previous active dataset. Read `/api/status` for the source timestamp, counts and latest outcome. See [data storage](data-storage.md) for where the downloaded files and database actually live.
+Failed imports preserve the previous active country snapshot. `scripts/update.sh` refreshes active countries sequentially, records a separate result for each, continues after failures, then exits nonzero if any country failed. Read `/api/status` for every country's activation state, source timestamp, counts and latest outcome. Retry one country with `scripts/refresh-countries.sh ro` (or `at`, `hu`, `de`). Pending countries are skipped by the scheduled job. See [multi-country operations](multi-country-coverage.md) for measured floors and activation gates, and [data storage](data-storage.md) for the country cache paths.
 
 ## Monitor and back up
 

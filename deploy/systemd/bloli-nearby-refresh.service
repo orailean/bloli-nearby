@@ -1,5 +1,5 @@
 [Unit]
-Description=Refresh Germany categorized location and settlement dataset for Bloli Nearby
+Description=Refresh active country location and settlement snapshots for Bloli Nearby
 Requires=docker.service
 After=docker.service network-online.target
 Wants=network-online.target
@@ -8,7 +8,7 @@ Wants=network-online.target
 Type=oneshot
 User=oliver
 WorkingDirectory=/home/oliver/stack/bloli-nearby
-ExecStart=/usr/bin/docker compose --profile tools run --rm importer
+ExecStart=/home/oliver/stack/bloli-nearby/scripts/update.sh
 TimeoutStartSec=6h
 Nice=10
 UMask=0077

@@ -3,9 +3,12 @@ import { spawn } from "node:child_process";
 import { createPool, migrate } from "./db.js";
 import { runRefresh } from "./refresh.js";
 import { importFile } from "./import-file.js";
+import type { CountryCode } from "../shared/countries.js";
 const pool = createPool();
 try {
   await migrate(pool);
+  const countryCode = (process.env.COUNTRY_CODE || "de") as CountryCode;
+  const dataDir = countryCode === "de" ? "/data" : `/data/countries/${countryCode}`;
   const result = await runRefresh(
     pool,
     process.env.DATA_URL ||
@@ -27,8 +30,9 @@ try {
             : reject(new Error("SOURCE_PREPARATION_FAILED"));
         });
       });
-      return importFile(pool, "/data/extracted.jsonl", context);
+      return importFile(pool, `${dataDir}/extracted.jsonl`, context);
     },
+    countryCode,
   );
   console.log(
     JSON.stringify({

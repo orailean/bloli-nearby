@@ -5,7 +5,7 @@ There is intentionally no `data/` folder in `/home/oliver/stack/bloli-nearby` fo
 ## What is downloaded
 
 - **Visible map background:** browsers load raster tiles directly from OpenStreetMap. The VM does not bulk-download or serve Germany map tiles.
-- **Germany OSM source:** the importer downloads Germany's `.osm.pbf` dataset from Geofabrik, verifies its published checksum and extracts toilets, tobacco sellers, kebab venues, drinking-water/refill points and settlements.
+- **OSM source data:** the importer downloads a country `.osm.pbf` dataset from Geofabrik, verifies its published checksum and extracts all six site categories and settlements. Germany retains the original `/data` cache; Romania, Austria and Hungary use isolated `/data/countries/{ro,at,hu}` caches in the same Docker volume.
 - **Search database:** normalized facility and settlement records, coverage, source dates and import job history are stored in PostGIS.
 
 ## Exact VM paths
@@ -27,24 +27,24 @@ docker volume inspect bloli-nearby_import_data bloli-nearby_postgres_data --form
 
 ## Inspect downloads and progress
 
-While the initial named importer is running:
+While an importer is running, inspect the active importer and its recent output:
 
 ```bash
-docker exec bloli-nearby-germany-kebab-import ls -lh /data
-docker logs --tail 50 bloli-nearby-germany-kebab-import
-docker stats --no-stream bloli-nearby-germany-kebab-import
+docker ps --filter label=com.docker.compose.service=importer
+docker compose logs --tail 50 importer
+docker stats --no-stream
 ```
 
 After it exits, or for scheduled imports with another container name, inspect the same persistent volume through a one-shot helper. Overriding the entrypoint avoids starting a download or import:
 
 ```bash
 cd /home/oliver/stack/bloli-nearby
-scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -c 'ls -lh /data'
+scripts/compose.sh --profile tools run --rm --no-deps --entrypoint sh importer -c 'du -sh /data /data/countries/* 2>/dev/null || true; find /data -maxdepth 3 -type f -printf "%p %s bytes\\n" | sort'
 ```
 
 You can also inspect the host directory with `sudo ls -lh /var/lib/docker/volumes/bloli-nearby_import_data/_data`; do not change Docker volume files directly.
 
-The initial Germany snapshot (2026-10-25) occupied 4.6 GB as a compressed source and approximately48MiB after the initial toilet-focused filter. After the five-category Transit rollout, the filter was111MiB, complete JSON1.9GiB, relation sidecar260MiB and PostgreSQL database2091MB. These are different processing stages; JSON repeats context and does not need to fit in memory. Future snapshots vary. Filtering reads the source in multiple passes, so its output can remain empty initially.
+The initial Germany snapshot (2026-10-25) occupied 4.6 GB as a compressed source and approximately 111 MiB after the five-category Transit filter; complete JSON was 1.9 GiB, relation sidecar 260 MiB and PostgreSQL database 2091 MB. These are different processing stages; JSON repeats context and does not need to fit in memory. Each additional country's source and temporary extraction will increase disk use. Measure available disk and per-country cache sizes before each import. Filtering reads the source in multiple passes, so its output can remain empty initially.
 
 Expected files:
 
@@ -58,7 +58,7 @@ Expected files:
 - `extracted.jsonl`: complete extraction used for publication.
 - `import.lock`: lock file; its presence alone does not mean a job is running.
 
-The current filename stays `source.osm.pbf` even if a dated upstream snapshot is used; `/api/status` and import metadata record the source. Temporary files may be absent after cleanup or an early failure. Normal app startup never initiates a download.
+The filenames stay `source.osm.pbf` within each country cache even if a dated upstream snapshot is used; `/api/status` and import metadata record the source. Temporary files may be absent after cleanup or an early failure. Normal app startup never initiates a download.
 
 ## Inspect active search data safely
 
@@ -75,6 +75,6 @@ Datasets, database files, dumps, screenshots, built assets and secrets are not c
 
 The legacy `find-a-loo_*` volumes were the pre-rename sources. The 2026-10-27 rollout uses verified copies under the generic names; original unmounted copies were explicitly removed at the owner’s request on2026-10-27T18:49:26Z after confirming zero references and verifying a backup. Current rollback uses verified dumps and retained image/configuration backups, not the deleted old volumes. See [volume migration](volume-name-migration.md) and the [Kebab protocol](protocol-2026-10-27-kebab.md). Never copy a running PostgreSQL volume.
 
-Water uses the same `bloli-nearby_import_data` volume and `/data/source.osm.pbf`; there is no separate water map download. Refiltering is required when adding Water because previous filters omitted its tags. Initial rollout reuses a verified retained snapshot; regular refresh updates all active categories (five after Transit activation).
+All country caches share the `bloli-nearby_import_data` volume. Germany's existing retained PBF is reused; each newly imported country keeps its own PBF and filters so a failed or pending import cannot replace another country's source. The scheduled refresh processes active countries one at a time. See [multi-country operations](multi-country-coverage.md) for exact paths and retry commands.
 
 Transit adds a source-bound SQLite relation metadata sidecar in the same import volume: `/data/transit-context.sqlite` and `/data/transit-context.source`. It contains route labels/mode evidence and stop_area membership, not route path geometry or a second map. The source checksum/context version controls reuse; all five categories/context publish atomically. Source PBF and visible browser tiles retain their existing separate roles.

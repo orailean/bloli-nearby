@@ -1,6 +1,6 @@
 # Bloli Nearby
 
-One self-hosted OpenStreetMap discovery platform, six focused sites across Germany:
+One self-hosted OpenStreetMap discovery platform with six focused sites. Germany is active; Romania is first in the staged country rollout, followed by Austria and Hungary after validation:
 
 - **[Find a Loo](https://loo.bloli.com)** — public toilets, free/paid filters and mapped opening hours.
 - **[Kippe](https://kippe.bloli.com)** — cigarette machines, tobacco shops, Lotto outlets, kiosks, Spätis, supermarkets, newsagents and petrol stations; machine/shop/petrol-station filters and mapped hours/payment details.
@@ -9,7 +9,7 @@ One self-hosted OpenStreetMap discovery platform, six focused sites across Germa
 - **[Transit](https://transit.bloli.com)** — nearby passenger stops/stations, mode filters, grouped platforms/entrances and mapped service/access details.
 - **[Charge](https://charge.bloli.com)** — mapped car charging stations, connector/power/access filters and driving directions.
 
-All six share one React/Leaflet frontend build, Node API, PostGIS database and Germany importer. Site profiles select distinct branding, artwork, translations, metadata, filters and details by hostname. No paid API or Google Maps key is needed; directions open externally in Google Maps. Browser map backgrounds load normal public OSM tiles directly. Downloaded Germany data supplies local location and postcode searches, not self-hosted map tiles.
+All six share one React/Leaflet frontend build, Node API, PostGIS database and country-aware importer. Site profiles select distinct branding, artwork, translations, metadata, filters and details by hostname. Germany remains active; Romania is the first additional country, with Austria and Hungary gated behind production validation. No paid API or Google Maps key is needed; directions open externally in Google Maps. Browser map backgrounds load normal public OSM tiles directly. Downloaded OSM data supplies local location and postcode searches, not self-hosted map tiles.
 
 ## Native local development
 
@@ -42,7 +42,7 @@ docker compose --profile tools build importer
 scripts/update.sh
 ```
 
-The importer resolves one immutable Germany snapshot and its published checksum, reuses matching retained files, filters all six categories and settlements, reconstructs fixed geometries and atomically publishes validated data. For the initial multi-site extension, the [migration guide](docs/deployment/bloli-nearby-migration.md) pins the already-downloaded snapshot to avoid downloading Germany again. Subsequent weekly refreshes use one latest source for all six sites.
+The importer resolves each active country's immutable Geofabrik snapshot and published checksum, filters all six categories and settlements, reconstructs fixed geometries and atomically publishes validated country data. Germany's existing source is retained; each additional country uses a separate path inside the same Docker volume. See [multi-country operations](docs/deployment/multi-country-coverage.md) for country floors, targeted retries and the staged activation gates.
 
 Tag rules are documented in [tobacco classification](docs/implementation/tobacco-tagging.md). Lotto outlets, kiosks, convenience stores/Spätis, newsagents, supermarkets, shops offering Lotto and petrol stations are included by assuming cigarette sales, without a special sales label. Explicit tobacco=no is excluded. Customer/private restrictions, inactive places and explicit negative product tags are preserved or excluded appropriately. Unknown prices and payments remain unknown. Shop hours remain unknown unless mapped; machines without mapped hours are labelled as assumed open 24/7. Missing fixed toilet/seller/kebab geometry or a suspicious count/drop aborts publication and preserves the old active data. Imports omitting any already-active category are rejected rather than mixing shared source snapshots.
 
@@ -52,7 +52,7 @@ Tag rules are documented in [tobacco classification](docs/implementation/tobacco
 
 Radius choices are **0.5, 1, 2, 3 and 5 km**, with **0.5 km default**. Radius changes update the list and fit a visible map boundary. Results are straight-line distance ordered and capped at 100 nearest matches with truncation indicated. Phones use natural page scrolling; desktops use a scrollable side panel. Tile failure leaves local search/list usable.
 
-**Open now** evaluates mapped schedules in Europe/Berlin, including daylight saving time, before applying the result cap. Missing/invalid/uncertain schedules and unresolved regional-holiday schedules are excluded, except vending machines without mapped hours are treated as 24/7 and clearly labelled as an assumption. Explicit mapped schedules still take precedence. Charge calls this **Accessible now**: it checks mapped station access hours, not connector availability, faults or live state. Unknown and conditional charger hours are excluded, never assumed to be 24/7. Active filtered searches refresh every minute. Opening status is based on recorded schedules, not operator confirmation or current inventory.
+**Open now** evaluates mapped schedules in each place's country timezone, including daylight saving time, before applying the result cap. Missing/invalid/uncertain schedules and unresolved regional-holiday schedules are excluded, except vending machines without mapped hours are treated as 24/7 and clearly labelled as an assumption. Explicit mapped schedules still take precedence. Charge calls this **Accessible now**: it checks mapped station access hours, not connector availability, faults or live state. Unknown and conditional charger hours are excluded, never assumed to be 24/7. Active filtered searches refresh every minute. Opening status is based on recorded schedules, not operator confirmation or current inventory.
 
 `/api/site`, `/api/status` and `/api/ready` resolve the request hostname. `/api/health` checks liveness only. `/api/locations` is site-scoped discovery; `/api/settlements` shares town/postcode search. The legacy `/api/toilets` route remains available only on Loo during migration. Unknown production hosts, cross-category overrides and unsupported filters are rejected.
 
@@ -90,7 +90,7 @@ Map/location data is © OpenStreetMap contributors under ODbL, via Geofabrik. Pr
 
 ## Kebab
 
-`https://kebab.bloli.com` discovers mapped Döner/kebab restaurants and fast-food venues. It shares the database, API, web gateway and weekly Germany source import with Loo and Kippe. Cuisine tokens `kebab`, `doner`, `doener` and `döner` qualify, including case/semicolon variants; Turkish cuisine or a business name alone does not. Food opening hours, takeaway/delivery, dietary information and menu/website links are shown only when mapped; food venues never receive the machine 24/7 assumption.
+`https://kebab.bloli.com` discovers mapped Döner/kebab restaurants and fast-food venues. It shares the database, API, web gateway and weekly country-aware source import with the other sites. Cuisine tokens `kebab`, `doner`, `doener` and `döner` qualify, including case/semicolon variants; Turkish cuisine or a business name alone does not. Food opening hours, takeaway/delivery, dietary information and menu/website links are shown only when mapped; food venues never receive the machine 24/7 assumption.
 
 Run all six local sites at `loo.localhost:5173`, `kippe.localhost:5173`, `kebab.localhost:5173`, `water.localhost:5173`, `transit.localhost:5173` and `charge.localhost:5173` with one native API/Vite pair and Docker PostGIS. The mixed sample contains synthetic toilets, sellers and food venues; see [local development](docs/development/multi-site.md). See [Kebab deployment](docs/deployment/kebab-site.md) for DNS, TLS, shared data validation and rollback. The displayed dataset date is the OSM snapshot timestamp; `/api/status` also reports `importedAt` and the latest job result.
 

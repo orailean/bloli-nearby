@@ -10,7 +10,9 @@ import { once } from "node:events";
 import { get as httpGet } from "node:http";
 import { createPool, migrate } from "../../src/server/db.js";
 import { importDataset } from "../../src/server/import.js";
+import { activateCountry, deactivateCountry } from "../../src/server/country-activation.js";
 import { createApi } from "../../src/server/api.js";
+import type { Category } from "../../src/shared/sites.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url)
@@ -82,8 +84,9 @@ test(
   async (t) => {
     await migrate(pool);
     await pool.query(
-      "TRUNCATE transit_components,location_categories,locations,category_datasets,facilities,settlements,dataset,import_jobs",
+      "TRUNCATE transit_components,country_location_memberships,country_settlement_memberships,country_datasets,location_categories,locations,category_datasets,facilities,settlements,dataset,import_jobs",
     );
+    await pool.query("UPDATE countries SET status=CASE WHEN code='de' THEN 'active' ELSE 'pending' END");
     const server = createApi(pool);
     server.listen(0, "127.0.0.1");
     await once(server, "listening");
@@ -116,6 +119,9 @@ test(
           );
           assert.equal(r.body.items[0].distance, 0);
           assert.equal(r.body.dataset.source, "test-fixture");
+          const status = await get("/api/status");
+          assert.equal(status.body.countries.find((c: any) => c.code === "de").status, "active");
+          assert.equal(status.body.countries.find((c: any) => c.code === "de").ready, true);
           assert.equal((await get("/api/ready")).status, 200);
         },
       );
@@ -1247,6 +1253,144 @@ test(
           );
         },
       );
+      await t.test("schema migration backfills German memberships without changing live identities", async () => {
+        const before = await pool.query("SELECT id FROM locations ORDER BY id");
+        const categoryCounts = await pool.query("SELECT category,location_count,settlement_count FROM category_datasets ORDER BY category");
+        await pool.query("DELETE FROM country_location_memberships; DELETE FROM country_settlement_memberships; DELETE FROM country_datasets");
+        await migrate(pool);
+        assert.deepEqual((await pool.query("SELECT id FROM locations ORDER BY id")).rows, before.rows);
+        assert.deepEqual((await pool.query("SELECT category,location_count,settlement_count FROM country_datasets WHERE country_code='de' ORDER BY category")).rows, categoryCounts.rows);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='de'")).rows[0].n, (await pool.query("SELECT count(*)::int n FROM location_categories")).rows[0].n);
+      });
+      await t.test("Romania imports atomically without replacing Germany", async () => {
+        const roCoverage = {
+          type: "MultiPolygon",
+          coordinates: [[[[20, 43], [30, 43], [30, 49], [20, 49], [20, 43]]]],
+        };
+        const roRows = [
+          { kind: "facility", sourceType: "node", sourceId: "81001", lat: 44.43, lon: 26.1, tags: { amenity: "toilets", name: "București WC", fee: "no" }, version: 1 },
+          { kind: "seller", sourceType: "node", sourceId: "81002", lat: 44.43, lon: 26.1, tags: { shop: "tobacco", name: "Tutun" }, version: 1 },
+          { kind: "kebab", sourceType: "node", sourceId: "81003", lat: 44.43, lon: 26.1, tags: { amenity: "fast_food", cuisine: "kebab", name: "Shaorma" }, version: 1 },
+          { kind: "water", sourceType: "node", sourceId: "81004", lat: 44.43, lon: 26.1, tags: { amenity: "drinking_water" }, version: 1 },
+          { kind: "transit", sourceType: "node", sourceId: "81005", lat: 44.43, lon: 26.1, tags: { railway: "station", name: "Gara de Nord" }, transport: { groups: [], routes: [] }, version: 1 },
+          { kind: "charge", sourceType: "node", sourceId: "81006", lat: 44.43, lon: 26.1, tags: { amenity: "charging_station", "socket:type2": "2" }, version: 1 },
+          { kind: "settlement", sourceType: "node", sourceId: "81007", lat: 44.43, lon: 26.1, tags: { place: "city", name: "București", "addr:postcode": "010011" }, version: 1 },
+          { kind: "facility", sourceType: "node", sourceId: "81008", lat: 52.52, lon: 13.405, tags: { amenity: "toilets", name: "Outside Romania" }, version: 1 },
+          { kind: "settlement", sourceType: "node", sourceId: "81009", lat: 52.52, lon: 13.405, tags: { place: "city", name: "Outside Romania" }, version: 1 },
+        ];
+        const countryOptions = {
+          ...opts,
+          countryCode: "ro" as const,
+          source: "romania-test",
+          sourceChecksum: "b".repeat(32),
+          boundarySource: "https://download.geofabrik.de/europe/romania.poly",
+          boundaryChecksum: "a".repeat(64),
+          coverage: roCoverage,
+          categories: ["toilets", "tobacco", "kebab", "water", "transit", "charge"] as Category[],
+          minimumFacilities: 1,
+          minimumSellers: 1,
+          minimumKebabs: 1,
+          minimumWaterPoints: 1,
+          minimumTransit: 1,
+          minimumChargeStations: 1,
+          minimumSettlements: 1,
+          minimumRatio: 0.5,
+        };
+        await importDataset(pool, (async function* () { yield* roRows; })(), countryOptions);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_datasets WHERE country_code='ro'")).rows[0].n, 6);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 6);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro' AND location_id='node/81008'")).rows[0].n, 0);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81009'")).rows[0].n, 0);
+        assert.equal((await pool.query("SELECT status FROM countries WHERE code='ro'")).rows[0].status, "pending");
+        await assert.rejects(activateCountry(pool, "at"), /ROLLOUT_GATE_NOT_PASSED/);
+        const pendingStatus = await get("/api/status");
+        assert.equal(pendingStatus.body.countries.find((c: any) => c.code === "ro").ready, true);
+        assert.equal(pendingStatus.body.countries.find((c: any) => c.code === "ro").status, "pending");
+        assert.equal((await get("/api/settlements?q=bucuresti&country=ro")).body.error, "COUNTRY_NOT_ACTIVE");
+        await activateCountry(pool, "ro");
+        const romanianSuggestion = await get("/api/settlements?q=bucuresti&country=ro");
+        assert.equal(romanianSuggestion.status, 200);
+        assert.equal(romanianSuggestion.body.items[0].name, "București");
+        assert.equal(romanianSuggestion.body.items[0].countryCode, "ro");
+        const bucharestSearch = await get("/api/locations?lat=44.43&lon=26.1&radius=500");
+        assert.equal(bucharestSearch.status, 200);
+        assert.equal(bucharestSearch.body.items[0].id, "node/81001");
+        assert.equal(bucharestSearch.body.items[0].countryCode, "ro");
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='de'")).rows[0].n > 0, true);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM location_categories WHERE category='charge'")).rows[0].n >= 7, true);
+        await assert.rejects(
+          importDataset(pool, (async function* () { yield* roRows; })(), {
+            ...countryOptions,
+            datasetAt: "2026-10-27T00:00:00Z",
+            minimumChargeStations: 2,
+          }),
+          /SUSPICIOUS_IMPORT/,
+        );
+        await assert.rejects(
+          importDataset(pool, (async function* () { yield* roRows; })(), {
+            ...countryOptions,
+            categories: ["toilets", "tobacco", "kebab", "water", "transit"] as Category[],
+          }),
+          /INCOMPLETE_COUNTRY_SNAPSHOT/,
+        );
+        assert.equal((await pool.query("SELECT source FROM country_datasets WHERE country_code='ro' AND category='toilets'")).rows[0].source, "romania-test");
+        const atOptions = {
+          ...countryOptions,
+          countryCode: "at" as const,
+          source: "austria-test",
+          boundarySource: "https://download.geofabrik.de/europe/austria.poly",
+        };
+        const publishAt = (rows: typeof roRows, options = atOptions) =>
+          importDataset(pool, (async function* () { yield* rows; })(), options);
+        await assert.rejects(activateCountry(pool, "hu"), /ROLLOUT_GATE_NOT_PASSED/);
+        await publishAt(roRows);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE location_id='node/81001' AND country_code IN ('ro','at')")).rows[0].n, 2);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM location_categories WHERE category='toilets' AND location_id='node/81001'")).rows[0].n, 1);
+        await activateCountry(pool, "at");
+        const borderSearch = await get("/api/locations?lat=44.43&lon=26.1&radius=500");
+        assert.equal(borderSearch.body.items.filter((x: any) => x.id === "node/81001").length, 1);
+        const conflicting = roRows.map((row: any) => row.sourceId === "81001" ? { ...row, tags: { ...row.tags, name: "Conflicting same-version edit" } } : row);
+        await assert.rejects(publishAt(conflicting), /OSM_VERSION_CONFLICT/);
+        assert.equal((await pool.query("SELECT source FROM country_datasets WHERE country_code='at' AND category='toilets'")).rows[0].source, "austria-test");
+        const replacement = roRows.filter((row: any) => Number(row.sourceId) < 81008).map((row: any, index: number) => ({ ...row, sourceId: String(82001 + index) }));
+        await publishAt(replacement, { ...atOptions, source: "austria-test-2", datasetAt: "2026-10-26T00:00:00Z" });
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro' AND location_id='node/81001'")).rows[0].n, 1);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM location_categories WHERE category='toilets' AND location_id='node/81001'")).rows[0].n, 1);
+        await assert.rejects(deactivateCountry(pool, "ro"), /DEACTIVATE_DOWNSTREAM_COUNTRIES_FIRST/);
+
+        const huCoverage = {
+          type: "MultiPolygon",
+          coordinates: [[[[18.9, 47.4], [19.2, 47.4], [19.2, 47.7], [18.9, 47.7], [18.9, 47.4]]]],
+        };
+        const huRows = roRows.filter((row: any) => Number(row.sourceId) < 81008).map((row: any) => ({
+          ...row,
+          sourceId: String(830000 + Number(row.sourceId)),
+          lat: row.lat + 3.1,
+          lon: row.lon - 7.06,
+          tags: row.tags.name === "București" ? { ...row.tags, name: "Budapest", "addr:postcode": "1051" } : row.tags,
+        }));
+        const huOptions = {
+          ...countryOptions,
+          countryCode: "hu" as const,
+          source: "hungary-test",
+          boundarySource: "https://download.geofabrik.de/europe/hungary.poly",
+          boundaryChecksum: "c".repeat(64),
+          sourceChecksum: "d".repeat(32),
+          coverage: huCoverage,
+        };
+        await importDataset(pool, (async function* () { yield* huRows; })(), huOptions);
+        await activateCountry(pool, "hu");
+        assert.equal((await pool.query("SELECT status FROM countries WHERE code='hu'")).rows[0].status, "active");
+        await assert.rejects(deactivateCountry(pool, "at"), /DEACTIVATE_DOWNSTREAM_COUNTRIES_FIRST/);
+        await deactivateCountry(pool, "hu");
+        await deactivateCountry(pool, "at");
+        await deactivateCountry(pool, "ro");
+        assert.deepEqual((await pool.query("SELECT code,status FROM countries WHERE code IN ('ro','at','hu') ORDER BY code")).rows, [
+          { code: "at", status: "pending" },
+          { code: "hu", status: "pending" },
+          { code: "ro", status: "pending" },
+        ]);
+      });
     } finally {
       server.close();
       await pool.end();

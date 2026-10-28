@@ -47,7 +47,7 @@ elif name == 'osmium':
                 executable.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{driver}" "$0" "$@"\n')
                 executable.chmod(0o755)
             prepared_script = root / 'prepare.sh'
-            prepared_script.write_text(script.replace('/data/', str(data) + '/'))
+            prepared_script.write_text(script.replace('/data', str(data)))
             environment = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
                            'DATA_URL': source_url, 'PREPARE_TEST_LOG': str(log),
                            'PREPARE_TEST_CHECKSUM': checksum}

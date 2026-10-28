@@ -1,6 +1,7 @@
 """Streaming OSM extraction. The caller publishes output only after successful completion."""
 import argparse
 import json
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -92,7 +93,7 @@ def kinds(tags):
     return result
 
 
-def _extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None, geometry_only=False):
+def _extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None, geometry_only=False, boundary_source=None, boundary_checksum=None, country_code=None, source_checksum=None):
     if not dataset_at:
         reader = osmium.io.Reader(filename)
         try:
@@ -104,7 +105,16 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     def emit(record):
         if not geometry_only:
             output.write(json.dumps(record, ensure_ascii=False) + '\n')
+    if bool(boundary_source) != bool(boundary_checksum) or (boundary_checksum and not re.fullmatch(r'[0-9a-fA-F]{64}', boundary_checksum)):
+        raise ValueError('Invalid coverage boundary provenance')
+    if country_code and country_code not in ('de', 'ro', 'at', 'hu'):
+        raise ValueError('Unsupported country code')
+    if source_checksum and not re.fullmatch(r'[0-9a-fA-F]{32}', source_checksum):
+        raise ValueError('Invalid source checksum')
     emit({'kind': 'metadata', 'source': source, 'datasetAt': dataset_at, 'coverage': coverage,
+          **({'coverageSource': boundary_source, 'coverageChecksum': boundary_checksum} if boundary_source else {}),
+          **({'countryCode': country_code} if country_code else {}),
+          **({'sourceChecksum': source_checksum} if source_checksum else {}),
           'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge'], 'transitContextComplete': True})
     transport_context=TransportContext(context_path,fingerprint)
     def object_kinds(tags,source_type,source_id):
@@ -114,6 +124,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
         return result
     factory = osmium.geom.GeoJSONFactory()
     sites = {}
+    source_versions = {}
     member_keys = set()
     building_member_keys = set()
     relation_members = {}
@@ -122,6 +133,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     class SiteMembers(osmium.SimpleHandler):
         def relation(self, obj):
             tags = dict(obj.tags)
+            source_versions[('relation', obj.id)] = obj.version
             # Collections and routes supply context, never passenger coordinates.
             if tags.get('type') not in ('route', 'route_master', 'collection', 'destination_sign') and tags.get('public_transport') not in ('stop_area', 'stop_area_group'):
                 relation_members[obj.id] = [(m.type, m.ref) for m in obj.members if m.type in ('n', 'w', 'r')]
@@ -163,24 +175,27 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             self.completed = set()
             self.count = 0
 
-        def write(self, source_type, source_id, tags, point):
+        def write(self, source_type, source_id, tags, point, version=None):
             for kind in object_kinds(tags, source_type, source_id):
                 if not geometry_only:
                     emit({'kind': kind, 'sourceType': source_type, 'sourceId': str(source_id),
+                          'version': version if version is not None else source_versions.get((source_type, source_id)),
                           'lat': point.y, 'lon': point.x, 'tags': tags, **({'transport':transport_context.get(source_type,str(source_id))} if kind == 'transit' else {})})
                 self.count += 1
 
         def node(self, obj):
             tags = dict(obj.tags)
+            source_versions[('node', obj.id)] = obj.version
             if object_kinds(tags,'node',obj.id) or ('n', obj.id) in member_keys:
                 point = shape(json.loads(factory.create_point(obj)))
                 if ('n', obj.id) in member_keys:
                     member_points[('n', obj.id)] = point
                 if object_kinds(tags,'node',obj.id):
-                    self.write('node', obj.id, tags, point)
+                    self.write('node', obj.id, tags, point, obj.version)
 
         def way(self, obj):
             tags = dict(obj.tags)
+            source_versions[('way', obj.id)] = obj.version
             if ('w', obj.id) in member_keys:
                 line = shape(json.loads(factory.create_linestring(obj)))
                 if ('w', obj.id) in building_member_keys and obj.is_closed():
@@ -196,9 +211,10 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
                 self.expected[('way', obj.id)] = object_kinds(tags,'way',obj.id)
             else:
                 line = shape(json.loads(factory.create_linestring(obj)))
-                self.write('way', obj.id, tags, line.interpolate(0.5, normalized=True))
+                self.write('way', obj.id, tags, line.interpolate(0.5, normalized=True), obj.version)
 
         def relation(self, obj):
+            source_versions[('relation', obj.id)] = obj.version
             if kinds(dict(obj.tags)):
                 self.expected[('relation', obj.id)] = kinds(dict(obj.tags))
 
@@ -213,7 +229,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             if member_key in member_keys:
                 member_points[member_key] = point
             if area_kinds:
-                self.write(source_type, obj.orig_id(), tags, point)
+                self.write(source_type, obj.orig_id(), tags, point, source_versions.get((source_type, obj.orig_id())))
                 self.completed.add((source_type, obj.orig_id()))
 
     handler = Extractor()
@@ -282,12 +298,12 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     return handler.count
 
 
-def extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None, geometry_only=False):
+def extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None, geometry_only=False, boundary_source=None, boundary_checksum=None, country_code=None, source_checksum=None):
     with tempfile.TemporaryDirectory(prefix='transit-context-') as temporary:
         if context_path is None:
             context_path=str(Path(temporary)/'context.sqlite')
             build_context(filename,context_path,'fixture')
-        return _extract(filename,coverage,output,source,dataset_at,context_path,fingerprint,geometry_only)
+        return _extract(filename,coverage,output,source,dataset_at,context_path,fingerprint,geometry_only,boundary_source,boundary_checksum,country_code,source_checksum)
 
 
 if __name__ == '__main__':
@@ -297,6 +313,10 @@ if __name__ == '__main__':
     parser.add_argument('--source', default='https://download.geofabrik.de/europe/germany-latest.osm.pbf')
     parser.add_argument('--transport-context')
     parser.add_argument('--context-fingerprint')
+    parser.add_argument('--boundary-source')
+    parser.add_argument('--boundary-checksum')
+    parser.add_argument('--country-code', choices=('de', 'ro', 'at', 'hu'))
+    parser.add_argument('--source-checksum')
     parser.add_argument('--geometry-only', action='store_true')
     args = parser.parse_args()
-    extract(args.pbf, poly_geojson(Path(args.poly).read_text()), sys.stdout, args.source, context_path=args.transport_context, fingerprint=args.context_fingerprint, geometry_only=args.geometry_only)
+    extract(args.pbf, poly_geojson(Path(args.poly).read_text()), sys.stdout, args.source, context_path=args.transport_context, fingerprint=args.context_fingerprint, geometry_only=args.geometry_only, boundary_source=args.boundary_source, boundary_checksum=args.boundary_checksum, country_code=args.country_code, source_checksum=args.source_checksum)

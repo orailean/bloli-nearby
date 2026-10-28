@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
 const results = {};
+const expectedCountries = (process.env.EXPECTED_COUNTRIES || "de,ro")
+  .split(",").map((value) => value.trim()).filter(Boolean);
 const browser = await chromium.launch();
 try {
   for (const id of (
@@ -20,6 +22,18 @@ try {
     }));
     assert.equal(status.status, 200);
     assert.equal(status.body.ready, true);
+    const countryStates = new Map((status.body.countries || []).map((country) => [country.code, country]));
+    for (const code of expectedCountries) {
+      const country = countryStates.get(code);
+      assert.ok(country, `${id}: status must include ${code}`);
+      assert.equal(country.status, "active", `${id}: ${code} should be active`);
+      assert.equal(country.ready, true, `${id}: ${code} snapshot should be ready`);
+      assert.ok(country.datasetAt, `${id}: ${code} source date should be present`);
+    }
+    for (const code of ["ro", "at", "hu"].filter((code) => !expectedCountries.includes(code))) {
+      const country = countryStates.get(code);
+      if (country) assert.equal(country.status, "pending", `${id}: ${code} must remain pending`);
+    }
     const query = "lat=48.1391&lon=11.4729&radius=5000";
     const all = await fetch(`${base}/api/locations?${query}`).then((r) =>
       r.json(),
@@ -32,6 +46,13 @@ try {
           (id === "kippe" ? !!item.sellerType : !item.sellerType),
       ),
     );
+    if (expectedCountries.includes("ro")) {
+      const bucharest = await fetch(`${base}/api/locations?lat=44.4268&lon=26.1025&radius=5000`).then((r) => r.json());
+      assert.ok(bucharest.items.length > 0, `${id}: Bucharest results`);
+      assert.ok(bucharest.items.every((item) => item.countryCode === "ro"), `${id}: Bucharest results must identify Romania`);
+      const settlements = await fetch(`${base}/api/settlements?q=bucuresti&country=ro`).then((r) => r.json());
+      assert.ok(settlements.items.some((item) => item.countryCode === "ro"), `${id}: unaccented Romanian settlement match`);
+    }
     if (id === "kebab") {
       assert.ok(
         all.items.every(
@@ -233,6 +254,7 @@ try {
       count: status.body.count,
       datasetAt: status.body.datasetAt,
       importedAt: status.body.importedAt,
+      countries: [...countryStates].map(([code, country]) => ({ code, status: country.status, ready: country.ready, datasetAt: country.datasetAt })),
       munichResults: all.items.length,
       initialHtml: true,
       mapImagesLoaded: true,

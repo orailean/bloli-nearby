@@ -34,6 +34,7 @@ import type {
   SearchResponse,
   Settlement,
 } from "../shared/types.js";
+import type { CountryCode } from "../shared/countries.js";
 import {
   siteDictionaries,
   chooseLocale,
@@ -90,6 +91,7 @@ export default function App() {
     [minPowerKw, setMinPowerKw] = useState<ChargePower>(0),
     [chargeAccess, setChargeAccess] = useState<ChargeAccessFilter>("all"),
     [fee, setFee] = useState<FeeFilter>("all"),
+    [countryFilter, setCountryFilter] = useState<CountryCode | "all">("all"),
     [sellerType, setSellerType] = useState<SellerType | "all">("all"),
     [radius, setRadius] = useState<number>(SEARCH_RADII[0]),
     [openNow, setOpenNow] = useState(false),
@@ -123,6 +125,16 @@ export default function App() {
     resultsPane = useRef<HTMLDivElement>(null);
   const dictionaries = siteDictionaries[site.id];
   const t = dictionaries[locale];
+  const countryName = (code: string) =>
+    (t as Record<string, string>)[`country${code.toUpperCase()}`] || code.toUpperCase();
+  const activeCountries = (dataset?.countries || []).filter(
+    (country) => country.status === "active" && country.ready,
+  );
+  const listedCountries = dataset?.countries || [];
+  const coverageLabel =
+    activeCountries.length > 1
+      ? `${t.coverageFrom} ${activeCountries.map((country) => countryName(country.code)).join(", ")}`
+      : t.germany;
   useEffect(() => {
     const title =
       t.brandName === "find a loo"
@@ -195,6 +207,7 @@ export default function App() {
         setDataset((old) => ({
           ...r.dataset,
           latestJob: old?.latestJob ?? null,
+          countries: old?.countries,
         }));
         setTruncated(r.truncated);
       })
@@ -250,7 +263,7 @@ export default function App() {
     setPlaces([]);
     try {
       const r = await request<{ items: Settlement[] }>(
-        `/api/settlements?q=${encodeURIComponent(query.trim())}`,
+        `/api/settlements?${new URLSearchParams({ q: query.trim(), ...(countryFilter === "all" ? {} : { country: countryFilter }) })}`,
         c.signal,
       );
       setPlaces(r.items);
@@ -381,7 +394,7 @@ export default function App() {
           <div className="hero-copy">
             <div className="country-tag">
               <span className="country-dot" />
-              {t.germany}
+              {coverageLabel}
             </div>
             <h1 id="hero-title">{t.hero}</h1>
             <p>{t.intro}</p>
@@ -427,6 +440,28 @@ export default function App() {
                 )}
               </button>
             </form>
+            <div className="country-filter">
+              <label htmlFor="country-filter">{t.filterCountry}</label>
+              <select
+                id="country-filter"
+                value={countryFilter}
+                onChange={(event) => {
+                  setCountryFilter(event.target.value as CountryCode | "all");
+                  setPlaces([]);
+                }}
+              >
+                <option value="all">{t.allCountries}</option>
+                {listedCountries.map((country) => (
+                  <option
+                    key={country.code}
+                    value={country.code}
+                    disabled={country.status !== "active" || !country.ready}
+                  >
+                    {countryName(country.code)}{country.status !== "active" || !country.ready ? ` · ${t.countryPending}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               className={`locate-button ${locating ? "is-locating" : ""}`}
               onClick={locate}
@@ -455,6 +490,7 @@ export default function App() {
                       <small>
                         {[
                           p.postcode,
+                          p.countryCode ? countryName(p.countryCode) : null,
                           p.region ||
                             (p.nearCity
                               ? `${t.nearCity} ${p.nearCity}`
@@ -675,6 +711,19 @@ export default function App() {
                     ? `${t.dataset} ${new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(new Date(dataset.datasetAt))}`
                     : t.countryOnly}
                 </div>
+                {!!dataset?.countries?.length && (
+                  <div className="dataset-country-line" aria-label={t.countryUpdated}>
+                    {dataset.countries.map((country) => (
+                      <small key={country.code}>
+                        {countryName(country.code)}: {country.status === "pending"
+                          ? t.countryPending
+                          : country.datasetAt
+                            ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(new Date(country.datasetAt))
+                            : t.countryPending}
+                      </small>
+                    ))}
+                  </div>
+                )}
               </aside>
               <div className="map-pane">
                 {config ? (

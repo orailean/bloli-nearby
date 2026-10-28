@@ -20,9 +20,19 @@ class ExtractTests(unittest.TestCase):
    rows=[json.loads(line) for line in out.getvalue().splitlines()]
    records=[r for r in rows if r.get('kind')=='facility']
    self.assertEqual({r['sourceType']+'/'+r['sourceId'] for r in records},{'node/1','way/10','relation/20'})
+   self.assertEqual({r['version'] for r in records},{1})
    self.assertTrue(all(53.07<=r['lat']<=53.071 for r in records))
    self.assertEqual(rows[-1]['kind'],'complete')
    self.assertEqual(len([r for r in rows if r.get('kind')=='settlement']),1)
+ def test_metadata_retains_the_exact_coverage_boundary_provenance(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML)
+   out=io.StringIO();extract(str(p), {'type':'MultiPolygon','coordinates':[[[[5,47],[16,47],[16,56],[5,56],[5,47]]]]},out,'fixture','2026-10-25T00:00:00Z',boundary_source='https://download.geofabrik.de/europe/romania.poly',boundary_checksum='a'*64,country_code='ro',source_checksum='b'*32)
+   metadata=json.loads(out.getvalue().splitlines()[0])
+   self.assertEqual(metadata['coverageSource'],'https://download.geofabrik.de/europe/romania.poly')
+   self.assertEqual(metadata['coverageChecksum'],'a'*64)
+   self.assertEqual(metadata['countryCode'],'ro')
+   self.assertEqual(metadata['sourceChecksum'],'b'*32)
  def test_incomplete_geometry_fails_instead_of_publishing_partial_data(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'fixture.osm';p.write_text(XML.replace('<nd ref="4"/>','<nd ref="999"/>'))

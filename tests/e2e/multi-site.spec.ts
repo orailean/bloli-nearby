@@ -8,6 +8,12 @@ const dataset = {
   source: "fixture",
   stale: false,
   latestJob: null,
+  countries: [
+    { code: "de", name: "Germany", status: "active", ready: true, datasetAt: "2026-10-25T00:00:00Z" },
+    { code: "ro", name: "Romania", status: "active", ready: true, datasetAt: "2026-10-25T00:00:00Z" },
+    { code: "at", name: "Austria", status: "pending", ready: false, datasetAt: null },
+    { code: "hu", name: "Hungary", status: "pending", ready: false, datasetAt: null },
+  ],
 };
 for (const id of [
   "loo",
@@ -40,6 +46,26 @@ for (const id of [
       await page.route("**/api/status", (route) =>
         route.fulfill({ json: dataset }),
       );
+      await page.route("**/api/settlements?*", (route) => {
+        const query = new URL(route.request().url()).searchParams;
+        expect(query.get("country")).toBe("ro");
+        expect(query.get("q")).toBe("Bucuresti");
+        return route.fulfill({
+          json: {
+            items: [{
+              id: "node/sample-ro-town",
+              name: "București",
+              postcode: "010011",
+              region: "București",
+              names: { ro: "București" },
+              lat: 44.4268,
+              lon: 26.1025,
+              countryCode: "ro",
+              countryName: "Romania",
+            }],
+          },
+        });
+      });
       await page.route("**/api/locations?*", (route) => {
         const q = new URL(route.request().url()).searchParams;
         expect(q.get("radius")).toMatch(/^(500|1000|2000|3000|5000)$/);
@@ -193,7 +219,20 @@ for (const id of [
       await expect(page.locator(".brand").first()).toContainText(
         id === "loo" ? "find a loo" : id,
       );
+      await expect(page.locator("#country-filter")).toHaveValue("all");
+      await page.locator("#country-filter").selectOption("ro");
+      await page.getByLabel("Town or postcode").fill("Bucuresti");
+      const [settlementResponse] = await Promise.all([
+        page.waitForResponse((response) => response.url().includes("/api/settlements?")),
+        page.locator(".search-submit").click(),
+      ]);
+      expect(settlementResponse.status()).toBe(200);
+      await expect(page.locator(".place-option").first()).toContainText("București");
+      await page.locator(".place-option").first().click();
+      await page.locator("#country-filter").selectOption("all");
       await page.getByRole("button", { name: "Bremen", exact: true }).click();
+      await expect(page.locator("#country-filter")).toHaveValue("all");
+      await expect(page.locator('#country-filter option[value="at"]')).toBeDisabled();
       await expect(page.locator(".result-row")).toHaveCount(3);
       await expect(page.locator(".radius-control select")).toHaveValue("500");
       if (id === "transit") {
