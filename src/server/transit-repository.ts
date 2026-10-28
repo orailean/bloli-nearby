@@ -11,15 +11,18 @@ export async function transitRows(
   timezone: string;
 }[]> {
   const result = await db.query(
-    `WITH candidates AS (
+    `WITH nearby_locations AS MATERIALIZED (
+ SELECT id,location FROM locations
+ WHERE ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3)
+ ), candidates AS (
  SELECT DISTINCT ON(t.location_id) t.*,l.location,c.data,m.country_code AS "countryCode",co.name AS "countryName",co.timezone,
  COALESCE(t.group_id,t.location_id) AS logical_id,
  ST_Distance(l.location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) AS distance
- FROM locations l JOIN transit_components t ON t.location_id=l.id JOIN location_categories c ON c.location_id=l.id AND c.category='transit'
+ FROM nearby_locations l JOIN transit_components t ON t.location_id=l.id JOIN location_categories c ON c.location_id=l.id AND c.category='transit'
  JOIN country_location_memberships m ON m.category='transit' AND m.location_id=l.id
  JOIN countries co ON co.code=m.country_code AND co.status='active'
  JOIN country_datasets d ON d.country_code=co.code AND d.category='transit'
- WHERE ST_DWithin(l.location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3) AND ($4='all' OR $4=ANY(t.modes))
+ WHERE ($4='all' OR $4=ANY(t.modes))
  ORDER BY t.location_id,m.source_version DESC,m.country_code
  ), eligible AS (
  SELECT n.* FROM candidates n WHERE CASE
