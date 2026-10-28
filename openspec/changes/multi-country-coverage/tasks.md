@@ -38,9 +38,9 @@
 ## 6. Controlled production rollout
 
 - [x] 6.1 Record current VM resources/counts/IDs/source dates/timers, take and verify a backup, and save private configuration before migration.
-- [ ] 6.2 Deploy compatible country support with refresh paused; migrate/backfill DE and verify unchanged German identities/counts and retained generic resource bindings across all six sites.
-- [ ] 6.3 Download and verify Romania, measure all six category counts/resources, set Romanian floors and publish its snapshot independently with logs and completion evidence.
-- [ ] 6.4 Validate the Romania release gate: Munich and Bucharest on all six sites, Romanian boundaries, timezone/holiday handling, DE/EN/RO mobile UI, APIs, tiles, Germany preservation, backup and refresh retry; keep AT/HU pending if any check fails.
-- [ ] 6.5 After Romania passes the gate, download and publish Austria, verify it, then download and publish Hungary; measure separate floors/resources and retain independent rollback per country.
-- [ ] 6.6 Verify all four countries in Munich, Bucharest, Vienna and Budapest, including DE/AT, AT/HU and HU/RO borders; take/verify final backup, confirm targeted and scheduled refresh, then resume/check the systemd timer.
-- [ ] 6.7 Save dated VM protocols for the staged activations with exact paths, counts, sizes, source dates and results; commit/push source-only work, synchronize production and stop local debug services while preserving local data.
+- [x] 6.2 Deploy compatible country support with refresh paused; migrate/backfill DE and verify unchanged German identities/counts and retained generic resource bindings across all six sites.
+- [x] 6.3 Download and verify Romania, measure all six category counts/resources, set Romanian floors and publish its snapshot independently with logs and completion evidence.
+- [x] 6.4 Validate the Romania release gate: Munich and Bucharest on all six sites, Romanian boundaries, timezone/holiday handling, DE/EN/RO mobile UI, APIs, tiles, Germany preservation, backup and refresh retry; keep AT/HU pending if any check fails.
+- [x] 6.5 After Romania passes the gate, download and publish Austria, verify it, then download and publish Hungary; measure separate floors/resources and retain independent rollback per country.
+- [x] 6.6 Verify all four countries in Munich, Bucharest, Vienna and Budapest, including DE/AT, AT/HU and HU/RO borders; take/verify final backup, confirm targeted and scheduled refresh, then resume/check the systemd timer.
+- [x] 6.7 Save dated VM protocols for the staged activations with exact paths, counts, sizes, source dates and results; commit/push source-only work, synchronize production and stop local debug services while preserving local data.
