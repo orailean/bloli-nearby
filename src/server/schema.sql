@@ -151,11 +151,17 @@ INSERT INTO country_datasets(country_code,category,dataset_at,imported_at,source
         'https://download.geofabrik.de/europe/germany.poly',NULL
  FROM category_datasets ON CONFLICT(country_code,category) DO NOTHING;
 INSERT INTO country_location_memberships(country_code,category,location_id,source_version)
- SELECT 'de',category,location_id,source_version FROM location_categories
+ SELECT 'de',lc.category,lc.location_id,lc.source_version
+ FROM location_categories lc
+ JOIN country_datasets d ON d.country_code='de' AND d.category=lc.category
+ JOIN locations l ON l.id=lc.location_id
+ WHERE ST_Covers(d.coverage,l.location::geometry)
  ON CONFLICT(country_code,category,location_id) DO NOTHING;
 INSERT INTO country_settlement_memberships(country_code,settlement_id,source_version)
- SELECT 'de',id,0 FROM settlements
- WHERE EXISTS(SELECT 1 FROM country_datasets WHERE country_code='de')
+ SELECT 'de',s.id,0
+ FROM settlements s
+ JOIN country_datasets d ON d.country_code='de' AND d.category='toilets'
+ WHERE ST_Covers(d.coverage,s.location::geometry)
  ON CONFLICT(country_code,settlement_id) DO NOTHING;
 
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS country_code text REFERENCES countries(code) DEFAULT 'de';

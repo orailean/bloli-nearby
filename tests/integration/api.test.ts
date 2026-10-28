@@ -1299,6 +1299,9 @@ test(
           minimumRatio: 0.5,
         };
         await importDataset(pool, (async function* () { yield* roRows; })(), countryOptions);
+        await migrate(pool);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='de' AND location_id='node/81001'")).rows[0].n, 0);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='de' AND settlement_id='node/81007'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_datasets WHERE country_code='ro'")).rows[0].n, 6);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 6);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro' AND location_id='node/81008'")).rows[0].n, 0);
