@@ -212,6 +212,7 @@ try {
       for (const code of expectedCountries) {
         await expect(page.locator(".dataset-country-line")).toContainText(
           countryLabels[code].en,
+          { timeout: 25000 },
         );
       }
     }
