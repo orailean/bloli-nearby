@@ -35,13 +35,13 @@
 - [x] 5.2 Extend guarded small six-category samples and native debugging docs for charge.localhost:5173 with Docker-only DB, preserving existing local datasets and separate translations.
 - [x] 5.3 Add HTTP/HTTPS Nginx templates using the shared proxy and document sixth-domain Certbot renewal-hook, shared data paths, updates and cross-schema rollback.
 - [x] 5.4 Extend production checks to all six sites and Charge connector/power/access/driving details; run relevant unit/importer/PostGIS/browser/build/image-readability checks.
-- [ ] 5.5 Obtain a fresh implementation review, fix material findings with reproducing regressions, and commit/push source-only implementation once release checks pass.
+- [x] 5.5 Obtain a fresh implementation review, fix material findings with reproducing regressions, and commit/push source-only implementation once release checks pass.
 
 ## 6. Controlled production rollout and protocol
 
-- [ ] 6.1 Verify Charge DNS, current generic mounts/ports/timers and shared Docker Nginx/Certbot; save matching revisions/images/private config/counts and verify a pre-change dump.
-- [ ] 6.2 Deploy compatible images/schema, pause overlapping refresh safely, reuse verified Germany source/Transit context, run full geometry preflight and six-category extraction/import with measured resource use.
-- [ ] 6.3 Compare the five original counts/source timestamps, validate Charge count and set its measured floor, analyze affected tables and verify representative combined searches plus a post-import dump.
-- [ ] 6.4 Issue Charge TLS through existing ACME infrastructure, extend the renewal hook to six domains, test all six renewals and gracefully activate the checked Nginx vhost.
-- [ ] 6.5 Verify all six live sites with real tiles, representative charging filters, languages/phone layouts and driving-versus-walking links; resume/verify refresh and certificate timers.
-- [ ] 6.6 Save the actual dated VM protocol, failure/retry and source/size/timing evidence in the project directory; update README/repository metadata, commit/push/synchronize docs and remove completed helpers/local debugging without removing active data/backups.
+- [x] 6.1 Verify Charge DNS, current generic mounts/ports/timers and shared Docker Nginx/Certbot; save matching revisions/images/private config/counts and verify a pre-change dump.
+- [x] 6.2 Deploy compatible images/schema, pause overlapping refresh safely, reuse verified Germany source/Transit context, run full geometry preflight and six-category extraction/import with measured resource use.
+- [x] 6.3 Compare the five original counts/source timestamps, validate Charge count and set its measured floor, analyze affected tables and verify representative combined searches plus a post-import dump.
+- [x] 6.4 Issue Charge TLS through existing ACME infrastructure, extend the renewal hook to six domains, test all six renewals and gracefully activate the checked Nginx vhost.
+- [x] 6.5 Verify all six live sites with real tiles, representative charging filters, languages/phone layouts and driving-versus-walking links; resume/verify refresh and certificate timers.
+- [x] 6.6 Save the actual dated VM protocol, failure/retry and source/size/timing evidence in the project directory; update README/repository metadata, commit/push/synchronize docs and remove completed helpers/local debugging without removing active data/backups.
