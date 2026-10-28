@@ -107,11 +107,10 @@ export async function searchLocations(
       await db.query(
         `SELECT min(d.dataset_at) AS dataset_at,min(d.imported_at) AS imported_at,
            array_agg(DISTINCT d.source ORDER BY d.source) AS sources,
-           (SELECT count(DISTINCT m.location_id)::int
-            FROM country_location_memberships m
-            JOIN countries active_c ON active_c.code=m.country_code AND active_c.status='active'
-            JOIN country_datasets active_d ON active_d.country_code=active_c.code AND active_d.category=m.category
-            WHERE m.category=$3) AS facility_count,
+           (SELECT COALESCE(sum(active_d.location_count),0)::int
+            FROM country_datasets active_d
+            JOIN countries active_c ON active_c.code=active_d.country_code AND active_c.status='active'
+            WHERE active_d.category=$3) AS facility_count,
            COALESCE(bool_or(ST_Covers(d.coverage,ST_SetSRID(ST_MakePoint($1,$2),4326))),false) AS covered
          FROM countries c JOIN country_datasets d ON d.country_code=c.code AND d.category=$3
          WHERE c.status='active'`,
