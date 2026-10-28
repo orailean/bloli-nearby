@@ -118,15 +118,18 @@ export async function searchLocations(
     if (!meta) throw new AppError("DATA_NOT_READY", 503);
     if (!meta.dataset_at) throw new AppError("DATA_NOT_READY", 503);
     if (!meta.covered) throw new AppError("OUTSIDE_COVERAGE", 400);
-    const sql = `SELECT * FROM (
+    const sql = `WITH nearby_locations AS MATERIALIZED (
+      SELECT id,location FROM locations
+      WHERE ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3)
+    )
+    SELECT * FROM (
       SELECT DISTINCT ON (c.location_id) c.data,m.country_code AS "countryCode",co.name AS "countryName",co.timezone,
         ST_Distance(l.location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) AS distance,c.location_id AS id
-      FROM locations l JOIN location_categories c ON c.location_id=l.id
+      FROM nearby_locations l JOIN location_categories c ON c.location_id=l.id
       JOIN country_location_memberships m ON m.category=c.category AND m.location_id=c.location_id
       JOIN countries co ON co.code=m.country_code AND co.status='active'
       JOIN country_datasets d ON d.country_code=co.code AND d.category=c.category
-      WHERE ST_DWithin(l.location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3)
-      AND c.category=$4 AND ($5='all' OR c.fee=$5) AND ($6='all' OR c.seller_type=$6)
+      WHERE c.category=$4 AND ($5='all' OR c.fee=$5) AND ($6='all' OR c.seller_type=$6)
       ${
         category === "charge"
           ? `AND (($7='all' AND $8::float8=0) OR EXISTS(
