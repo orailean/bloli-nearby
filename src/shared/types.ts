@@ -17,7 +17,7 @@ export type FeeFilter = "all" | "free" | "paid";
 export interface SourceRecord {
   sourceType: "node" | "way" | "relation";
   sourceId: string;
-  version?: number;
+  version?: number | null;
   lat: number;
   lon: number;
   transport?: TransitContext;

@@ -139,7 +139,7 @@ export async function importDataset(
         !/^\d+$/.test(r.sourceId)
       )
         throw new AppError("INVALID_SOURCE");
-      if (r.version !== undefined && (!Number.isSafeInteger(r.version) || r.version < 1))
+      if (r.version != null && (!Number.isSafeInteger(r.version) || r.version < 1))
         throw new AppError("INVALID_SOURCE_VERSION");
       const key = `${r.kind}/${r.sourceType}/${r.sourceId}`;
       if (batchIds.has(key)) {

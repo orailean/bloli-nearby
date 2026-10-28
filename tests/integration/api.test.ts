@@ -1274,7 +1274,9 @@ test(
           { kind: "water", sourceType: "node", sourceId: "81004", lat: 44.43, lon: 26.1, tags: { amenity: "drinking_water" }, version: 1 },
           { kind: "transit", sourceType: "node", sourceId: "81005", lat: 44.43, lon: 26.1, tags: { railway: "station", name: "Gara de Nord" }, transport: { groups: [], routes: [] }, version: 1 },
           { kind: "charge", sourceType: "node", sourceId: "81006", lat: 44.43, lon: 26.1, tags: { amenity: "charging_station", "socket:type2": "2" }, version: 1 },
-          { kind: "settlement", sourceType: "node", sourceId: "81007", lat: 44.43, lon: 26.1, tags: { place: "city", name: "București", "addr:postcode": "010011" }, version: 1 },
+          // Extracted OSM area records can lack source-version metadata; these
+          // are stored with source_version=0 and must still import safely.
+          { kind: "settlement", sourceType: "node", sourceId: "81007", lat: 44.43, lon: 26.1, tags: { place: "city", name: "București", "addr:postcode": "010011" }, version: null },
           { kind: "facility", sourceType: "node", sourceId: "81008", lat: 52.52, lon: 13.405, tags: { amenity: "toilets", name: "Outside Romania" }, version: 1 },
           { kind: "settlement", sourceType: "node", sourceId: "81009", lat: 52.52, lon: 13.405, tags: { place: "city", name: "Outside Romania" }, version: 1 },
         ];
@@ -1301,6 +1303,7 @@ test(
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 6);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro' AND location_id='node/81008'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81009'")).rows[0].n, 0);
+        assert.equal((await pool.query("SELECT source_version FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81007'")).rows[0].source_version, 0);
         assert.equal((await pool.query("SELECT status FROM countries WHERE code='ro'")).rows[0].status, "pending");
         await assert.rejects(activateCountry(pool, "at"), /ROLLOUT_GATE_NOT_PASSED/);
         const pendingStatus = await get("/api/status");
