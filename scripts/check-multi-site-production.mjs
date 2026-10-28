@@ -208,6 +208,13 @@ try {
       )
       .toBeGreaterThan(0);
     await expect(page.locator(".radius-control select")).toHaveValue("500");
+    if (expectedCountries.length > 1) {
+      for (const code of expectedCountries) {
+        await expect(page.locator(".dataset-country-line")).toContainText(
+          countryLabels[code].en,
+        );
+      }
+    }
     await page.getByRole("button", { name: "München", exact: true }).click();
     await page.locator(".radius-control select").selectOption("5000");
     await expect(page.locator(".result-select").first()).toBeVisible();
