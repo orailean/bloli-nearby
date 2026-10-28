@@ -9,7 +9,14 @@ const dataset = {
   stale: false,
   latestJob: null,
 };
-for (const id of ["loo", "kippe", "kebab", "water", "transit"] as const) {
+for (const id of [
+  "loo",
+  "kippe",
+  "kebab",
+  "water",
+  "transit",
+  "charge",
+] as const) {
   for (const width of [1440, 320, 390, 430]) {
     test(`${id} ${width}px shares search, keeps its category and fits every locale`, async ({
       page,
@@ -36,14 +43,18 @@ for (const id of ["loo", "kippe", "kebab", "water", "transit"] as const) {
       await page.route("**/api/locations?*", (route) => {
         const q = new URL(route.request().url()).searchParams;
         expect(q.get("radius")).toMatch(/^(500|1000|2000|3000|5000)$/);
-        expect(
-          q.has(["loo", "water"].includes(id) ? "sellerType" : "fee"),
-        ).toBe(false);
+        expect(q.has("sellerType")).toBe(id === "kippe");
+        expect(q.has("fee")).toBe(["loo", "water", "charge"].includes(id));
         if (["kebab", "water", "transit"].includes(id))
           expect(q.has("sellerType")).toBe(false);
         if (id === "transit") {
           expect(q.has("openNow")).toBe(false);
           expect(q.has("mode")).toBe(true);
+        }
+        if (id === "charge") {
+          expect(q.has("connector")).toBe(true);
+          expect(q.has("minPowerKw")).toBe(true);
+          expect(q.has("chargeAccess")).toBe(true);
         }
         const items = ["machine", "shop", "fuel"]
           .filter(
@@ -95,10 +106,11 @@ for (const id of ["loo", "kippe", "kebab", "water", "transit"] as const) {
               : {}),
             charge: null,
             feeText: null,
-            access: "public",
+            access: id === "charge" && i === 1 ? "customers" : "public",
             wheelchair: "unknown",
             openingHours: i === 0 ? "24/7" : null,
             operator: null,
+            brand: id === "charge" ? "Sample brand" : null,
             notes: null,
             tags: {},
             distance: i * 80,
@@ -121,6 +133,27 @@ for (const id of ["loo", "kippe", "kebab", "water", "transit"] as const) {
                   brand: "Fixture brand",
                 }
               : {}),
+            ...(id === "charge"
+              ? {
+                  category: "charge",
+                  charging: {
+                    connectors: [
+                      {
+                        key: "socket:type2",
+                        type: "type2",
+                        count: 2,
+                        outputKw: 22,
+                        rawOutput: "22 kW",
+                      },
+                    ],
+                    accessRestriction: i === 1 ? "customers" : null,
+                    network: "Fixture network",
+                    capacity: 4,
+                    parkingFee: "yes",
+                    authenticationMethods: { app: "yes" },
+                  },
+                }
+              : {}),
           }))
           .filter(
             (item) =>
@@ -133,7 +166,27 @@ for (const id of ["loo", "kippe", "kebab", "water", "transit"] as const) {
             (item) =>
               q.get("openNow") !== "true" || item.openingHours === "24/7",
           );
-        return route.fulfill({ json: { items, dataset, truncated: false } });
+        const filteredItems = items.filter((item) => {
+          if (id !== "charge") return true;
+          const charging = item.charging as
+            | { connectors: { type: string; outputKw: number | null }[] }
+            | undefined;
+          const matches = charging?.connectors.some(
+            (socket) =>
+              (q.get("connector") === "all" ||
+                socket.type === q.get("connector")) &&
+              (Number(q.get("minPowerKw") || 0) === 0 ||
+                (socket.outputKw ?? -1) >= Number(q.get("minPowerKw"))),
+          );
+          return (
+            matches &&
+            (q.get("chargeAccess") === "all" ||
+              item.access === q.get("chargeAccess"))
+          );
+        });
+        return route.fulfill({
+          json: { items: filteredItems, dataset, truncated: false },
+        });
       });
       await page.goto(`http://${id}.localhost:5173/`);
       await expect(page.locator("html")).toHaveAttribute("data-site", id);
@@ -215,6 +268,41 @@ for (const id of ["loo", "kippe", "kebab", "water", "transit"] as const) {
           .getByRole("button", { name: "Machine", exact: true })
           .click();
         await expect(page.locator(".seller-filters")).toBeVisible();
+      }
+      if (id === "charge") {
+        await expect(page.locator(".charge-select")).toHaveCount(3);
+        await expect(page.locator(".open-now-control")).toBeVisible();
+        await page
+          .getByLabel("Connector", { exact: true })
+          .selectOption("type2");
+        await page
+          .getByLabel("Minimum power", { exact: true })
+          .selectOption("22");
+        await page
+          .getByLabel("Access", { exact: true })
+          .selectOption("customers");
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel")).toContainText(
+          "Fixture network",
+        );
+        await expect(page.locator(".detail-panel")).toContainText(
+          "Sample brand",
+        );
+        await expect(
+          page.locator(".detail-panel .walk-button"),
+        ).toHaveAttribute("href", /travelmode=driving/);
+        await expect(page.locator(".detail-panel")).toContainText(
+          "Parking fee",
+        );
+        await expect(page.locator(".detail-panel")).toContainText(
+          "Mapped authentication",
+        );
+        await page.getByLabel("Access", { exact: true }).selectOption("all");
+        await page.getByLabel("Connector", { exact: true }).selectOption("all");
+        await page
+          .getByLabel("Minimum power", { exact: true })
+          .selectOption("0");
       }
       await page.locator(".radius-control select").selectOption("5000");
       await expect(page.locator(".search-boundary")).toHaveCount(1);

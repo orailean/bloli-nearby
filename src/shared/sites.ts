@@ -1,14 +1,29 @@
-export type SiteId = "loo" | "kippe" | "kebab" | "water" | "transit";
-export type Category = "toilets" | "tobacco" | "kebab" | "water" | "transit";
+export type SiteId = "loo" | "kippe" | "kebab" | "water" | "transit" | "charge";
+export type Category =
+  | "toilets"
+  | "tobacco"
+  | "kebab"
+  | "water"
+  | "transit"
+  | "charge";
 export type SellerType = "machine" | "shop" | "fuel";
 export interface SiteProfile {
   id: SiteId;
   category: Category;
   name: string;
   domain: string;
+  directionsMode?: "walking" | "driving";
   capabilities: { fee: boolean; sellerType: boolean; openNow: boolean };
 }
 export const sites: Record<SiteId, SiteProfile> = {
+  charge: {
+    id: "charge",
+    category: "charge",
+    name: "Charge",
+    domain: "charge.bloli.com",
+    directionsMode: "driving",
+    capabilities: { fee: true, sellerType: false, openNow: true },
+  },
   transit: {
     id: "transit",
     category: "transit",

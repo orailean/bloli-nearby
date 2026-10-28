@@ -1,3 +1,4 @@
+import { normalizeCharge } from "../shared/charge.js";
 import type { Category } from "../shared/sites.js";
 import type { Facility, SourceRecord } from "../shared/types.js";
 import { normalizeFacility } from "../shared/domain.js";
@@ -10,15 +11,29 @@ export type CategoryMinimum =
   | "minimumSellers"
   | "minimumKebabs"
   | "minimumWaterPoints"
-  | "minimumTransit";
+  | "minimumTransit"
+  | "minimumChargeStations";
 export interface CategoryImport {
   kind: string;
   minimum: CategoryMinimum;
   defaultMinimum: number;
-  count: "facilities" | "sellers" | "kebabs" | "waterPoints" | "transitStops";
+  count:
+    | "facilities"
+    | "sellers"
+    | "kebabs"
+    | "waterPoints"
+    | "transitStops"
+    | "chargeStations";
   normalize: (record: SourceRecord) => Facility | null;
 }
 export const categoryImports: Record<Category, CategoryImport> = {
+  charge: {
+    kind: "charge",
+    minimum: "minimumChargeStations",
+    defaultMinimum: 100,
+    count: "chargeStations",
+    normalize: normalizeCharge,
+  },
   transit: {
     kind: "transit",
     minimum: "minimumTransit",

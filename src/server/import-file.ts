@@ -49,6 +49,7 @@ export async function importFile(
         minimumSettlements: Number(process.env.MIN_SETTLEMENTS || 1000),
         minimumSellers: Number(process.env.MIN_SELLERS || 100),
         minimumTransit: Number(process.env.MIN_TRANSIT_STOPS || 1000),
+        minimumChargeStations: Number(process.env.MIN_CHARGE_STATIONS || 100),
         minimumWaterPoints: Number(process.env.MIN_WATER_POINTS || 100),
         minimumKebabs: Number(process.env.MIN_KEBABS || 100),
         minimumRatio: Number(process.env.MIN_IMPORT_RATIO || 0.75),

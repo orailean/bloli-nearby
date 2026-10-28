@@ -40,18 +40,20 @@ if [ ! -f /data/transit-context.sqlite ] || [ ! -f /data/transit-context.source 
 else
   printf '[transit-context] Reusing source-bound relation context\n'
 fi
-FILTER_EXPRESSIONS='nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco nwr/cuisine nwr/amenity=drinking_water nwr/drinking_water nwr/drinking_water:refill nwr/fountain=drinking nwr/railway=station,halt,tram_stop,platform,subway_entrance,train_station_entrance nwr/highway=bus_stop,platform nwr/amenity=bus_station,taxi,ferry_terminal nwr/aerialway=station nwr/public_transport=station,platform,stop_position,entrance r/public_transport=stop_area'
+FILTER_EXPRESSIONS='nwr/amenity=charging_station nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco nwr/cuisine nwr/amenity=drinking_water nwr/drinking_water nwr/drinking_water:refill nwr/fountain=drinking nwr/railway=station,halt,tram_stop,platform,subway_entrance,train_station_entrance nwr/highway=bus_stop,platform nwr/amenity=bus_station,taxi,ferry_terminal nwr/aerialway=station nwr/public_transport=station,platform,stop_position,entrance r/public_transport=stop_area'
 filter_key="$DATA_URL|$FILTER_EXPRESSIONS"
 if [ -f /data/filtered.osm.pbf ] && [ -f /data/filtered.source ] && [ "$(cat /data/filtered.source)" = "$filter_key" ]; then
   printf '[filter] Reusing completed filtered snapshot\n'
 else
   rm -f /data/filtered.source
-  printf '[filter] Extracting toilets, tobacco sellers, cuisine venues, water points, places and postal boundaries\n'
+  printf '[filter] Extracting all six categories, places and postal boundaries\n'
   # This word list is a fixed set of filter arguments, not user input.
   osmium tags-filter /data/source.osm.pbf $FILTER_EXPRESSIONS -o /data/filtered.osm.pbf --overwrite
   printf '%s\n' "$filter_key" > /data/filtered.source
 fi
-printf '[geometry] Building complete facility, seller, kebab, water and settlement records\n'
+printf '[geometry-preflight] Validating all six categories and settlements\n'
+python3 /app/importer/extract.py /data/filtered.osm.pbf /data/coverage.poly --source "$DATA_URL" --transport-context /data/transit-context.sqlite --context-fingerprint "$context_key" --geometry-only
+printf '[geometry] Building complete six-category and settlement records\n'
 python3 /app/importer/extract.py /data/filtered.osm.pbf /data/coverage.poly --source "$DATA_URL" --transport-context /data/transit-context.sqlite --context-fingerprint "$context_key" > /data/extracted.jsonl.part
 mv /data/extracted.jsonl.part /data/extracted.jsonl
 printf '[publish] Source preparation complete\n'

@@ -40,6 +40,8 @@ class TransportContext:
   self.db=sqlite3.connect(f'file:{Path(path).resolve()}?mode=ro',uri=True)
   meta=dict(self.db.execute('SELECT key,value FROM meta'))
   if meta.get('complete')!='1' or fingerprint is not None and meta.get('fingerprint')!=fingerprint:self.db.close();raise ValueError('INVALID_TRANSIT_CONTEXT')
+ def has_group(self,source_type,source_id):
+  return self.db.execute('SELECT 1 FROM group_members WHERE member=? LIMIT 1',(f'{source_type}/{source_id}',)).fetchone() is not None
  def get(self,source_type,source_id):
   key=f'{source_type}/{source_id}'
   groups=[]

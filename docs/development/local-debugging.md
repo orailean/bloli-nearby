@@ -1,6 +1,6 @@
 # Local debugging: Docker database, native app processes
 
-For the current two-site setup and small mixed-category sample, start with [Bloli Nearby local development](multi-site.md). The regional workflows below remain available for source-level debugging.
+For the current six-site setup and small mixed-category sample, start with [Bloli Nearby local development](multi-site.md). The regional workflows below remain available for source-level debugging.
 
 Run only PostgreSQL/PostGIS in Docker. Run the Node API and Vite on your machine, where your IDE can set breakpoints normally. `compose.dev.yaml` is an independent database-only project named `bloli-nearby-dev`; it does not start the app, importer, shared Nginx, or any production service.
 
@@ -20,7 +20,7 @@ The default connection is `postgres://bloli_nearby_dev:bloli-dev-only@127.0.0.1:
 
 Changing the password environment variable does not change an existing PostgreSQL role in a persistent volume. Use SQL to change that role password or create a separate disposable development database; do not delete a volume containing data you want to keep.
 
-The development volume is separate from the normal app's `find-a-loo_postgres_data` volume. Stopping the dev database retains its data:
+The development volume is separate from the normal app's `bloli-nearby_postgres_data` volume. Stopping the dev database retains its data:
 
 ```bash
 docker compose --env-file .env.local -f compose.dev.yaml stop

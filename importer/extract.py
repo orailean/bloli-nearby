@@ -75,6 +75,8 @@ def kinds(tags):
     if tags.get('type') in ('route', 'route_master', 'collection', 'destination_sign') or tags.get('public_transport') in ('stop_area', 'stop_area_group'):
         return []
     result = []
+    if tags.get('amenity') == 'charging_station':
+        result.append('charge')
     if transit_candidate(tags):
         result.append("transit")
     if tags.get('amenity') == 'toilets' or tags.get('toilets') == 'yes':
@@ -90,7 +92,7 @@ def kinds(tags):
     return result
 
 
-def _extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None):
+def _extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None, geometry_only=False):
     if not dataset_at:
         reader = osmium.io.Reader(filename)
         try:
@@ -100,13 +102,14 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     if not dataset_at:
         raise ValueError('Missing source dataset timestamp')
     def emit(record):
-        output.write(json.dumps(record, ensure_ascii=False) + '\n')
+        if not geometry_only:
+            output.write(json.dumps(record, ensure_ascii=False) + '\n')
     emit({'kind': 'metadata', 'source': source, 'datasetAt': dataset_at, 'coverage': coverage,
-          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit'], 'transitContextComplete': True})
+          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge'], 'transitContextComplete': True})
     transport_context=TransportContext(context_path,fingerprint)
     def object_kinds(tags,source_type,source_id):
         result=kinds(tags)
-        if tags.get('entrance') and tags.get('entrance') != 'no' and 'transit' not in result and transport_context.get(source_type,str(source_id))['groups']:
+        if tags.get('entrance') and tags.get('entrance') != 'no' and 'transit' not in result and transport_context.has_group(source_type,str(source_id)):
             result.append('transit')
         return result
     factory = osmium.geom.GeoJSONFactory()
@@ -162,8 +165,9 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
 
         def write(self, source_type, source_id, tags, point):
             for kind in object_kinds(tags, source_type, source_id):
-                emit({'kind': kind, 'sourceType': source_type, 'sourceId': str(source_id),
-                      'lat': point.y, 'lon': point.x, 'tags': tags, **({'transport':transport_context.get(source_type,str(source_id))} if kind == 'transit' else {})})
+                if not geometry_only:
+                    emit({'kind': kind, 'sourceType': source_type, 'sourceId': str(source_id),
+                          'lat': point.y, 'lon': point.x, 'tags': tags, **({'transport':transport_context.get(source_type,str(source_id))} if kind == 'transit' else {})})
                 self.count += 1
 
         def node(self, obj):
@@ -268,17 +272,22 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     broken_transit=[key for key in missing if 'transit' in handler.expected[key]]
     if broken_transit:
         raise ValueError(f'Incomplete transit geometries: {len(broken_transit)}; sources: {sorted(broken_transit)[:30]}')
+    broken_charge=[key for key in missing if 'charge' in handler.expected[key]]
+    if broken_charge:
+        raise ValueError(f'Incomplete charge geometries: {len(broken_charge)}; sources: {sorted(broken_charge)[:30]}')
     transport_context.close()
+    if geometry_only:
+        output.write(json.dumps({'kind':'geometryComplete','records':handler.count})+'\n')
     emit({'kind': 'complete', 'records': handler.count, 'skippedSettlementGeometries': len(missing)})
     return handler.count
 
 
-def extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None):
+def extract(filename, coverage, output, source, dataset_at=None, context_path=None, fingerprint=None, geometry_only=False):
     with tempfile.TemporaryDirectory(prefix='transit-context-') as temporary:
         if context_path is None:
             context_path=str(Path(temporary)/'context.sqlite')
             build_context(filename,context_path,'fixture')
-        return _extract(filename,coverage,output,source,dataset_at,context_path,fingerprint)
+        return _extract(filename,coverage,output,source,dataset_at,context_path,fingerprint,geometry_only)
 
 
 if __name__ == '__main__':
@@ -288,5 +297,6 @@ if __name__ == '__main__':
     parser.add_argument('--source', default='https://download.geofabrik.de/europe/germany-latest.osm.pbf')
     parser.add_argument('--transport-context')
     parser.add_argument('--context-fingerprint')
+    parser.add_argument('--geometry-only', action='store_true')
     args = parser.parse_args()
-    extract(args.pbf, poly_geojson(Path(args.poly).read_text()), sys.stdout, args.source, context_path=args.transport_context, fingerprint=args.context_fingerprint)
+    extract(args.pbf, poly_geojson(Path(args.poly).read_text()), sys.stdout, args.source, context_path=args.transport_context, fingerprint=args.context_fingerprint, geometry_only=args.geometry_only)

@@ -43,6 +43,11 @@ import {
 import { site, sitePresentation, siteOverride } from "./sites/index.js";
 import type { SellerType } from "../shared/sites.js";
 import { SEARCH_RADII } from "../shared/domain.js";
+import {
+  type ChargeAccessFilter,
+  type ChargeConnectorFilter,
+  type ChargePower,
+} from "../shared/charge-types.js";
 import MapView from "./Map.js";
 import Details from "./Details.js";
 import "./styles.css";
@@ -81,6 +86,9 @@ export default function App() {
     [dataset, setDataset] = useState<Dataset | null>(null);
   const [origin, setOrigin] = useState<Origin | null>(null),
     [mode, setMode] = useState<TransitMode | "all">("all"),
+    [connector, setConnector] = useState<ChargeConnectorFilter>("all"),
+    [minPowerKw, setMinPowerKw] = useState<ChargePower>(0),
+    [chargeAccess, setChargeAccess] = useState<ChargeAccessFilter>("all"),
     [fee, setFee] = useState<FeeFilter>("all"),
     [sellerType, setSellerType] = useState<SellerType | "all">("all"),
     [radius, setRadius] = useState<number>(SEARCH_RADII[0]),
@@ -115,6 +123,29 @@ export default function App() {
     resultsPane = useRef<HTMLDivElement>(null);
   const dictionaries = siteDictionaries[site.id];
   const t = dictionaries[locale];
+  useEffect(() => {
+    const title =
+      t.brandName === "find a loo"
+        ? "Find a Loo"
+        : `${t.brandName[0].toUpperCase()}${t.brandName.slice(1)}`;
+    document.title = `${title} · ${t.hero.replace(/\n/g, " ")}`;
+    const theme = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    );
+    if (theme)
+      theme.content =
+        site.id === "charge"
+          ? "#2448d8"
+          : site.id === "transit"
+            ? "#007b7f"
+            : site.id === "water"
+              ? "#1459d9"
+              : site.id === "kebab"
+                ? "#402b52"
+                : site.id === "kippe"
+                  ? "#b52d3b"
+                  : "#123f3b";
+  }, [locale, t]);
   const {
     Icon: SiteIcon,
     Artwork,
@@ -156,7 +187,7 @@ export default function App() {
     setSelected(null);
     setTruncated(false);
     request<SearchResponse>(
-      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), ...(site.capabilities.openNow ? { openNow: String(openNow) } : {}), ...(site.id === "transit" ? { mode } : {}) })}`,
+      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), ...(site.capabilities.openNow ? { openNow: String(openNow) } : {}), ...(site.id === "transit" ? { mode } : {}), ...(site.id === "charge" ? { connector, minPowerKw: String(minPowerKw), chargeAccess } : {}) })}`,
       c.signal,
     )
       .then((r) => {
@@ -174,7 +205,19 @@ export default function App() {
         if (!c.signal.aborted) setLoading(false);
       });
     return () => c.abort();
-  }, [origin?.lat, origin?.lon, fee, sellerType, radius, openNow, mode, retry]);
+  }, [
+    origin?.lat,
+    origin?.lon,
+    fee,
+    sellerType,
+    radius,
+    openNow,
+    mode,
+    connector,
+    minPowerKw,
+    chargeAccess,
+    retry,
+  ]);
   useEffect(() => {
     const d = dialogRef.current;
     if (!d) return;
@@ -463,6 +506,12 @@ export default function App() {
                 onFee={setFee}
                 sellerType={sellerType}
                 onSellerType={setSellerType}
+                connector={connector}
+                onConnector={setConnector}
+                minPowerKw={minPowerKw}
+                onMinPower={setMinPowerKw}
+                chargeAccess={chargeAccess}
+                onChargeAccess={setChargeAccess}
               />
               {site.capabilities.openNow && (
                 <label className="open-now-control" title={t.openNowHint}>

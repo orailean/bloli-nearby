@@ -1,8 +1,8 @@
 # Updating Bloli Nearby in production
 
-Current multi-site deployment: see [Bloli Nearby migration and updates](bloli-nearby-migration.md) for shared deployment details, and [Water setup](water-site.md) for Water, and [Transit setup](transit-site.md) for the fifth profile.
+Current six-site deployment: see [Bloli Nearby migration and updates](bloli-nearby-migration.md), [Water setup](water-site.md), [Transit setup](transit-site.md) and [Charge setup](charge-site.md).
 
-Production path: `/home/oliver/stack/bloli-nearby` on `ssh-contabo`. Public sites: https://loo.bloli.com, https://kippe.bloli.com, https://kebab.bloli.com https://water.bloli.com and https://transit.bloli.com. The existing Docker Nginx owns ports 80/443; this app publishes no host ports. The production `.env` persists `COMPOSE_FILE=compose.yaml:compose.production.yaml` so operational commands retain the external `nginx_default` network and alias `bloli-nearby-web`.
+Production path: `/home/oliver/stack/bloli-nearby` on `ssh-contabo`. Public sites: https://loo.bloli.com, https://kippe.bloli.com, https://kebab.bloli.com, https://water.bloli.com, https://transit.bloli.com and https://charge.bloli.com. The existing Docker Nginx owns ports 80/443; this app publishes no host ports. The production `.env` persists `COMPOSE_FILE=compose.yaml:compose.production.yaml` so operational commands retain the external `nginx_default` network and alias `bloli-nearby-web`.
 
 ## Update application code
 
@@ -63,7 +63,7 @@ The daily backup timer runs around 04:30–04:45 Europe/Berlin. Dumps are in the
 
 ## Roll back app code
 
-Pause `bloli-nearby-refresh.timer` before an incompatible rollback. Once Transit is active, do not run an older four-category importer against the five-category database. Keep refresh paused until compatible code is restored or a matching pre-change backup is restored, then resume the timer explicitly.
+Pause `bloli-nearby-refresh.timer` before an incompatible rollback. Once Transit is active, do not run an older category importer against the six-category database. Keep refresh paused until compatible code is restored or a matching pre-change backup is restored, then resume the timer explicitly.
 
 Use the recorded previous commit, replacing `PREVIOUS_COMMIT` below. Keep the current database unless the code change requires a matching pre-update schema/data snapshot.
 
@@ -110,7 +110,7 @@ sudo systemctl restart bloli-nearby-refresh.timer bloli-nearby-backup.timer
 Certificate renewal uses the existing Snap Certbot timer and the domain-scoped hook documented in [the HTTPS setup guide](contabo-nginx.md). Verify each app lineage without changing unrelated sites' renewal configuration:
 
 ```bash
-for domain in loo.bloli.com kippe.bloli.com kebab.bloli.com water.bloli.com transit.bloli.com; do
+for domain in loo.bloli.com kippe.bloli.com kebab.bloli.com water.bloli.com transit.bloli.com charge.bloli.com; do
   sudo /snap/bin/certbot renew --cert-name "$domain" --dry-run --run-deploy-hooks --no-random-sleep-on-renew
 done
 ```

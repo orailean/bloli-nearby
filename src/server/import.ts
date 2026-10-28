@@ -16,6 +16,7 @@ export interface ImportOptions {
   minimumKebabs?: number;
   minimumWaterPoints?: number;
   minimumTransit?: number;
+  minimumChargeStations?: number;
 }
 export async function importDataset(
   pool: pg.Pool,
@@ -29,6 +30,7 @@ export async function importDataset(
   kebabs: number;
   waterPoints: number;
   transitStops: number;
+  chargeStations: number;
 }> {
   if (!Number.isFinite(Date.parse(options.datasetAt)))
     throw new AppError("INVALID_DATASET_DATE");
@@ -180,6 +182,7 @@ export async function importDataset(
       kebabs: categoryCounts.get("kebab") ?? 0,
       waterPoints: categoryCounts.get("water") ?? 0,
       transitStops: categoryCounts.get("transit") ?? 0,
+      chargeStations: categoryCounts.get("charge") ?? 0,
       settlements: (
         await db.query("SELECT count(*)::int AS n FROM stage_settlements")
       ).rows[0].n as number,
@@ -254,7 +257,7 @@ export async function importDataset(
       "DELETE FROM locations l WHERE NOT EXISTS(SELECT 1 FROM location_categories c WHERE c.location_id=l.id)",
     );
     await db.query(
-      "UPDATE import_jobs SET status='success',finished_at=now(),facility_count=$2,settlement_count=$3,seller_count=$4,kebab_count=$5,water_count=$6,transit_count=$7 WHERE id=$1",
+      "UPDATE import_jobs SET status='success',finished_at=now(),facility_count=$2,settlement_count=$3,seller_count=$4,kebab_count=$5,water_count=$6,transit_count=$7,charge_count=$8 WHERE id=$1",
       [
         jobId,
         counts.facilities,
@@ -263,6 +266,7 @@ export async function importDataset(
         categories.includes("kebab") ? counts.kebabs : null,
         categories.includes("water") ? counts.waterPoints : null,
         categories.includes("transit") ? counts.transitStops : null,
+        categories.includes("charge") ? counts.chargeStations : null,
       ],
     );
     await db.query("COMMIT");

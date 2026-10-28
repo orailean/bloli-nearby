@@ -23,6 +23,7 @@ try {
   process.env.MIN_KEBABS = "1";
   process.env.MIN_WATER_POINTS = "1";
   process.env.MIN_TRANSIT_STOPS = "1";
+  process.env.MIN_CHARGE_STATIONS = "1";
   console.log(await importFile(pool, "tests/fixtures/multi-site.jsonl"));
 } finally {
   await pool.end();

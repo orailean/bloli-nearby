@@ -1,4 +1,10 @@
 import type {
+  ChargingData,
+  ChargeConnectorFilter,
+  ChargePower,
+  ChargeAccessFilter,
+} from "./charge-types.js";
+import type {
   TransitContext,
   TransitData,
   TransitMode,
@@ -40,6 +46,7 @@ export interface Facility {
   paymentMethods?: Record<string, string>;
   brand?: string | null;
   transit?: TransitData;
+  charging?: ChargingData;
   waterType?: "point" | "refill";
   bottle?: string | null;
   seasonal?: string | null;
@@ -69,6 +76,9 @@ export interface SearchQuery {
   fee: FeeFilter;
   openNow: boolean;
   mode?: TransitMode | "all";
+  connector?: ChargeConnectorFilter;
+  minPowerKw?: ChargePower;
+  chargeAccess?: ChargeAccessFilter;
   sellerType?: SellerType | "all";
 }
 export interface Dataset {

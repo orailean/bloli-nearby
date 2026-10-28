@@ -63,8 +63,16 @@ export async function searchLocations(
       FROM locations l JOIN location_categories c ON c.location_id=l.id
       WHERE ST_DWithin(l.location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3)
       AND c.category=$4 AND ($5='all' OR c.fee=$5) AND ($6='all' OR c.seller_type=$6)
+      ${
+        category === "charge"
+          ? `AND (($7='all' AND $8::float8=0) OR EXISTS(
+        SELECT 1 FROM jsonb_array_elements(COALESCE(c.data->'charging'->'connectors','[]'::jsonb)) socket
+        WHERE ($7='all' OR socket->>'type'=$7) AND ($8::float8=0 OR (socket->>'outputKw')::float8 >= $8::float8)
+      )) AND ($9='all' OR c.data->>'access'=$9)`
+          : ""
+      }
       ORDER BY distance,l.id`;
-    const parameters = [
+    const parameters: unknown[] = [
       q.lon,
       q.lat,
       q.radius,
@@ -72,6 +80,12 @@ export async function searchLocations(
       q.fee,
       q.sellerType ?? "all",
     ];
+    if (category === "charge")
+      parameters.push(
+        q.connector ?? "all",
+        q.minPowerKw ?? 0,
+        q.chargeAccess ?? "all",
+      );
     let rows: Array<{ data: Facility; distance: number }>;
     if (category === "transit") {
       rows = await transitRows(db, q);
@@ -96,8 +110,12 @@ export async function searchLocations(
       }
       await db.query("CLOSE open_candidates");
     } else {
-      rows = (await db.query(`${sql} LIMIT $7`, [...parameters, q.limit + 1]))
-        .rows;
+      rows = (
+        await db.query(`${sql} LIMIT $${parameters.length + 1}`, [
+          ...parameters,
+          q.limit + 1,
+        ])
+      ).rows;
     }
     await db.query("COMMIT");
     return {

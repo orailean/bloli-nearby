@@ -43,5 +43,5 @@
     "typescript": "5.9.3",
     "vite": "7.3.7"
   },
-  "description": "One shared OpenStreetMap platform for nearby places: Find a Loo, Kippe, Kebab, Water and Transit."
+  "description": "One shared OpenStreetMap platform for nearby places: toilets, tobacco, kebab, water, transit and EV charging across Germany."
 }

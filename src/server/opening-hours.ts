@@ -14,7 +14,7 @@ export function isOpenNow(
   const hours = facility.openingHours?.trim();
   if (!hours) return false;
   if (
-    facility.category === "water" &&
+    ["water", "charge"].includes(facility.category || "") &&
     facility.tags.seasonal &&
     facility.tags.seasonal !== "no"
   ) {

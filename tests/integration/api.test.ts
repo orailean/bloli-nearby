@@ -1,3 +1,4 @@
+import { analyzePublishedDataset } from "../../src/server/import-maintenance.js";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -1031,6 +1032,218 @@ test(
               )
             ).rows,
             before,
+          );
+        },
+      );
+      await t.test(
+        "Charge filters connector-local power/access before cap and publishes six categories",
+        async () => {
+          const prior = (
+            await pool.query(
+              "SELECT category,data FROM location_categories ORDER BY category,location_id",
+            )
+          ).rows;
+          const beforeCounts = (
+            await pool.query(
+              "SELECT category,location_count FROM category_datasets ORDER BY category",
+            )
+          ).rows;
+          const opts6 = {
+            ...opts,
+            categories: [
+              "toilets",
+              "tobacco",
+              "kebab",
+              "water",
+              "transit",
+              "charge",
+            ] as any,
+            minimumSellers: 1,
+            minimumKebabs: 1,
+            minimumWaterPoints: 1,
+            minimumTransit: 1,
+            minimumChargeStations: 1,
+          };
+          async function* six() {
+            for (const row of prior)
+              yield {
+                kind: (
+                  {
+                    toilets: "facility",
+                    tobacco: "seller",
+                    kebab: "kebab",
+                    water: "water",
+                    transit: "transit",
+                  } as any
+                )[row.category],
+                sourceType: row.data.sourceType,
+                sourceId: row.data.sourceId,
+                lat: row.data.lat,
+                lon: row.data.lon,
+                tags: row.data.tags,
+                ...(row.category === "transit"
+                  ? {
+                      transport: {
+                        groups: row.data.transit.groupId
+                          ? [
+                              {
+                                id: row.data.transit.groupId,
+                                tags: {
+                                  name: row.data.transit.groupName || "Fixture",
+                                },
+                                routes: row.data.transit.groupRoutes || [],
+                              },
+                            ]
+                          : [],
+                        routes: row.data.transit.routes || [],
+                      },
+                    }
+                  : {}),
+              };
+            for (let i = 0; i < 5; i++)
+              yield {
+                kind: "settlement",
+                sourceType: "node",
+                sourceId: String(40000 + i),
+                lat: 52.52,
+                lon: 13.405,
+                tags: { place: "city", name: "Fixture" },
+              };
+            for (let i = 0; i < 125; i++)
+              yield {
+                kind: "charge",
+                sourceType: "node",
+                sourceId: String(30000 + i),
+                lat: 52.52,
+                lon: 13.405 + i * 0.00001,
+                tags: {
+                  amenity: "charging_station",
+                  access: "yes",
+                  "socket:type2": "2",
+                  "socket:type2:output": "22 kW",
+                  "socket:type2_combo": "2",
+                  "socket:type2_combo:output": "150 kW",
+                },
+              };
+            for (const [id, access, hours] of [
+              ["31001", "yes", "24/7"],
+              ["31002", "customers", "24/7"],
+              ["31003", "yes", ""],
+            ] as const)
+              yield {
+                kind: "charge",
+                sourceType: "node",
+                sourceId: id,
+                lat: 52.52,
+                lon: 13.407,
+                tags: {
+                  amenity: "charging_station",
+                  access,
+                  opening_hours: hours,
+                  fee: "no",
+                  "parking:fee": "yes",
+                  "socket:type2": "yes",
+                  "socket:type2:output": "150 kW",
+                },
+              };
+          }
+          await importDataset(pool, six(), opts6);
+          await migrate(pool);
+          assert.deepEqual(await analyzePublishedDataset(pool), {
+            status: "success",
+          });
+          assert.equal(
+            (
+              await pool.query(
+                "SELECT count(*)::int n FROM pg_stat_user_tables WHERE relname IN ('locations','location_categories','transit_components') AND last_analyze IS NOT NULL",
+              )
+            ).rows[0].n,
+            3,
+          );
+          assert.deepEqual(
+            (
+              await pool.query(
+                "SELECT category,location_count FROM category_datasets WHERE category<>'charge' ORDER BY category",
+              )
+            ).rows,
+            beforeCounts,
+          );
+          const req = (query: string) =>
+            new Promise<any>((resolve, reject) =>
+              httpGet(
+                `http://127.0.0.1:${address.port}/api/locations?lat=52.52&lon=13.405&radius=5000&${query}`,
+                { headers: { Host: "charge.bloli.com" } },
+                (r) => {
+                  let b = "";
+                  r.on("data", (c) => (b += c));
+                  r.on("end", () =>
+                    resolve({ status: r.statusCode, body: JSON.parse(b) }),
+                  );
+                },
+              ).on("error", reject),
+            );
+          const power = await req("connector=type2&minPowerKw=150");
+          assert.equal(power.status, 200);
+          assert.deepEqual(power.body.items.map((x: any) => x.id).sort(), [
+            "node/31001",
+            "node/31002",
+            "node/31003",
+          ]);
+          const pub = await req(
+            "connector=type2&minPowerKw=150&chargeAccess=public&openNow=true&fee=free",
+          );
+          assert.deepEqual(
+            pub.body.items.map((x: any) => x.id),
+            ["node/31001"],
+          );
+          assert.equal(pub.body.items[0].charging.parkingFee, "yes");
+          const customer = await req(
+            "connector=type2&minPowerKw=150&chargeAccess=customers",
+          );
+          assert.deepEqual(
+            customer.body.items.map((x: any) => x.id),
+            ["node/31002"],
+          );
+          const cap = await req("limit=100");
+          assert.equal(cap.body.items.length, 100);
+          assert.equal(cap.body.truncated, true);
+          for (const q of [
+            "mode=all",
+            "sellerType=all",
+            "connector=ccs&connector=type2",
+            "minPowerKw=149",
+          ])
+            assert.equal((await req(q)).status, 400);
+          const snapshot = (
+            await pool.query(
+              "SELECT category,location_count,imported_at FROM category_datasets ORDER BY category",
+            )
+          ).rows;
+          await assert.rejects(
+            importDataset(pool, six(), {
+              ...opts6,
+              minimumChargeStations: 999,
+            }),
+          );
+          assert.deepEqual(
+            (
+              await pool.query(
+                "SELECT category,location_count,imported_at FROM category_datasets ORDER BY category",
+              )
+            ).rows,
+            snapshot,
+          );
+          await assert.rejects(
+            importDataset(pool, six(), {
+              ...opts6,
+              categories: [
+                "toilets",
+                "tobacco",
+                "kebab",
+                "water",
+                "transit",
+              ] as any,
+            }),
           );
         },
       );

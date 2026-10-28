@@ -39,6 +39,13 @@ const profiles = {
       "Find cigarette machines, tobacco shops and explicitly mapped tobacco sellers across Germany. Check seller types, mapped hours and payment details.",
     color: "#b52d3b",
   },
+  charge: {
+    domain: "charge.bloli.com",
+    title: "Charge · Find your next plug stop.",
+    description:
+      "Find mapped car charging stations across Germany. Filter by connector, power, access and mapped charging fees.",
+    color: "#2448d8",
+  },
 };
 for (const [id, profile] of Object.entries(profiles)) {
   const canonical = `https://${profile.domain}/`;

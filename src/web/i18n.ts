@@ -18,12 +18,16 @@ import waterRo from "./sites/water/locales/ro.json";
 import transitEn from "./sites/transit/locales/en.json";
 import transitDe from "./sites/transit/locales/de.json";
 import transitRo from "./sites/transit/locales/ro.json";
+import chargeEn from "./sites/charge/locales/en.json";
+import chargeDe from "./sites/charge/locales/de.json";
+import chargeRo from "./sites/charge/locales/ro.json";
 type Dictionary = Record<
   | keyof typeof commonEn
   | keyof typeof looEn
   | keyof typeof kebabEn
   | keyof typeof waterEn
-  | keyof typeof transitEn,
+  | keyof typeof transitEn
+  | keyof typeof chargeEn,
   string
 >;
 // Food labels extend the shared presentation type; existing sites keep their own copy.
@@ -57,9 +61,28 @@ const transitFallback = Object.fromEntries(
     keyof typeof commonDe | keyof typeof looDe | keyof typeof kebabDe
   >
 >;
+const chargeFallback = Object.fromEntries(
+  Object.entries(chargeDe).filter(
+    ([key]) =>
+      ![commonDe, looDe, kebabDe, waterDe, transitDe].some((dict) =>
+        Object.hasOwn(dict, key),
+      ),
+  ),
+) as Pick<
+  typeof chargeDe,
+  Exclude<
+    keyof typeof chargeDe,
+    | keyof typeof commonDe
+    | keyof typeof looDe
+    | keyof typeof kebabDe
+    | keyof typeof waterDe
+    | keyof typeof transitDe
+  >
+>;
 export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
   transit: {
     en: {
+      ...chargeFallback,
       ...waterFallback,
       ...foodFallback,
       ...commonDe,
@@ -67,8 +90,15 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...transitDe,
       ...transitEn,
     },
-    de: { ...waterFallback, ...foodFallback, ...commonDe, ...transitDe },
+    de: {
+      ...chargeFallback,
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...transitDe,
+    },
     ro: {
+      ...chargeFallback,
       ...waterFallback,
       ...foodFallback,
       ...commonDe,
@@ -79,6 +109,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
   },
   water: {
     en: {
+      ...chargeFallback,
       ...transitFallback,
       ...foodFallback,
       ...commonDe,
@@ -86,8 +117,15 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...waterDe,
       ...waterEn,
     },
-    de: { ...transitFallback, ...foodFallback, ...commonDe, ...waterDe },
+    de: {
+      ...chargeFallback,
+      ...transitFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...waterDe,
+    },
     ro: {
+      ...chargeFallback,
       ...transitFallback,
       ...foodFallback,
       ...commonDe,
@@ -98,6 +136,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
   },
   kebab: {
     en: {
+      ...chargeFallback,
       ...transitFallback,
       ...waterFallback,
       ...commonDe,
@@ -105,8 +144,15 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...kebabDe,
       ...kebabEn,
     },
-    de: { ...transitFallback, ...waterFallback, ...commonDe, ...kebabDe },
+    de: {
+      ...chargeFallback,
+      ...transitFallback,
+      ...waterFallback,
+      ...commonDe,
+      ...kebabDe,
+    },
     ro: {
+      ...chargeFallback,
       ...transitFallback,
       ...waterFallback,
       ...commonDe,
@@ -117,6 +163,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
   },
   loo: {
     en: {
+      ...chargeFallback,
       ...transitFallback,
       ...waterFallback,
       ...foodFallback,
@@ -126,6 +173,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...looEn,
     },
     de: {
+      ...chargeFallback,
       ...transitFallback,
       ...waterFallback,
       ...foodFallback,
@@ -133,6 +181,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...looDe,
     },
     ro: {
+      ...chargeFallback,
       ...transitFallback,
       ...waterFallback,
       ...foodFallback,
@@ -144,6 +193,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
   },
   kippe: {
     en: {
+      ...chargeFallback,
       ...transitFallback,
       ...waterFallback,
       ...foodFallback,
@@ -153,6 +203,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...kippeEn,
     },
     de: {
+      ...chargeFallback,
       ...transitFallback,
       ...waterFallback,
       ...foodFallback,
@@ -160,6 +211,7 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...kippeDe,
     },
     ro: {
+      ...chargeFallback,
       ...transitFallback,
       ...waterFallback,
       ...foodFallback,
@@ -167,6 +219,34 @@ export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
       ...commonRo,
       ...kippeDe,
       ...kippeRo,
+    },
+  },
+  charge: {
+    en: {
+      ...chargeFallback,
+      ...transitFallback,
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonEn,
+      ...chargeDe,
+      ...chargeEn,
+    },
+    de: {
+      ...transitFallback,
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...chargeDe,
+    },
+    ro: {
+      ...transitFallback,
+      ...waterFallback,
+      ...foodFallback,
+      ...commonDe,
+      ...commonRo,
+      ...chargeDe,
+      ...chargeRo,
     },
   },
 };

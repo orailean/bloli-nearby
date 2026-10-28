@@ -1,3 +1,4 @@
+import { analyzePublishedDataset } from "./import-maintenance.js";
 import { spawn } from "node:child_process";
 import { createPool, migrate } from "./db.js";
 import { runRefresh } from "./refresh.js";
@@ -29,7 +30,14 @@ try {
       return importFile(pool, "/data/extracted.jsonl", context);
     },
   );
-  console.log(JSON.stringify({ status: "success", ...result }));
+  console.log(
+    JSON.stringify({
+      status: "success",
+      published: true,
+      ...result,
+      statistics: await analyzePublishedDataset(pool),
+    }),
+  );
 } finally {
   await pool.end();
 }

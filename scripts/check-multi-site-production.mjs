@@ -3,9 +3,9 @@ import { chromium, expect } from "@playwright/test";
 const results = {};
 const browser = await chromium.launch();
 try {
-  for (const id of (process.env.SITES || "loo,kippe,kebab,water,transit").split(
-    ",",
-  )) {
+  for (const id of (
+    process.env.SITES || "loo,kippe,kebab,water,transit,charge"
+  ).split(",")) {
     const base = `https://${id}.bloli.com`;
     const htmlResponse = await fetch(base);
     assert.equal(htmlResponse.status, 200);
@@ -75,6 +75,42 @@ try {
         assert.ok(d.items.every((item) => item.transit.modes.includes(mode)));
       }
     }
+    if (id === "charge") {
+      assert.ok(all.items.every((item) => item.category === "charge"));
+      for (const suffix of ["&mode=all", "&sellerType=all"])
+        assert.equal(
+          (await fetch(`${base}/api/locations?${query}${suffix}`)).status,
+          400,
+        );
+      for (const [connector, minPowerKw] of [
+        ["ccs", 150],
+        ["type2", 22],
+        ["chademo", 0],
+      ]) {
+        const response = await fetch(
+          `${base}/api/locations?${query}&connector=${connector}&minPowerKw=${minPowerKw}`,
+        );
+        assert.equal(response.status, 200);
+        const data = await response.json();
+        assert.ok(
+          data.items.every((item) =>
+            item.charging?.connectors?.some(
+              (socket) =>
+                socket.type === connector &&
+                (minPowerKw === 0 || (socket.outputKw ?? -1) >= minPowerKw),
+            ),
+          ),
+        );
+      }
+      for (const access of ["public", "customers"]) {
+        const response = await fetch(
+          `${base}/api/locations?${query}&chargeAccess=${access}`,
+        );
+        assert.equal(response.status, 200);
+        const data = await response.json();
+        assert.ok(data.items.every((item) => item.access === access));
+      }
+    }
     if (id === "water") {
       assert.ok(
         all.items.every(
@@ -142,7 +178,7 @@ try {
     await page.locator(".result-select").first().click();
     await expect(page.locator(".detail-panel .walk-button")).toHaveAttribute(
       "href",
-      /travelmode=walking/,
+      id === "charge" ? /travelmode=driving/ : /travelmode=walking/,
     );
     await expect(page.locator(".search-boundary")).toHaveCount(1);
     if (id === "kippe")
@@ -185,7 +221,11 @@ try {
     if (id === "transit") {
       await expect(page.locator(".open-now-control")).toHaveCount(0);
       await expect(page.locator(".transit-mode-control")).toBeVisible();
-    } else await page.locator(".open-now-control input").check();
+    } else {
+      if (id === "charge")
+        await expect(page.locator(".charge-select")).toHaveCount(3);
+      await page.locator(".open-now-control input").check();
+    }
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     assert.deepEqual(errors, []);
     results[id] = {

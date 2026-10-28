@@ -69,16 +69,16 @@ ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS kebab_count integer;
 
 -- Expand existing checks for the fourth profile without rewriting active rows.
 ALTER TABLE location_categories DROP CONSTRAINT IF EXISTS location_categories_category_check;
-ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit'));
+ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge'));
 ALTER TABLE category_datasets DROP CONSTRAINT IF EXISTS category_datasets_category_check;
-ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit'));
+ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge'));
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS water_count integer;
 
 -- Fifth shared profile and its raw component/context projection.
 ALTER TABLE location_categories DROP CONSTRAINT IF EXISTS location_categories_category_check;
-ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit'));
+ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge'));
 ALTER TABLE category_datasets DROP CONSTRAINT IF EXISTS category_datasets_category_check;
-ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit'));
+ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge'));
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS transit_count integer;
 CREATE TABLE IF NOT EXISTS transit_components (
  location_id text PRIMARY KEY REFERENCES locations(id) ON DELETE CASCADE,
@@ -89,3 +89,5 @@ CREATE INDEX IF NOT EXISTS transit_components_group_idx ON transit_components(gr
 CREATE INDEX IF NOT EXISTS transit_components_modes_idx ON transit_components USING gin(modes);
 
 CREATE INDEX IF NOT EXISTS transit_components_logical_idx ON transit_components((COALESCE(group_id,location_id)));
+
+ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS charge_count integer;

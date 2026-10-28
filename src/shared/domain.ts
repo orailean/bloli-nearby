@@ -1,3 +1,4 @@
+import { CHARGE_CONNECTORS, CHARGE_POWERS } from "./charge-types.js";
 import { TRANSIT_MODES } from "./transit-modes.js";
 import type { Category } from "./sites.js";
 import type { Facility, SourceRecord, SearchQuery } from "./types.js";
@@ -99,7 +100,7 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   if (
-    (!["toilets", "water"].includes(category) && p.has("fee")) ||
+    (!["toilets", "water", "charge"].includes(category) && p.has("fee")) ||
     (category !== "tobacco" && p.has("sellerType"))
   )
     throw new AppError("INVALID_QUERY");
@@ -110,6 +111,19 @@ export function parseSearch(
     throw new AppError("INVALID_QUERY");
   const mode = p.get("mode") ?? "all";
   if (!["all", ...TRANSIT_MODES].includes(mode) || p.getAll("mode").length > 1)
+    throw new AppError("INVALID_QUERY");
+  const chargeKeys = ["connector", "minPowerKw", "chargeAccess"];
+  if (category !== "charge" && chargeKeys.some((k) => p.has(k)))
+    throw new AppError("INVALID_QUERY");
+  const connector = p.get("connector") ?? "all",
+    chargeAccess = p.get("chargeAccess") ?? "all";
+  const minPowerKw = number("minPowerKw", 0);
+  if (
+    !CHARGE_CONNECTORS.includes(connector as never) ||
+    !CHARGE_POWERS.includes(minPowerKw as never) ||
+    !["all", "public", "customers"].includes(chargeAccess) ||
+    chargeKeys.some((k) => p.getAll(k).length > 1)
+  )
     throw new AppError("INVALID_QUERY");
   const sellerType = p.get("sellerType") ?? "all";
   if (
@@ -133,6 +147,13 @@ export function parseSearch(
     throw new AppError("INVALID_QUERY");
   return {
     ...(category === "transit" ? { mode: mode as SearchQuery["mode"] } : {}),
+    ...(category === "charge"
+      ? {
+          connector: connector as SearchQuery["connector"],
+          minPowerKw: minPowerKw as SearchQuery["minPowerKw"],
+          chargeAccess: chargeAccess as SearchQuery["chargeAccess"],
+        }
+      : {}),
     lat,
     lon,
     radius,
@@ -144,7 +165,11 @@ export function parseSearch(
       : {}),
   };
 }
-export function directionsUrl(lat: number, lon: number): string {
+export function directionsUrl(
+  lat: number,
+  lon: number,
+  mode: "walking" | "driving" = "walking",
+): string {
   coordinates(lat, lon);
-  return `https://www.google.com/maps/dir/?${new URLSearchParams({ api: "1", destination: `${lat},${lon}`, travelmode: "walking" })}`;
+  return `https://www.google.com/maps/dir/?${new URLSearchParams({ api: "1", destination: `${lat},${lon}`, travelmode: mode })}`;
 }

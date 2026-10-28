@@ -13,6 +13,7 @@ import type { ComponentType } from "react";
 import type { SiteId } from "../shared/sites.js";
 import type { ItemProps } from "./sites/types.js";
 import { siteDictionaries } from "./i18n.js";
+import { sites } from "../shared/sites.js";
 import { directionsUrl } from "../shared/domain.js";
 export default function Details({
   item,
@@ -87,7 +88,11 @@ export default function Details({
       {item.transit?.directionsAvailable !== false && (
         <a
           className="walk-button"
-          href={directionsUrl(item.lat, item.lon)}
+          href={directionsUrl(
+            item.lat,
+            item.lon,
+            sites[siteId].directionsMode ?? "walking",
+          )}
           target="_blank"
           rel="noopener noreferrer"
         >

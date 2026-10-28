@@ -1,10 +1,10 @@
 # Bloli Nearby production migration and updates
 
-The public sites are `loo.bloli.com` (Find a Loo), `kippe.bloli.com` (Kippe) and `kebab.bloli.com` (Kebab). All three share one gateway/frontend, API, PostGIS and scheduled Germany importer. The canonical checkout is `/home/oliver/stack/bloli-nearby` and source is `git@github.com:orailean/bloli-nearby.git`.
+The six public sites are `loo.bloli.com` (Find a Loo), `kippe.bloli.com` (Kippe), `kebab.bloli.com` (Kebab), `water.bloli.com`, `transit.bloli.com` and `charge.bloli.com`. They share one gateway/frontend, API, PostGIS database and scheduled Germany importer. The canonical checkout is `/home/oliver/stack/bloli-nearby` and source is `git@github.com:orailean/bloli-nearby.git`.
 
 ## Current resource identities
 
-Running service containers are **`bloli-nearby-web`**, **`bloli-nearby-api`** and **`bloli-nearby-db`**. The production Compose override uses project **`bloli-nearby`** and explicitly attaches the external volumes **`bloli-nearby_postgres_data`** and **`bloli-nearby_import_data`**. These are verified copies of the original data resources; the offline rename is recorded in the Kebab protocol and volume migration guide. The shared database is `bloli_nearby`, login role `bloli`; the existing password secret is reused. API/importer connections and backup/restore/health commands use configurable `DB_NAME`/`DB_USER` rather than fixed legacy names. The gateway uses `bloli-nearby-web` on `nginx_default`. All three public virtual hosts include the same `bloli-nearby-proxy.inc` location block, so upstream/header/timeout settings cannot diverge. Install this `.inc` beside the virtual hosts in the shared Nginx configuration volume. No new host ports are published. Never rename the checkout/project without verifying these bindings: Docker could otherwise create an empty replacement DB.
+Running service containers are **`bloli-nearby-web`**, **`bloli-nearby-api`** and **`bloli-nearby-db`**. The production Compose override uses project **`bloli-nearby`** and explicitly attaches the external volumes **`bloli-nearby_postgres_data`** and **`bloli-nearby_import_data`**. These are verified copies of the original data resources; the offline rename is recorded in the Kebab protocol and volume migration guide. The shared database is `bloli_nearby`, login role `bloli`; the existing password secret is reused. API/importer connections and backup/restore/health commands use configurable `DB_NAME`/`DB_USER` rather than fixed legacy names. The gateway uses `bloli-nearby-web` on `nginx_default`. All six public virtual hosts include the same `bloli-nearby-proxy.inc` location block, so upstream/header/timeout settings cannot diverge. Install this `.inc` beside the virtual hosts in the shared Nginx configuration volume. No new host ports are published. Never rename the checkout/project without verifying these bindings: Docker could otherwise create an empty replacement DB.
 
 ```bash
 cd /home/oliver/stack/bloli-nearby
@@ -45,7 +45,7 @@ docker compose build api web
 docker compose up -d --wait api web
 ```
 
-Verify **all three** public domains. `/api/health` is liveness; `/api/ready` and `/api/status` are category-aware using the request hostname. `npm run build` generates separate initial HTML metadata for each site while sharing versioned assets. Unknown production hosts and cross-category overrides are rejected.
+Verify **all six** public domains. `/api/health` is liveness; `/api/ready` and `/api/status` are category-aware using the request hostname. `npm run build` generates separate initial HTML metadata for each site while sharing versioned assets. Unknown production hosts and cross-category overrides are rejected.
 
 Dataset refresh is separate: build the importer when its code changes, then use `scripts/update.sh` or let the weekly timer run. The scheduled job resolves one latest verified Germany snapshot for all categories. Monitor job outcomes per site and save logs. Backup/restore includes locations, category memberships/metadata, legacy toilets, settlements and import jobs.
 
@@ -69,7 +69,7 @@ Location data updates are scheduled by **systemd**, through these files:
 - `/etc/systemd/system/bloli-nearby-refresh.service`: runs `/usr/bin/docker compose --profile tools run --rm importer` as `oliver`, working directory `/home/oliver/stack/bloli-nearby`.
 - `/etc/systemd/system/bloli-nearby-backup.timer`: daily at **04:30 Europe/Berlin**, with up to **15 minutes random delay**; invokes the companion backup service/script.
 
-The old `find-a-loo-refresh.timer` and `find-a-loo-backup.timer` are disabled. There must be only one active refresh/backup pair. The weekly importer updates toilets, tobacco sellers, kebab places and shared settlements from a single verified Germany source. Visible map tiles continue loading directly in users' browsers; the job does not download raster map tiles.
+The old `find-a-loo-refresh.timer` and `find-a-loo-backup.timer` are disabled. There must be only one active refresh/backup pair. The weekly importer updates toilets, tobacco sellers, kebab places, drinking water, transit, charging stations and shared settlements from a single verified Germany source. Visible map tiles continue loading directly in users' browsers; the job does not download raster map tiles.
 
 Inspect schedules, exact configuration and refresh history:
 
