@@ -229,7 +229,12 @@ export async function searchSettlements(
   category: Category = "toilets",
   country: CountryCode | "all" = "all",
 ): Promise<Settlement[]> {
-  if (!(await datasetStatus(pool, category)).ready)
+  const ready = (await pool.query(
+    `SELECT EXISTS(SELECT 1 FROM countries c JOIN country_datasets d ON d.country_code=c.code
+     WHERE c.status='active' AND d.category=$1) AS ready`,
+    [category],
+  )).rows[0].ready;
+  if (!ready)
     throw new AppError("DATA_NOT_READY", 503);
   if (query.length < 2 || query.length > 80)
     throw new AppError("INVALID_QUERY");
