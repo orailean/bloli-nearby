@@ -25,7 +25,19 @@ export const createPool = (url?: string) =>
     statement_timeout: 30000,
   });
 export async function migrate(pool: pg.Pool) {
-  await pool.query(
-    await readFile(new URL("./schema.sql", import.meta.url), "utf8"),
-  );
+  const client = await pool.connect();
+  try {
+    // Schema backfills may touch every existing OSM row. Keep the normal
+    // request timeout for searches, but do not interrupt a one-time migration.
+    await client.query("SET statement_timeout = 0");
+    await client.query(
+      await readFile(new URL("./schema.sql", import.meta.url), "utf8"),
+    );
+  } finally {
+    try {
+      await client.query("SET statement_timeout = 30000");
+    } finally {
+      client.release();
+    }
+  }
 }
