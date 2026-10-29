@@ -129,7 +129,7 @@ export function normalizeCharge(r: SourceRecord): Facility | null {
       ? "public"
       : "unknown";
   const names: Facility["names"] = {};
-  for (const lang of ["de", "en", "ro"] as const)
+  for (const lang of ["de", "en", "ro", "hu"] as const)
     if (t[`name:${lang}`]) names[lang] = t[`name:${lang}`];
   const conditionalFee = t["fee:conditional"];
   const prefixed = (prefix: string) =>

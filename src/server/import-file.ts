@@ -3,12 +3,16 @@ import { createInterface } from "node:readline";
 import type pg from "pg";
 import { importDataset } from "./import.js";
 import type { RefreshContext } from "./refresh.js";
-import { minimumForCountry, minimumSettlementsForCountry } from "../shared/countries.js";
+import {
+  minimumForCountry,
+  minimumSettlementsForCountry,
+} from "../shared/countries.js";
 import type { CountryCode } from "../shared/countries.js";
 export async function importFile(
   pool: pg.Pool,
   path: string,
   context?: RefreshContext,
+  measureOnly = false,
 ) {
   const lines = createInterface({
     input: createReadStream(path),
@@ -49,9 +53,12 @@ export async function importFile(
       {
         ...meta,
         countryCode,
+        measureOnly,
         sourceChecksum: meta.sourceChecksum,
         boundarySource: meta.coverageSource,
         boundaryChecksum: meta.coverageChecksum,
+        minimumAtms: minimumForCountry(countryCode, "atm"),
+        minimumAccommodations: minimumForCountry(countryCode, "accommodation"),
         minimumFacilities: minimumForCountry(countryCode, "toilets"),
         minimumSettlements: minimumSettlementsForCountry(countryCode),
         minimumSellers: minimumForCountry(countryCode, "tobacco"),

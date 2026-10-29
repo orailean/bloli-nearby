@@ -4,6 +4,20 @@ const template = await readFile(
   "utf8",
 );
 const profiles = {
+  atm: {
+    domain: "atm.bloli.com",
+    title: "ATM · Bargeld in deiner Nähe.",
+    description:
+      "Finde erfasste Geldautomaten in den freigeschalteten Ländern. Prüfe Zugang, Betreiber, erfasste Währungen und Gebührenangaben aus OpenStreetMap.",
+    color: "#162c45",
+  },
+  stay: {
+    domain: "stay.bloli.com",
+    title: "Stay · Die nächste Unterkunft ist nah.",
+    description:
+      "Finde erfasste Hotels, Pensionen, Hostels und weitere Unterkünfte in den freigeschalteten Ländern. Mit Unterkunftsarten und Details aus OpenStreetMap, ohne Live-Verfügbarkeit oder Buchungspreise.",
+    color: "#344963",
+  },
   transit: {
     domain: "transit.bloli.com",
     title: "Transit · Der nächste Halt. Dein nächster Schritt.",

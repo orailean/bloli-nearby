@@ -1,3 +1,4 @@
+import type { AccommodationType } from "../shared/nearby-types.js";
 import type { TransitMode } from "../shared/transit-modes.js";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -88,6 +89,11 @@ export default function App() {
     [dataset, setDataset] = useState<Dataset | null>(null);
   const [origin, setOrigin] = useState<Origin | null>(null),
     [mode, setMode] = useState<TransitMode | "all">("all"),
+    [currency, setCurrency] = useState("all"),
+    [deposit, setDeposit] = useState<"all" | "yes">("all"),
+    [accommodationType, setAccommodationType] = useState<
+      AccommodationType | "all"
+    >("all"),
     [connector, setConnector] = useState<ChargeConnectorFilter>("all"),
     [minPowerKw, setMinPowerKw] = useState<ChargePower>(0),
     [chargeAccess, setChargeAccess] = useState<ChargeAccessFilter>("all"),
@@ -127,7 +133,8 @@ export default function App() {
   const dictionaries = siteDictionaries[site.id];
   const t = dictionaries[locale];
   const countryName = (code: string) =>
-    (t as Record<string, string>)[`country${code.toUpperCase()}`] || code.toUpperCase();
+    (t as Record<string, string>)[`country${code.toUpperCase()}`] ||
+    code.toUpperCase();
   const activeCountries = (dataset?.countries || []).filter(
     (country) => country.status === "active" && country.ready,
   );
@@ -214,7 +221,7 @@ export default function App() {
     setSelected(null);
     setTruncated(false);
     request<SearchResponse>(
-      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), ...(site.capabilities.openNow ? { openNow: String(openNow) } : {}), ...(site.id === "transit" ? { mode } : {}), ...(site.id === "charge" ? { connector, minPowerKw: String(minPowerKw), chargeAccess } : {}) })}`,
+      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), ...(site.capabilities.openNow ? { openNow: String(openNow) } : {}), ...(site.id === "transit" ? { mode } : {}), ...(site.id === "charge" ? { connector, minPowerKw: String(minPowerKw), chargeAccess } : {}), ...(site.id === "atm" ? { currency, deposit } : {}), ...(site.id === "stay" ? { accommodationType } : {}) })}`,
       c.signal,
     )
       .then((r) => {
@@ -244,6 +251,9 @@ export default function App() {
     connector,
     minPowerKw,
     chargeAccess,
+    currency,
+    deposit,
+    accommodationType,
     retry,
   ]);
   useEffect(() => {
@@ -396,6 +406,7 @@ export default function App() {
               <option value="en">English</option>
               <option value="de">Deutsch</option>
               <option value="ro">Română</option>
+              <option value="hu">Magyar</option>
             </select>
             <ChevronDown size={14} aria-hidden="true" />
           </div>
@@ -472,7 +483,10 @@ export default function App() {
                     value={country.code}
                     disabled={country.status !== "active" || !country.ready}
                   >
-                    {countryName(country.code)}{country.status !== "active" || !country.ready ? ` · ${t.countryPending}` : ""}
+                    {countryName(country.code)}
+                    {country.status !== "active" || !country.ready
+                      ? ` · ${t.countryPending}`
+                      : ""}
                   </option>
                 ))}
               </select>
@@ -551,6 +565,12 @@ export default function App() {
             <div className="workspace-toolbar">
               <Filters
                 t={t}
+                currency={currency}
+                onCurrency={setCurrency}
+                deposit={deposit}
+                onDeposit={setDeposit}
+                accommodationType={accommodationType}
+                onAccommodationType={setAccommodationType}
                 mode={mode}
                 onMode={setMode}
                 fee={fee}
@@ -727,13 +747,21 @@ export default function App() {
                     : t.countryOnly}
                 </div>
                 {!!dataset?.countries?.length && (
-                  <div className="dataset-country-line" aria-label={t.countryUpdated}>
+                  <div
+                    className="dataset-country-line"
+                    aria-label={t.countryUpdated}
+                  >
                     {dataset.countries.map((country) => (
                       <small key={country.code}>
-                        {countryName(country.code)}: {country.status === "pending"
+                        {countryName(country.code)}:{" "}
+                        {country.status === "pending"
                           ? t.countryPending
                           : country.datasetAt
-                            ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(new Date(country.datasetAt))
+                            ? new Intl.DateTimeFormat(locale, {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              }).format(new Date(country.datasetAt))
                             : t.countryPending}
                       </small>
                     ))}
@@ -869,7 +897,7 @@ export default function App() {
             <Heart size={13} aria-hidden="true" />
             {t.comfort}
           </span>
-          <span>Deutsch / English / Română</span>
+          <span>Deutsch / English / Română / Magyar</span>
         </div>
       </footer>
       <dialog

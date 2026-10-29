@@ -63,7 +63,7 @@ export function normalizeWater(r: SourceRecord): Facility | null {
     t["drinking_water:fee:conditional"] ||
     (standalone ? t["fee:conditional"] : null);
   const names: Facility["names"] = {};
-  for (const lang of ["de", "en", "ro"] as const)
+  for (const lang of ["de", "en", "ro", "hu"] as const)
     if (t[`name:${lang}`]) names[lang] = t[`name:${lang}`];
   return {
     id: `${r.sourceType}/${r.sourceId}`,

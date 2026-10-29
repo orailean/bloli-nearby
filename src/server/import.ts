@@ -2,7 +2,12 @@ import type pg from "pg";
 import { coordinates, AppError } from "../shared/domain.js";
 import type { Category } from "../shared/sites.js";
 import type { SourceRecord, Facility } from "../shared/types.js";
-import { COUNTRIES, minimumForCountry, minimumSettlementsForCountry, type CountryCode } from "../shared/countries.js";
+import {
+  COUNTRIES,
+  minimumForCountry,
+  minimumSettlementsForCountry,
+  type CountryCode,
+} from "../shared/countries.js";
 import { categoryImports } from "./category-imports.js";
 import { runRefresh, type RefreshContext } from "./refresh.js";
 export interface ImportOptions {
@@ -23,6 +28,9 @@ export interface ImportOptions {
   minimumWaterPoints?: number;
   minimumTransit?: number;
   minimumChargeStations?: number;
+  minimumAtms?: number;
+  minimumAccommodations?: number;
+  measureOnly?: boolean;
 }
 export async function importDataset(
   pool: pg.Pool,
@@ -37,9 +45,28 @@ export async function importDataset(
   waterPoints: number;
   transitStops: number;
   chargeStations: number;
+  atms: number;
+  accommodations: number;
 }> {
   if (!Number.isFinite(Date.parse(options.datasetAt)))
     throw new AppError("INVALID_DATASET_DATE");
+  if (!context && options.measureOnly) {
+    const db = await pool.connect();
+    let locked = false;
+    try {
+      locked = (await db.query("SELECT pg_try_advisory_lock(194159) AS locked"))
+        .rows[0].locked;
+      if (!locked) throw new AppError("IMPORT_LOCKED", 409);
+      return await importDataset(pool, records, options, {
+        db,
+        jobId: "",
+        countryCode: options.countryCode ?? "de",
+      });
+    } finally {
+      if (locked) await db.query("SELECT pg_advisory_unlock(194159)");
+      db.release();
+    }
+  }
   if (!context)
     return runRefresh(
       pool,
@@ -49,11 +76,14 @@ export async function importDataset(
     );
   const { db, jobId } = context;
   const countryCode = options.countryCode ?? "de";
-  const countryProfile = COUNTRIES.find((country) => country.code === countryCode);
+  const countryProfile = COUNTRIES.find(
+    (country) => country.code === countryCode,
+  );
   if (!countryProfile) throw new AppError("UNKNOWN_COUNTRY");
   if (
     countryCode !== "de" &&
-    (!options.boundarySource || !/^[0-9a-fA-F]{64}$/.test(options.boundaryChecksum || ""))
+    (!options.boundarySource ||
+      !/^[0-9a-fA-F]{64}$/.test(options.boundaryChecksum || ""))
   )
     throw new AppError("MISSING_BOUNDARY_PROVENANCE");
   const categories = options.categories ?? ["toilets"];
@@ -64,14 +94,21 @@ export async function importDataset(
     categories.some((c) => !Object.hasOwn(categoryImports, c))
   )
     throw new AppError("INVALID_CATEGORIES");
-  if (countryCode !== "de" && categories.length !== Object.keys(categoryImports).length)
+  if (
+    countryCode !== "de" &&
+    categories.length !== Object.keys(categoryImports).length
+  )
     throw new AppError("INCOMPLETE_COUNTRY_SNAPSHOT");
-  if (options.sourceChecksum && !/^[0-9a-fA-F]{32}$/.test(options.sourceChecksum))
+  if (
+    options.sourceChecksum &&
+    !/^[0-9a-fA-F]{32}$/.test(options.sourceChecksum)
+  )
     throw new AppError("INVALID_SOURCE_CHECKSUM");
   const ratio = options.minimumRatio ?? 0.75;
   const minimumSettlements =
-    options.minimumSettlements ?? minimumSettlementsForCountry(countryCode) ??
-    (countryCode === "de" ? 1000 : undefined);
+    options.minimumSettlements ??
+    minimumSettlementsForCountry(countryCode) ??
+    (options.measureOnly ? 1 : countryCode === "de" ? 1000 : undefined);
   if (
     !Number.isFinite(ratio) ||
     ratio < 0.5 ||
@@ -82,9 +119,11 @@ export async function importDataset(
     categories.some((c) => {
       const n =
         options[categoryImports[c].minimum] ??
-        (countryCode === "de"
-          ? categoryImports[c].defaultMinimum
-          : minimumForCountry(countryCode, c));
+        (options.measureOnly
+          ? 1
+          : countryCode === "de" && !["atm", "accommodation"].includes(c)
+            ? categoryImports[c].defaultMinimum
+            : minimumForCountry(countryCode, c));
       return n === undefined || !Number.isInteger(n) || n < 1;
     })
   )
@@ -102,7 +141,9 @@ export async function importDataset(
     await db.query(`CREATE TEMP TABLE stage_category_locations (
    category text NOT NULL,id text NOT NULL,data jsonb NOT NULL,fee text NOT NULL,location geography(Point,4326) NOT NULL,source_version integer NOT NULL,PRIMARY KEY(category,id)
   ) ON COMMIT DROP; CREATE TEMP TABLE stage_settlements (LIKE settlements INCLUDING ALL) ON COMMIT DROP`);
-    let locations: Array<Facility & { category: Category; sourceVersion: number }> = [],
+    let locations: Array<
+        Facility & { category: Category; sourceVersion: number }
+      > = [],
       settlements: unknown[] = [];
     const flush = async () => {
       if (locations.length)
@@ -139,7 +180,10 @@ export async function importDataset(
         !/^\d+$/.test(r.sourceId)
       )
         throw new AppError("INVALID_SOURCE");
-      if (r.version != null && (!Number.isSafeInteger(r.version) || r.version < 1))
+      if (
+        r.version != null &&
+        (!Number.isSafeInteger(r.version) || r.version < 1)
+      )
         throw new AppError("INVALID_SOURCE_VERSION");
       const key = `${r.kind}/${r.sourceType}/${r.sourceId}`;
       if (batchIds.has(key)) {
@@ -159,7 +203,7 @@ export async function importDataset(
             postcode,
             region: t["is_in:state"] || t["addr:state"] || t.is_in || null,
             names: Object.fromEntries(
-              ["en", "de", "ro"]
+              ["en", "de", "ro", "hu"]
                 .filter((l) => t[`name:${l}`])
                 .map((l) => [l, t[`name:${l}`]]),
             ),
@@ -175,7 +219,12 @@ export async function importDataset(
         if (!categories.includes(category))
           throw new AppError("UNDECLARED_CATEGORY");
         const location = categoryImports[category].normalize(r);
-        if (location) locations.push({ ...location, category, sourceVersion: r.version ?? 0 });
+        if (location)
+          locations.push({
+            ...location,
+            category,
+            sourceVersion: r.version ?? 0,
+          });
       }
       if (locations.length + settlements.length >= 1000) {
         await flush();
@@ -216,10 +265,16 @@ export async function importDataset(
       waterPoints: categoryCounts.get("water") ?? 0,
       transitStops: categoryCounts.get("transit") ?? 0,
       chargeStations: categoryCounts.get("charge") ?? 0,
+      atms: categoryCounts.get("atm") ?? 0,
+      accommodations: categoryCounts.get("accommodation") ?? 0,
       settlements: (
         await db.query("SELECT count(*)::int AS n FROM stage_settlements")
       ).rows[0].n as number,
     };
+    if (options.measureOnly) {
+      await db.query("ROLLBACK");
+      return counts;
+    }
     const previous = active[0];
     if (
       counts.settlements < minimumSettlements ||
@@ -234,11 +289,12 @@ export async function importDataset(
       const previousCategory = active.find((row) => row.category === category);
       const minimum =
         options[categoryImports[category].minimum] ??
-        (countryCode === "de"
+        (countryCode === "de" && !["atm", "accommodation"].includes(category)
           ? categoryImports[category].defaultMinimum
           : minimumForCountry(countryCode, category));
       if (
-        !minimum || count < minimum ||
+        !minimum ||
+        count < minimum ||
         (previousCategory &&
           (count < previousCategory.location_count * ratio ||
             Date.parse(options.datasetAt) <
@@ -251,7 +307,7 @@ export async function importDataset(
        JOIN location_categories c ON c.category=s.category AND c.location_id=s.id
        JOIN locations l ON l.id=s.id
        WHERE s.source_version>0 AND s.source_version=c.source_version
-         AND (s.data<>c.data OR s.data->'tags'<>l.tags OR ST_AsEWKB(s.location::geometry)<>ST_AsEWKB(l.location::geometry))
+         AND (s.data->'tags'<>l.tags OR ST_AsEWKB(s.location::geometry)<>ST_AsEWKB(l.location::geometry))
        LIMIT 1`,
     );
     if (conflicts.rowCount) throw new AppError("OSM_VERSION_CONFLICT");
@@ -303,25 +359,27 @@ export async function importDataset(
           options.boundaryChecksum ?? null,
         ],
       );
-      if (countryCode === "de") await db.query(
-        `INSERT INTO category_datasets(category,dataset_at,source,location_count,settlement_count,coverage) VALUES($1,$2,$3,$4,$5,ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($6),4326))) ON CONFLICT(category) DO UPDATE SET dataset_at=EXCLUDED.dataset_at,imported_at=now(),source=EXCLUDED.source,location_count=EXCLUDED.location_count,settlement_count=EXCLUDED.settlement_count,coverage=EXCLUDED.coverage`,
-        [
-          category,
-          options.datasetAt,
-          options.source,
-          categoryCounts.get(category) ?? 0,
-          counts.settlements,
-          coverage,
-        ],
-      );
+      if (countryCode === "de")
+        await db.query(
+          `INSERT INTO category_datasets(category,dataset_at,source,location_count,settlement_count,coverage) VALUES($1,$2,$3,$4,$5,ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($6),4326))) ON CONFLICT(category) DO UPDATE SET dataset_at=EXCLUDED.dataset_at,imported_at=now(),source=EXCLUDED.source,location_count=EXCLUDED.location_count,settlement_count=EXCLUDED.settlement_count,coverage=EXCLUDED.coverage`,
+          [
+            category,
+            options.datasetAt,
+            options.source,
+            categoryCounts.get(category) ?? 0,
+            counts.settlements,
+            coverage,
+          ],
+        );
     }
-    if (categories.includes("transit")) await db.query(
-      `DELETE FROM transit_components t WHERE NOT EXISTS(SELECT 1 FROM country_location_memberships m WHERE m.category='transit' AND m.location_id=t.location_id);
+    if (categories.includes("transit"))
+      await db.query(
+        `DELETE FROM transit_components t WHERE NOT EXISTS(SELECT 1 FROM country_location_memberships m WHERE m.category='transit' AND m.location_id=t.location_id);
        INSERT INTO transit_components(location_id,group_id,kind,modes)
        SELECT location_id,data->'transit'->>'groupId',data->'transit'->>'kind',ARRAY(SELECT jsonb_array_elements_text(data->'transit'->'modes'))
        FROM location_categories WHERE category='transit' AND data->'transit' IS NOT NULL
        ON CONFLICT(location_id) DO UPDATE SET group_id=EXCLUDED.group_id,kind=EXCLUDED.kind,modes=EXCLUDED.modes`,
-    );
+      );
     await db.query(
       "DELETE FROM location_categories c WHERE NOT EXISTS(SELECT 1 FROM country_location_memberships m WHERE m.category=c.category AND m.location_id=c.location_id)",
     );
@@ -330,7 +388,12 @@ export async function importDataset(
     );
     await db.query(
       "UPDATE countries SET boundary_source=$2,boundary_checksum=$3,status=CASE WHEN $4 OR code='de' THEN 'active' ELSE status END WHERE code=$1",
-      [countryCode, options.boundarySource ?? countryProfile.boundaryUrl, options.boundaryChecksum ?? null, options.activateCountry === true],
+      [
+        countryCode,
+        options.boundarySource ?? countryProfile.boundaryUrl,
+        options.boundaryChecksum ?? null,
+        options.activateCountry === true,
+      ],
     );
     if (countryCode === "de") {
       await db.query(
@@ -339,14 +402,20 @@ export async function importDataset(
       await db.query(
         `INSERT INTO dataset(dataset_at,source,facility_count,settlement_count,coverage) VALUES($1,$2,$3,$4,ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($5),4326)))
          ON CONFLICT(singleton) DO UPDATE SET dataset_at=EXCLUDED.dataset_at,imported_at=now(),source=EXCLUDED.source,facility_count=EXCLUDED.facility_count,settlement_count=EXCLUDED.settlement_count,coverage=EXCLUDED.coverage`,
-        [options.datasetAt, options.source, counts.facilities, counts.settlements, coverage],
+        [
+          options.datasetAt,
+          options.source,
+          counts.facilities,
+          counts.settlements,
+          coverage,
+        ],
       );
     }
     await db.query(
       "DELETE FROM locations l WHERE NOT EXISTS(SELECT 1 FROM location_categories c WHERE c.location_id=l.id)",
     );
     await db.query(
-      "UPDATE import_jobs SET status='success',finished_at=now(),facility_count=$2,settlement_count=$3,seller_count=$4,kebab_count=$5,water_count=$6,transit_count=$7,charge_count=$8 WHERE id=$1",
+      "UPDATE import_jobs SET status='success',finished_at=now(),facility_count=$2,settlement_count=$3,seller_count=$4,kebab_count=$5,water_count=$6,transit_count=$7,charge_count=$8,atm_count=$9,accommodation_count=$10 WHERE id=$1",
       [
         jobId,
         counts.facilities,
@@ -356,6 +425,8 @@ export async function importDataset(
         categories.includes("water") ? counts.waterPoints : null,
         categories.includes("transit") ? counts.transitStops : null,
         categories.includes("charge") ? counts.chargeStations : null,
+        categories.includes("atm") ? counts.atms : null,
+        categories.includes("accommodation") ? counts.accommodations : null,
       ],
     );
     await db.query("COMMIT");

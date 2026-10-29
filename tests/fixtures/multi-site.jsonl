@@ -1,4 +1,4 @@
-{"kind": "metadata", "source": "development-fixture-not-live-data", "datasetAt": "2026-10-25T00:00:00Z", "categories": ["toilets", "tobacco", "kebab", "water", "transit", "charge"], "coverage": {"type": "MultiPolygon", "coordinates": [[[[5, 47], [16, 47], [16, 56], [5, 56], [5, 47]]]]}, "transitContextComplete": true}
+{"kind": "metadata", "source": "development-fixture-not-live-data", "datasetAt": "2026-10-25T00:00:00Z", "categories": ["toilets", "tobacco", "kebab", "water", "transit", "charge", "atm", "accommodation"], "coverage": {"type": "MultiPolygon", "coordinates": [[[[5, 47], [16, 47], [16, 56], [5, 56], [5, 47]]]]}, "transitContextComplete": true}
 {"kind": "facility", "sourceType": "node", "sourceId": "900000", "lat": 48.1391, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 1", "fee": "no", "opening_hours": "24/7"}}
 {"kind": "facility", "sourceType": "node", "sourceId": "900001", "lat": 48.1396, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 2", "fee": "yes", "opening_hours": "off"}}
 {"kind": "facility", "sourceType": "node", "sourceId": "900002", "lat": 48.1401, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 3", "fee": "no", "opening_hours": "\"by appointment\""}}
@@ -63,4 +63,6 @@
 {"kind": "charge", "sourceType": "node", "sourceId": "960105", "lat": 53.0778, "lon": 8.8072, "tags": {"amenity": "charging_station", "name": "Sample destination charger Bremen", "access": "destination", "socket:type2_cable": "2", "socket:type2_cable:output": "11 kW", "opening_hours": "off"}}
 {"kind": "charge", "sourceType": "node", "sourceId": "960106", "lat": 53.0782, "lon": 8.8072, "tags": {"amenity": "charging_station", "name": "Excluded private charger Bremen", "access": "private", "socket:type2": "2"}}
 {"kind": "charge", "sourceType": "node", "sourceId": "960107", "lat": 53.0786, "lon": 8.8072, "tags": {"amenity": "charging_station", "name": "Excluded bicycle charging Bremen", "bicycle": "yes", "motorcar": "no", "socket:schuko": "2"}}
-{"kind": "complete", "records": 64}
+{"kind": "atm", "sourceType": "node", "sourceId": "900090", "lat": 48.1391, "lon": 11.4729, "tags": {"amenity": "atm", "currency": "EUR;RON;HUF", "cash_in": "yes", "fee": "no", "opening_hours": "24/7", "name": "Sample ATM", "name:hu": "Minta bankautomata"}}
+{"kind": "accommodation", "sourceType": "node", "sourceId": "900091", "lat": 48.1391, "lon": 11.4729, "tags": {"tourism": "hotel", "name": "Sample hotel", "name:hu": "Minta szálloda", "stars": "3", "opening_hours:reception": "08:00-20:00", "website": "https://example.com"}}
+{"kind": "complete", "records": 66}

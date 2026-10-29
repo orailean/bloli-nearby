@@ -1,4 +1,9 @@
 import type {
+  AtmData,
+  AccommodationData,
+  AccommodationType,
+} from "./nearby-types.js";
+import type {
   ChargingData,
   ChargeConnectorFilter,
   ChargePower,
@@ -11,9 +16,9 @@ import type {
 } from "./transit-modes.js";
 import type { Category, SiteProfile, SellerType } from "./sites.js";
 import type { CountryCode, CountryStatus } from "./countries.js";
-export type Locale = "en" | "de" | "ro";
+export type Locale = "en" | "de" | "ro" | "hu";
 export type Fee = "free" | "paid" | "unknown";
-export type FeeFilter = "all" | "free" | "paid";
+export type FeeFilter = "all" | "free" | "paid" | "unknown";
 export interface SourceRecord {
   sourceType: "node" | "way" | "relation";
   sourceId: string;
@@ -51,6 +56,8 @@ export interface Facility {
   brand?: string | null;
   transit?: TransitData;
   charging?: ChargingData;
+  atm?: AtmData;
+  accommodation?: AccommodationData;
   waterType?: "point" | "refill";
   bottle?: string | null;
   seasonal?: string | null;
@@ -82,6 +89,9 @@ export interface SearchQuery {
   fee: FeeFilter;
   openNow: boolean;
   mode?: TransitMode | "all";
+  currency?: string;
+  deposit?: "all" | "yes";
+  accommodationType?: AccommodationType | "all";
   connector?: ChargeConnectorFilter;
   minPowerKw?: ChargePower;
   chargeAccess?: ChargeAccessFilter;
@@ -94,7 +104,12 @@ export interface Dataset {
   count: number;
   stale: boolean;
   source: string | null;
-  latestJob: { status: string; startedAt?: string; finishedAt: string | null; error?: string | null } | null;
+  latestJob: {
+    status: string;
+    startedAt?: string;
+    finishedAt: string | null;
+    error?: string | null;
+  } | null;
   countries?: CountryCoverage[];
 }
 export interface CountryCoverage {
@@ -114,7 +129,20 @@ export interface CountryCoverage {
     startedAt: string;
     finishedAt: string | null;
     error: string | null;
-    counts: Partial<Record<"toilets" | "tobacco" | "kebab" | "water" | "transit" | "charge" | "settlements", number>>;
+    counts: Partial<
+      Record<
+        | "toilets"
+        | "tobacco"
+        | "kebab"
+        | "water"
+        | "transit"
+        | "charge"
+        | "atm"
+        | "accommodation"
+        | "settlements",
+        number
+      >
+    >;
   } | null;
 }
 export interface SearchResponse {

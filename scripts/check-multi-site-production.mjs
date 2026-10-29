@@ -1,18 +1,18 @@
 import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
 const results = {};
-const expectedCountries = (process.env.EXPECTED_COUNTRIES || "de,ro")
+const expectedCountries = (process.env.EXPECTED_COUNTRIES || "de,ro,at,hu")
   .split(",").map((value) => value.trim()).filter(Boolean);
 const countryLabels = {
-  de: { de: "Deutschland", en: "Germany", ro: "Germania" },
-  ro: { de: "Rumänien", en: "Romania", ro: "România" },
-  at: { de: "Österreich", en: "Austria", ro: "Austria" },
-  hu: { de: "Ungarn", en: "Hungary", ro: "Ungaria" },
+  de: { de: "Deutschland", en: "Germany", ro: "Germania",hu:"Németország" },
+  ro: { de: "Rumänien", en: "Romania", ro: "România",hu:"Románia" },
+  at: { de: "Österreich", en: "Austria", ro: "Austria",hu:"Ausztria" },
+  hu: { de: "Ungarn", en: "Hungary", ro: "Ungaria",hu:"Magyarország" },
 };
 const browser = await chromium.launch();
 try {
   for (const id of (
-    process.env.SITES || "loo,kippe,kebab,water,transit,charge"
+    process.env.SITES || "loo,kippe,kebab,water,transit,charge,atm,stay"
   ).split(",")) {
     const base = `https://${id}.bloli.com`;
     const htmlResponse = await fetch(base);
@@ -67,6 +67,20 @@ try {
       const settlements = await fetch(`${base}/api/settlements?q=bucuresti&country=ro`).then((r) => r.json());
       assert.ok(settlements.items.some((item) => item.countryCode === "ro"), `${id}: unaccented Romanian settlement match`);
       }
+    }
+    if(id==='atm'){
+      assert.ok(all.items.every(item=>item.category==='atm'&&item.atm));
+      for(const query of ['currency=EUR','deposit=yes','fee=unknown']){
+        const response=await fetch(`${base}/api/locations?${query}&lat=48.1391&lon=11.4729&radius=5000`);
+        assert.equal(response.status,200);const data=await response.json();
+        assert.ok(data.items.every(item=>query==='currency=EUR'?item.atm.currencies.includes('EUR'):query==='deposit=yes'?item.atm.deposit==='yes':item.fee==='unknown'));
+      }
+    }
+    if(id==='stay'){
+      assert.ok(all.items.every(item=>item.category==='accommodation'&&item.accommodation));
+      const hotels=await fetch(`${base}/api/locations?${query}&accommodationType=hotel`).then(r=>r.json());
+      assert.ok(hotels.items.every(item=>item.accommodation.type==='hotel'));
+      for(const suffix of ['&fee=all','&openNow=false','&currency=EUR'])assert.equal((await fetch(`${base}/api/locations?${query}${suffix}`)).status,400);
     }
     if (id === "kebab") {
       assert.ok(
@@ -222,7 +236,7 @@ try {
     await page.locator(".result-select").first().click();
     await expect(page.locator(".detail-panel .walk-button")).toHaveAttribute(
       "href",
-      id === "charge" ? /travelmode=driving/ : /travelmode=walking/,
+      ["charge","stay"].includes(id) ? /travelmode=driving/ : /travelmode=walking/,
     );
     await expect(page.locator(".search-boundary")).toHaveCount(1);
     if (id === "kippe")
@@ -242,7 +256,7 @@ try {
     }
     for (const width of [320, 390, 430]) {
       await page.setViewportSize({ width, height: 852 });
-      for (const lang of ["de", "ro", "en"]) {
+      for (const lang of ["de", "ro", "en", "hu"]) {
         await page.locator("#language").selectOption(lang);
         await page.evaluate(() => document.fonts.ready);
         if (expectedCountries.length > 1) {
@@ -273,15 +287,15 @@ try {
         .evaluate((el) => getComputedStyle(el).overflowY),
       "visible",
     );
-    if (id === "transit") {
+    if (["transit","stay"].includes(id)) {
       await expect(page.locator(".open-now-control")).toHaveCount(0);
-      await expect(page.locator(".transit-mode-control")).toBeVisible();
+      if(id==="transit") await expect(page.locator(".transit-mode-control")).toBeVisible();
     } else {
       if (id === "charge")
         await expect(page.locator(".charge-select")).toHaveCount(3);
       await page.locator(".open-now-control input").check();
     }
-    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.locator("html")).toHaveAttribute("lang", "hu");
     assert.deepEqual(errors, []);
     results[id] = {
       profile: profile.id,
@@ -293,7 +307,7 @@ try {
       initialHtml: true,
       mapImagesLoaded: true,
       mobileLocales: true,
-      openNowControl: id !== "transit",
+      openNowControl: !["transit","stay"].includes(id),
       modeControl: id === "transit",
       pageErrors: errors,
     };

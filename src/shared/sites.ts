@@ -1,11 +1,21 @@
-export type SiteId = "loo" | "kippe" | "kebab" | "water" | "transit" | "charge";
+export type SiteId =
+  | "loo"
+  | "kippe"
+  | "kebab"
+  | "water"
+  | "transit"
+  | "charge"
+  | "atm"
+  | "stay";
 export type Category =
   | "toilets"
   | "tobacco"
   | "kebab"
   | "water"
   | "transit"
-  | "charge";
+  | "charge"
+  | "atm"
+  | "accommodation";
 export type SellerType = "machine" | "shop" | "fuel";
 export interface SiteProfile {
   id: SiteId;
@@ -16,6 +26,22 @@ export interface SiteProfile {
   capabilities: { fee: boolean; sellerType: boolean; openNow: boolean };
 }
 export const sites: Record<SiteId, SiteProfile> = {
+  atm: {
+    id: "atm",
+    category: "atm",
+    name: "ATM",
+    domain: "atm.bloli.com",
+    directionsMode: "walking",
+    capabilities: { fee: true, sellerType: false, openNow: true },
+  },
+  stay: {
+    id: "stay",
+    category: "accommodation",
+    name: "Stay",
+    domain: "stay.bloli.com",
+    directionsMode: "driving",
+    capabilities: { fee: false, sellerType: false, openNow: false },
+  },
   charge: {
     id: "charge",
     category: "charge",

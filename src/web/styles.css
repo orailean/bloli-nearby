@@ -2824,3 +2824,116 @@ html[data-site="kebab"] {
     scroll-behavior: auto !important;
   }
 }
+
+/* ATM: a cash slip, a machine slot and the green of a banknote. */
+html[data-site="atm"] {
+  --ink: #162c45;
+  --mint: #bde8d4;
+  --yellow: #d9edb8;
+  --line: #cfddd9;
+  --muted: #506575;
+  background: #f7fbf8;
+  color: var(--ink);
+}
+[data-site="atm"] .site-header { background: #f7fbf8; }
+[data-site="atm"] .brand-mark { border-radius: 7px; transform: none; background: #162c45; color: #bde8d4; }
+[data-site="atm"] .brand-dot { color: #558673; }
+[data-site="atm"] .hero h1 { letter-spacing: -3px; }
+[data-site="atm"] .hero-art::before { display: none; }
+.atm-scene { width: min(100%, 365px); height: 290px; overflow: visible; }
+.atm-slip { animation: atm-receipt-feed .8s cubic-bezier(.2,.7,.2,1) both; transform-origin: 200px 167px; }
+@keyframes atm-receipt-feed { from { transform: translateY(-12px) scaleY(.7); opacity: .1; } to { transform: translateY(0) scaleY(1); opacity: 1; } }
+[data-site="atm"] .art-caption { background: #bde8d4; color: #162c45; border-radius: 4px; transform: rotate(-4deg); box-shadow: none; }
+[data-site="atm"] .workspace { border-color: #a8bdb9; border-radius: 9px; }
+[data-site="atm"] .workspace-toolbar { flex-wrap: wrap; background: #eef5f1; }
+.atm-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; min-width: 0; }
+.atm-select { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; border: 1px solid #adbfba; border-radius: 5px; padding: 0 9px; background: #fff; font-size: 12px; font-weight: 650; min-width: 0; }
+.atm-select select { color: #162c45; background: #fff; border: 0; padding: 9px 0; font-size: 12px; min-width: 0; max-width: 150px; }
+[data-site="atm"] .fee-filters { border: 1px dashed #9eb5ad; border-radius: 5px; background: #fff; }
+[data-site="atm"] .fee-filters button { padding: 8px 10px; border-radius: 3px; }
+[data-site="atm"] .fee-filters button.active,
+[data-site="atm"] .locate-button,
+[data-site="atm"] .search-submit,
+[data-site="atm"] .walk-button { background: #162c45; color: #f7fbf8; }
+[data-site="atm"] .fee-filters button:hover:not(.active) { background: #e0f0e7; }
+[data-site="atm"] .result-number { color: #162c45; background: #bde8d4; border-radius: 4px; border: 1px solid #a0c7b3; font-variant-numeric: tabular-nums; }
+[data-site="atm"] .result-card { border-bottom-style: dashed; }
+[data-site="atm"] .result-meta { flex-wrap: wrap; gap: 6px; }
+.atm-currency-badge { color: #274c43; font-weight: 750; font-size: 11px; overflow-wrap: anywhere; }
+.atm-location-badge { font-size: 11px; color: #506575; }
+.atm-detail-note { border-top: 1px dashed #b1c7bd; padding-top: 10px; }
+[data-site="atm"] .site-footer { background: #162c45; color: #f7fbf8; }
+[data-site="atm"] .footer-main p,
+[data-site="atm"] .footer-bottom { color: #c9ded6; }
+[data-site="atm"] .footer-main { border-bottom-color: #53697a; }
+
+/* Stay: a postcard tucked into a travel journal, with a luggage-tag index. */
+html[data-site="stay"] {
+  --ink: #344963;
+  --mint: #eee4d0;
+  --yellow: #edbf77;
+  --line: #dfd2bd;
+  --muted: #62666c;
+  background: #fff8ec;
+  color: var(--ink);
+}
+[data-site="stay"] .site-header { background: #fff8ec; border-bottom-color: #dfd2bd; }
+[data-site="stay"] .brand-mark { background: #a74731; color: #fff8ec; border-radius: 5px 13px 13px 5px; transform: rotate(5deg); }
+[data-site="stay"] .brand-dot { color: #a74731; }
+[data-site="stay"] .hero h1 { font-weight: 650; letter-spacing: -3px; line-height: 1.04; }
+[data-site="stay"] .hero-art::before { display: none; }
+.stay-scene { width: min(100%, 370px); height: 300px; overflow: visible; }
+.stay-postcard { animation: stay-postcard-arrive .7s cubic-bezier(.2,.7,.2,1) both; transform-origin: 200px 160px; }
+@keyframes stay-postcard-arrive { from { transform: rotate(-4deg) translateX(15px); opacity: 0; } to { transform: rotate(0) translateX(0); opacity: 1; } }
+[data-site="stay"] .art-caption { background: #fffdf7; color: #a74731; border: 1px solid #dfd2bd; box-shadow: none; border-radius: 3px; transform: rotate(-5deg); }
+[data-site="stay"] .locate-button,
+[data-site="stay"] .search-submit,
+[data-site="stay"] .walk-button { background: #a74731; color: #fff8ec; }
+[data-site="stay"] .workspace { border-radius: 7px 18px 18px 7px; border-color: #d8cbb6; }
+[data-site="stay"] .workspace-toolbar { flex-wrap: wrap; background: #fffcf6; }
+.stay-type-control { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 12px; border: 1px solid #d8cbb6; border-radius: 6px; font-size: 13px; font-weight: 650; min-width: 0; max-width: 100%; }
+.stay-type-control select { border: 0; background: transparent; color: #344963; font-size: 13px; padding: 11px 0; min-width: 0; max-width: 250px; }
+[data-site="stay"] .result-number { color: #344963; background: #edbf77; border-radius: 3px 10px 10px 3px; border: 1px solid #d3a862; transform: rotate(-5deg); font-variant-numeric: tabular-nums; }
+[data-site="stay"] .result-number::before { content: ""; position: absolute; width: 4px; height: 4px; left: 3px; top: calc(50% - 2px); border-radius: 50%; background: #fff8ec; }
+[data-site="stay"] .result-number { position: relative; }
+[data-site="stay"] .result-card.selected { background: #fff7e7; }
+[data-site="stay"] .result-meta { flex-wrap: wrap; gap: 6px; }
+.stay-type-badge { font-size: 11px; font-weight: 750; color: #a74731; }
+.stay-classification { font-size: 11px; color: #62666c; }
+.stay-availability-note { border-top: 1px solid #dfd2bd; padding-top: 10px; }
+.stay-contact-link { color: #923923; text-decoration: underline; text-underline-offset: 3px; }
+[data-site="stay"] .site-footer { background: #344963; color: #fff8ec; }
+[data-site="stay"] .footer-main p,
+[data-site="stay"] .footer-bottom { color: #e1e0dc; }
+[data-site="stay"] .footer-main { border-bottom-color: #748095; }
+[data-site="atm"] .detail-grid dd,
+[data-site="stay"] .detail-grid dd { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  [data-site="atm"] .hero,
+  [data-site="stay"] .hero { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-top: 28px; padding-bottom: 24px; }
+  [data-site="atm"] .hero h1,
+  [data-site="stay"] .hero h1 { font-size: clamp(34px, 9vw, 58px); letter-spacing: -1.5px; max-width: 100%; }
+  [data-site="atm"] .hero-art,
+  [data-site="stay"] .hero-art { position: relative; width: 100%; height: 195px; margin-top: 12px; transform: none; }
+  .atm-scene,
+  .stay-scene { width: 250px; height: 200px; }
+  [data-site="atm"] .art-caption,
+  [data-site="stay"] .art-caption { right: 0; bottom: 0; max-width: 150px; font-size: 11px; }
+  [data-site="atm"] .workspace-toolbar,
+  [data-site="stay"] .workspace-toolbar { gap: 10px; padding: 12px; }
+  .atm-filters { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .atm-select { flex-wrap: wrap; column-gap: 6px; row-gap: 0; padding: 6px 8px; }
+  .atm-select select { width: 100%; max-width: 100%; padding: 4px 0; }
+  .atm-filters .fee-filters { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+  [data-site="atm"] .fee-filters button { flex: 1 1 calc(50% - 5px); justify-content: flex-start; white-space: normal; }
+  .stay-type-control { width: 100%; flex-wrap: wrap; column-gap: 8px; row-gap: 0; padding: 8px 10px; }
+  .stay-type-control select { width: 100%; max-width: 100%; padding: 5px 0; }
+  [data-site="atm"] .radius-control,
+  [data-site="stay"] .radius-control { margin-left: auto; }
+  [data-site="atm"] .locate-button,
+  [data-site="stay"] .locate-button { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-site="atm"] *, [data-site="atm"] *::before, [data-site="atm"] *::after,
+  [data-site="stay"] *, [data-site="stay"] *::before, [data-site="stay"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
