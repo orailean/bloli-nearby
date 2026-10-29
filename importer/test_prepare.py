@@ -15,20 +15,29 @@ class PrepareTests(unittest.TestCase):
             self.assertNotEqual(result.returncode,0)
             self.assertIn('MISSING_RETAINED_SOURCE',result.stderr)
 
-    def test_cuisine_prefilter_invalidates_old_cache_and_keeps_verified_source(self):
+    def test_new_filters_invalidate_old_cache_and_keep_verified_source(self):
+        self.check_preparation()
+
+    def test_retained_country_source_never_downloads_or_uses_germany_provenance(self):
+        self.check_preparation(retained=True, country='ro')
+
+    def check_preparation(self, retained=False, country='de'):
         script = Path(__file__).with_name('prepare.sh').read_text()
         old_expressions = 'nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco'
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             data_root = root / 'data'
-            data = data_root / 'countries' / 'de'
+            data = data_root / 'countries' / country
             data.mkdir(parents=True)
             tools = root / 'bin'
             tools.mkdir()
             source = data / 'source.osm.pbf'
             source.write_bytes(b'verified retained snapshot')
             checksum = hashlib.md5(source.read_bytes()).hexdigest()
-            source_url = 'https://example.invalid/germany-261025.osm.pbf'
+            source_url = f'https://example.invalid/{country}-261025.osm.pbf'
+            (data / 'source.url').write_text(source_url)
+            (data / 'source.md5').write_text(checksum)
+            (data / 'coverage.poly').write_text('coverage')
             (data / 'filtered.osm.pbf').write_bytes(b'old two-category filter')
             (data / 'filtered.source').write_text(source_url + '|' + old_expressions + '\n')
             log = root / 'calls.jsonl'
@@ -56,7 +65,7 @@ elif name == 'osmium':
             prepared_script = root / 'prepare.sh'
             prepared_script.write_text(script.replace('/data', str(data_root)))
             environment = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
-                           'DATA_URL': source_url, 'PREPARE_TEST_LOG': str(log),
+                           'DATA_URL': source_url, 'COUNTRY_CODE':country,'USE_RETAINED_SOURCE':'1' if retained else '0', 'POLY_URL':'https://wrong.invalid/germany.poly', 'PREPARE_TEST_LOG': str(log),
                            'PREPARE_TEST_CHECKSUM': checksum}
             result = subprocess.run(['sh', str(prepared_script)], env=environment,
                                     text=True, capture_output=True, check=True)
@@ -64,6 +73,14 @@ elif name == 'osmium':
             filters = [args for name, args in calls if name == 'osmium']
             self.assertEqual(len(filters), 1, result.stdout)
             self.assertIn('nwr/cuisine', filters[0])
+            self.assertIn('nwr/amenity=atm', filters[0])
+            self.assertIn('nwr/tourism=hotel,motel,guest_house,hostel,apartment,chalet,camp_site,caravan_site',filters[0])
+            if retained:
+                self.assertFalse(any(name=='curl' for name,args in calls))
+                extract_calls=[args for name,args in calls if name=='python3' and args[0].endswith('extract.py')]
+                self.assertEqual(len(extract_calls),2)
+                for args in extract_calls:
+                    self.assertEqual(args[args.index('--boundary-source')+1],'https://download.geofabrik.de/europe/romania.poly')
             self.assertTrue(all(expression in filters[0] for expression in old_expressions.split()))
             self.assertFalse(any(name == 'curl' and args[-1] == source_url for name, args in calls))
             self.assertEqual(source.read_bytes(), b'verified retained snapshot')

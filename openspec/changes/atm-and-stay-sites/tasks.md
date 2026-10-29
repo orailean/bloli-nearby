@@ -36,7 +36,7 @@
 ## 5. Controlled production rollout
 
 - [x] 5.1 Record VM resources, six-site counts/IDs/timings, verified source pins, private configuration and timer state; take/verify backup and pause refresh.
-- [ ] 5.2 Merge approved implementation into main, push and deploy compatible additive API/importer/web from main; verify existing sites remain healthy.
+- [x] 5.2 Merge approved implementation into main, push and deploy compatible additive API/importer/web from main; verify existing sites remain healthy.
 - [ ] 5.3 Measure DE candidates from retained verified source without publication, configure new national floors and publish/verify its eight-category snapshot.
 - [ ] 5.4 Measure/publish/verify RO, then AT, then HU sequentially with separate floors, retained Transit context and independent failure/rollback evidence.
 - [ ] 5.5 Verify new national readiness and existing six-category identities/counts, border behavior and searches in Munich/Bucharest/Vienna/Budapest; take/verify cutover backup.

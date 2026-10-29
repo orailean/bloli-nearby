@@ -44,5 +44,5 @@
     "typescript": "5.9.3",
     "vite": "7.3.7"
   },
-  "description": "One shared OpenStreetMap platform for nearby places: toilets, tobacco, kebab, water, transit and EV charging across Germany."
+  "description": "Shared OpenStreetMap finders for toilets, tobacco, kebab, water, transit, EV charging, ATMs and accommodation across Germany, Romania, Austria and Hungary."
 }

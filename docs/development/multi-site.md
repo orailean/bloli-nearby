@@ -27,7 +27,7 @@ Open **http://loo.localhost:5173**, **http://kippe.localhost:5173**, **http://ke
 
 If your OS does not resolve these names to loopback, add `127.0.0.1 loo.localhost kippe.localhost kebab.localhost water.localhost transit.localhost charge.localhost` to your local hosts file. Vite allows only the documented local hostnames and preserves Host when proxying `/api`. Bare localhost selects Loo; `http://localhost:5173/?site=kippe` is a development-only debugging override (`?site=kebab` selects Kebab; `?site=water` selects Water; `?site=charge` selects Charge). Public hostnames determine the site in production; a `site` query override is rejected there.
 
-Translation JSON is separate: `src/web/locales/common/{de,en,ro}.json` plus `src/web/sites/{loo,kippe,kebab,water,transit,charge}/locales/{de,en,ro}.json`. Shared search/map behavior lives in common components; site modules supply artwork, branding, filters and details. Vite hot reload and IDE breakpoints work for all six sites.
+Translation JSON is separate: `src/web/locales/common/{de,en,ro}.json` plus `src/web/sites/{loo,kippe,kebab,water,transit,charge}/locales/{de,en,ro}.json`. Shared search/map behavior lives in common components; site modules supply artwork, branding, filters and details. Vite hot reload and IDE breakpoints work for all eight sites.
 
 ## Tests
 
@@ -39,15 +39,15 @@ npm run test:e2e
 .venv/bin/python -m unittest discover -s importer
 ```
 
-Integration tests truncate app tables. Use a separate disposable PostGIS database such as `bloli_nearby_integration` and set `TEST_DATABASE_URL` before `npm run test:integration`. The legacy browser suite can use the existing Bremen dataset; the multi-site suite uses small deterministic mocked API responses to test all six actual local hostnames without loading public map tiles. Domain routing, combined publication, failure retention and category isolation are separately tested against real PostGIS.
+Integration tests truncate app tables. Use a separate disposable PostGIS database such as `bloli_nearby_integration` and set `TEST_DATABASE_URL` before `npm run test:integration`. The legacy browser suite can use the existing Bremen dataset; the multi-site suite uses small deterministic mocked API responses to test all eight actual local hostnames without loading public map tiles. Domain routing, combined publication, failure retention and category isolation are separately tested against real PostGIS.
 
-For Docker preview, the production gateway intentionally accepts only the six public domain hosts. Test with a Host header, e.g. `curl -H 'Host: kippe.bloli.com' http://127.0.0.1:8088/`; use the native hostname workflow above for browser development.
+For Docker preview, the production gateway intentionally accepts only the eight public domain hosts. Test with a Host header, e.g. `curl -H 'Host: kippe.bloli.com' http://127.0.0.1:8088/`; use the native hostname workflow above for browser development.
 
 ## Existing local installation renamed on 2026-10-26
 
 The development database/login were renamed to `bloli_nearby_dev` / `bloli_dev`, preserving the existing password and 246-toilet Bremen sample. The integration database is `bloli_nearby_integration`. The stopped old PostgreSQL volume was copied with ownership preserved into `bloli-nearby-dev-postgres-data`, and the new `bloli-nearby-dev-db-1` container was started on the same loopback port. The old development volume remains as a rollback copy; do not run both copies on the same port. The ignored `.env.local` was updated without changing its password. Fresh installations use the example password shown above.
 
-The synthetic six-category fixture contains 6 toilets, 8 tobacco sellers, 8 kebab venues, 8 water points,16 Transit components, 12 charging stations and 2 settlements. Integration imports use the disposable `bloli_nearby_integration` database and never the saved development sample. Once a database has all six categories active, imports omitting an active category are rejected; use a new local database when trying historical single-category samples.
+The synthetic eight-category fixture contains 6 toilets, 8 tobacco sellers, 8 kebab venues, 8 water points,16 Transit components, 12 charging stations, 1 ATM, 1 accommodation and 2 settlements. Integration imports use the disposable `bloli_nearby_integration` database and never the saved development sample. Once a database has all eight categories active, imports omitting an active category are rejected; use a new local database when trying historical single-category samples.
 
 ## Water profile
 
@@ -60,3 +60,7 @@ Open `http://transit.localhost:5173` with the shared native API/Vite pair and Do
 ## Charge
 
 Open `http://charge.localhost:5173` (or `http://localhost:5173/?site=charge`) with the same native API/Vite pair and Docker-only database. The guarded synthetic sample has 12 charging stations across München/Bremen and is not a live German directory. Connector, minimum output and access filters are site-specific; Charge directions use driving mode. Use a fresh sample database if existing data is already active.
+
+## ATM, Stay and Hungarian
+
+Open `http://atm.localhost:5173` and `http://stay.localhost:5173` using the same native API/Vite pair. The guarded sample now includes all eight categories in DE/RO/AT/HU; use a fresh disposable sample database, not an existing saved development directory. ATM uses walking directions and mapped-access Open now; Stay uses driving directions and type filtering without an Open now/room-availability claim. Every site supports German, English, Romanian and Hungarian from separate JSON dictionaries.

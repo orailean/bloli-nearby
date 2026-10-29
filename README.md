@@ -1,6 +1,6 @@
 # Bloli Nearby
 
-One self-hosted OpenStreetMap discovery platform with six focused sites. Germany is active; Romania is first in the staged country rollout, followed by Austria and Hungary after validation:
+One self-hosted OpenStreetMap discovery platform with eight focused sites, covering Germany, Romania, Austria and Hungary:
 
 - **[Find a Loo](https://loo.bloli.com)** — public toilets, free/paid filters and mapped opening hours.
 - **[Kippe](https://kippe.bloli.com)** — cigarette machines, tobacco shops, Lotto outlets, kiosks, Spätis, supermarkets, newsagents and petrol stations; machine/shop/petrol-station filters and mapped hours/payment details.
@@ -8,8 +8,10 @@ One self-hosted OpenStreetMap discovery platform with six focused sites. Germany
 - **[Water](https://water.bloli.com)** — mapped drinking-water points and refill partners, water fees, seasonal details and mapped opening hours.
 - **[Transit](https://transit.bloli.com)** — nearby passenger stops/stations, mode filters, grouped platforms/entrances and mapped service/access details.
 - **[Charge](https://charge.bloli.com)** — mapped car charging stations, connector/power/access filters and driving directions.
+- **[ATM](https://atm.bloli.com)** — mapped cash machines, currency/deposit/machine-fee filters and mapped access hours.
+- **[Stay](https://stay.bloli.com)** — hotels, guesthouses, hostels, apartments, holiday homes, campsites and motorhome sites, mapped contact details and driving directions.
 
-All six share one React/Leaflet frontend build, Node API, PostGIS database and country-aware importer. Site profiles select distinct branding, artwork, translations, metadata, filters and details by hostname. Germany remains active; Romania is the first additional country, with Austria and Hungary gated behind production validation. No paid API or Google Maps key is needed; directions open externally in Google Maps. Browser map backgrounds load normal public OSM tiles directly. Downloaded OSM data supplies local location and postcode searches, not self-hosted map tiles.
+All eight share one React/Leaflet frontend build, Node API, PostGIS database and country-aware importer. Site profiles select distinct branding, artwork, translations, metadata, filters and details by hostname. All four countries use independent verified snapshots. No paid API or Google Maps key is needed; directions open externally in Google Maps. Browser map backgrounds load normal public OSM tiles directly. Downloaded OSM data supplies local location and postcode searches, not self-hosted map tiles.
 
 ## Native local development
 
@@ -23,15 +25,15 @@ npm run dev:api # terminal 1
 npm run dev     # terminal 2
 ```
 
-Open `http://loo.localhost:5173`, `http://kippe.localhost:5173`, `http://kebab.localhost:5173`, `http://water.localhost:5173`, `http://transit.localhost:5173` and `http://charge.localhost:5173`. All six use the same services. For a fresh mixed sample database and `npm run seed:sample`, follow the guide; the seed command refuses to overwrite existing data. The [detailed local debugging guide](docs/development/local-debugging.md) also retains optional regional source workflows.
+Open `http://loo.localhost:5173`, `http://kippe.localhost:5173`, `http://kebab.localhost:5173`, `http://water.localhost:5173`, `http://transit.localhost:5173` `http://charge.localhost:5173`, `http://atm.localhost:5173` and `http://stay.localhost:5173`. All eight use the same services. For a fresh mixed sample database and `npm run seed:sample`, follow the guide; the seed command refuses to overwrite existing data. The [detailed local debugging guide](docs/development/local-debugging.md) also retains optional regional source workflows.
 
-Translation JSON is separate under `src/web/locales/common/{de,en,ro}.json` and `src/web/sites/{loo,kippe,kebab,water,transit,charge}/locales/{de,en,ro}.json`. Unsupported browser languages fall back to German; an explicit language choice persists per origin. Site modules compose artwork, filters and details around common search/map behavior.
+Translation JSON is separate under `src/web/locales/common/{de,en,ro,hu}.json` and `src/web/sites/{loo,kippe,kebab,water,transit,charge,atm,stay}/locales/{de,en,ro,hu}.json`. Unsupported browser languages fall back to German; an explicit language choice persists per origin. Site modules compose artwork, filters and details around common search/map behavior.
 
 ## Containers and production
 
 Node >=22.12, Docker and Compose >=2.24.4 are required; the pinned PostGIS image uses amd64 emulation on Apple Silicon. `scripts/setup-local.sh` creates ignored local credentials when absent. `docker compose up -d --build` starts a fresh base stack; its strict gateway can be previewed with a public Host header, e.g. `curl -H 'Host: kippe.bloli.com' http://127.0.0.1:8088/`. Use native local hostnames for browser debugging.
 
-For Contabo, use [the multi-site migration/update guide](docs/deployment/bloli-nearby-migration.md). Existing Docker Nginx remains the shared TLS proxy. The production override uses the `bloli-nearby` Compose project and explicitly binds the verified `bloli-nearby_postgres_data` / `bloli-nearby_import_data` volumes, while the package/repository is named `bloli-nearby`. No new application host ports are published. The canonical VM checkout is `/home/oliver/stack/bloli-nearby`.
+For Contabo, use [production updates](docs/deployment/production-updates.md) and the [ATM/Stay eight-site deployment guide](docs/deployment/atm-stay-sites.md). Existing Docker Nginx remains the shared TLS proxy. The production override uses the `bloli-nearby` Compose project and explicitly binds the verified `bloli-nearby_postgres_data` / `bloli-nearby_import_data` volumes, while the package/repository is named `bloli-nearby`. No new application host ports are published. The canonical VM checkout is `/home/oliver/stack/bloli-nearby`.
 
 Do not remove volumes or assume renaming a directory migrates Docker resources. The shared production database/login are `bloli_nearby` / `bloli`, configured through `DB_NAME` / `DB_USER`. Development uses the independent `bloli-nearby-dev` Compose project and `bloli-nearby-dev-postgres-data` volume. [Data locations](docs/deployment/data-storage.md) explain the host paths; historical deployment protocols retain original names as an audit record.
 
