@@ -61,7 +61,7 @@
   "how1": "Choose your spot",
   "how1Text": "Use your location, search a town or postcode, or pick a point on the map.",
   "privacyTitle": "A little privacy, too.",
-  "privacyText": "Searches run on this site’s server. We do not store location history. Your language choice is saved only in this browser. OpenStreetMap receives your IP address and the map tiles you view. Google Maps opens only when you choose walking directions. Names and opening hours come from community map data and may be incomplete. Map labels follow the tile provider’s language.",
+  "privacyText": "Searches run on this site’s server. We do not store location history. Your language choice is saved only in this browser. OpenStreetMap receives your IP address and the map tiles you view. Google Maps opens only when you choose directions. Names and opening hours come from community map data and may be incomplete. Map labels follow the tile provider’s language.",
   "choosePoint": "Choose a spot",
   "zoomIn": "Zoom in",
   "zoomOut": "Zoom out",

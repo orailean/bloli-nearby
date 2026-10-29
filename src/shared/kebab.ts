@@ -50,7 +50,7 @@ export function normalizeKebab(r: SourceRecord): Facility | null {
   )
     return null;
   const names: Facility["names"] = {};
-  for (const lang of ["en", "de", "ro"] as const)
+  for (const lang of ["en", "de", "ro", "hu"] as const)
     if (t[`name:${lang}`]) names[lang] = t[`name:${lang}`];
   return {
     id: `${r.sourceType}/${r.sourceId}`,

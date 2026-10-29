@@ -9,10 +9,34 @@ const dataset = {
   stale: false,
   latestJob: null,
   countries: [
-    { code: "de", name: "Germany", status: "active", ready: true, datasetAt: "2026-10-25T00:00:00Z" },
-    { code: "ro", name: "Romania", status: "active", ready: true, datasetAt: "2026-10-25T00:00:00Z" },
-    { code: "at", name: "Austria", status: "pending", ready: false, datasetAt: null },
-    { code: "hu", name: "Hungary", status: "pending", ready: false, datasetAt: null },
+    {
+      code: "de",
+      name: "Germany",
+      status: "active",
+      ready: true,
+      datasetAt: "2026-10-25T00:00:00Z",
+    },
+    {
+      code: "ro",
+      name: "Romania",
+      status: "active",
+      ready: true,
+      datasetAt: "2026-10-25T00:00:00Z",
+    },
+    {
+      code: "at",
+      name: "Austria",
+      status: "pending",
+      ready: false,
+      datasetAt: null,
+    },
+    {
+      code: "hu",
+      name: "Hungary",
+      status: "pending",
+      ready: false,
+      datasetAt: null,
+    },
   ],
 };
 for (const id of [
@@ -22,6 +46,8 @@ for (const id of [
   "water",
   "transit",
   "charge",
+  "atm",
+  "stay",
 ] as const) {
   for (const width of [1440, 320, 390, 430]) {
     test(`${id} ${width}px shares search, keeps its category and fits every locale`, async ({
@@ -52,17 +78,19 @@ for (const id of [
         expect(query.get("q")).toBe("Bucuresti");
         return route.fulfill({
           json: {
-            items: [{
-              id: "node/sample-ro-town",
-              name: "București",
-              postcode: "010011",
-              region: "București",
-              names: { ro: "București" },
-              lat: 44.4268,
-              lon: 26.1025,
-              countryCode: "ro",
-              countryName: "Romania",
-            }],
+            items: [
+              {
+                id: "node/sample-ro-town",
+                name: "București",
+                postcode: "010011",
+                region: "București",
+                names: { ro: "București" },
+                lat: 44.4268,
+                lon: 26.1025,
+                countryCode: "ro",
+                countryName: "Romania",
+              },
+            ],
           },
         });
       });
@@ -70,7 +98,9 @@ for (const id of [
         const q = new URL(route.request().url()).searchParams;
         expect(q.get("radius")).toMatch(/^(500|1000|2000|3000|5000)$/);
         expect(q.has("sellerType")).toBe(id === "kippe");
-        expect(q.has("fee")).toBe(["loo", "water", "charge"].includes(id));
+        expect(q.has("fee")).toBe(
+          ["loo", "water", "charge", "atm"].includes(id),
+        );
         if (["kebab", "water", "transit"].includes(id))
           expect(q.has("sellerType")).toBe(false);
         if (id === "transit") {
@@ -100,7 +130,38 @@ for (const id of [
               id === "kebab"
                 ? `Döner Kebab Spezialitäten und vegetarische Küche am langen Straßenbahnhof ${type}`
                 : `Fixture ${type}`,
-            fee: "free",
+            fee:
+              id === "atm" ? (["free", "paid", "unknown"] as const)[i] : "free",
+            ...(id === "atm"
+              ? {
+                  category: "atm",
+                  atm: {
+                    embedded: false,
+                    currencies: [(["EUR", "RON", "HUF"] as const)[i]],
+                    deposit: i === 0 ? "yes" : "unknown",
+                    withdrawal: "yes",
+                    network: "Fixture bank",
+                  },
+                }
+              : {}),
+            ...(id === "stay"
+              ? {
+                  category: "accommodation",
+                  website: "https://example.com",
+                  accommodation: {
+                    type: (["hotel", "guest_house", "camp_site"] as const)[i],
+                    stars: i === 0 ? "4" : null,
+                    rooms: "20",
+                    beds: null,
+                    receptionHours: "08:00-18:00",
+                    checkIn: "15:00",
+                    checkOut: "11:00",
+                    internet: "wlan",
+                    pets: null,
+                    phone: "+4912345",
+                  },
+                }
+              : {}),
             ...(id === "transit"
               ? {
                   category: "transit",
@@ -138,7 +199,7 @@ for (const id of [
             operator: null,
             brand: id === "charge" ? "Sample brand" : null,
             notes: null,
-            tags: {},
+            tags: id === "stay" ? {"addr:street":"Sample Street","addr:housenumber":"12","addr:city":"Example Town"} : {},
             distance: i * 80,
             ...(id === "kebab"
               ? {
@@ -193,6 +254,19 @@ for (const id of [
               q.get("openNow") !== "true" || item.openingHours === "24/7",
           );
         const filteredItems = items.filter((item) => {
+          if (id === "atm")
+            return (
+              (q.get("currency") === "all" ||
+                item.atm?.currencies.includes(q.get("currency") as never)) &&
+              (q.get("deposit") === "all" ||
+                item.atm?.deposit === q.get("deposit")) &&
+              (q.get("fee") === "all" || item.fee === q.get("fee"))
+            );
+          if (id === "stay")
+            return (
+              q.get("accommodationType") === "all" ||
+              item.accommodation?.type === q.get("accommodationType")
+            );
           if (id !== "charge") return true;
           const charging = item.charging as
             | { connectors: { type: string; outputKw: number | null }[] }
@@ -223,16 +297,22 @@ for (const id of [
       await page.locator("#country-filter").selectOption("ro");
       await page.getByLabel("Town or postcode").fill("Bucuresti");
       const [settlementResponse] = await Promise.all([
-        page.waitForResponse((response) => response.url().includes("/api/settlements?")),
+        page.waitForResponse((response) =>
+          response.url().includes("/api/settlements?"),
+        ),
         page.locator(".search-submit").click(),
       ]);
       expect(settlementResponse.status()).toBe(200);
-      await expect(page.locator(".place-option").first()).toContainText("București");
+      await expect(page.locator(".place-option").first()).toContainText(
+        "București",
+      );
       await page.locator(".place-option").first().click();
       await page.locator("#country-filter").selectOption("all");
       await page.getByRole("button", { name: "Bremen", exact: true }).click();
       await expect(page.locator("#country-filter")).toHaveValue("all");
-      await expect(page.locator('#country-filter option[value="at"]')).toBeDisabled();
+      await expect(
+        page.locator('#country-filter option[value="at"]'),
+      ).toBeDisabled();
       await expect(page.locator(".result-row")).toHaveCount(3);
       await expect(page.locator(".radius-control select")).toHaveValue("500");
       if (id === "transit") {
@@ -343,13 +423,52 @@ for (const id of [
           .getByLabel("Minimum power", { exact: true })
           .selectOption("0");
       }
+      if (id === "atm") {
+        await expect(
+          page.locator(".atm-filters .fee-filters button"),
+        ).toHaveCount(4);
+        expect(
+          await page.locator(".atm-filters .fee-filters").evaluate((parent) => {
+            const box = parent.getBoundingClientRect();
+            return Array.from(parent.querySelectorAll("button")).every(
+              (button) => {
+                const child = button.getBoundingClientRect();
+                return (
+                  child.left >= box.left - 1 &&
+                  child.right <= box.right + 1 &&
+                  child.top >= box.top - 1 &&
+                  child.bottom <= box.bottom + 1
+                );
+              },
+            );
+          }),
+        ).toBe(true);
+        await page.locator(".atm-select select").first().selectOption("EUR");
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await page.locator(".atm-select select").first().selectOption("all");
+        await page.locator(".atm-select select").nth(1).selectOption("yes");
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await page.locator(".atm-select select").nth(1).selectOption("all");
+      }
+      if (id === "stay") {
+        await expect(page.locator(".open-now-control")).toHaveCount(0);
+        await page.locator(".stay-type-control select").selectOption("hotel");
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".walk-button")).toHaveAttribute(
+          "href",
+          /travelmode=driving/,
+        );
+        await expect(page.locator(".detail-panel")).toContainText("Sample Street 12");
+        await page.locator(".stay-type-control select").selectOption("all");
+      }
       await page.locator(".radius-control select").selectOption("5000");
       await expect(page.locator(".search-boundary")).toHaveCount(1);
-      if (id !== "transit") {
+      if (!["transit", "stay"].includes(id)) {
         await page.locator(".open-now-control input").check();
         await expect(page.locator(".result-row")).toHaveCount(1);
       }
-      for (const locale of ["de", "ro", "en"]) {
+      for (const locale of ["de", "ro", "en", "hu"]) {
         await page.locator("#language").selectOption(locale);
         await page.evaluate(() => document.fonts.ready);
         await expect(page.locator("html")).toHaveAttribute("lang", locale);

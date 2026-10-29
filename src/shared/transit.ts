@@ -162,10 +162,10 @@ export function normalizeTransit(r: SourceRecord): Facility | null {
     return null;
   if (!modes.size) modes.add("other");
   const names: Facility["names"] = {};
-  for (const lang of ["de", "en", "ro"] as const)
+  for (const lang of ["de", "en", "ro", "hu"] as const)
     if (t[`name:${lang}`]) names[lang] = t[`name:${lang}`];
   const groupNames = Object.fromEntries(
-    ["de", "en", "ro"]
+    ["de", "en", "ro", "hu"]
       .filter((lang) => !!group?.tags[`name:${lang}`])
       .map((lang) => [lang, group!.tags[`name:${lang}`]]),
   );

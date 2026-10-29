@@ -9,6 +9,12 @@ from pathlib import Path
 
 
 class PrepareTests(unittest.TestCase):
+    def test_retained_mode_fails_before_network_if_sources_are_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result=subprocess.run(['sh',str(Path(__file__).with_name('prepare.sh'))],env={**os.environ,'DATA_ROOT':directory,'COUNTRY_CODE':'ro','USE_RETAINED_SOURCE':'1'},text=True,capture_output=True)
+            self.assertNotEqual(result.returncode,0)
+            self.assertIn('MISSING_RETAINED_SOURCE',result.stderr)
+
     def test_cuisine_prefilter_invalidates_old_cache_and_keeps_verified_source(self):
         script = Path(__file__).with_name('prepare.sh').read_text()
         old_expressions = 'nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco'

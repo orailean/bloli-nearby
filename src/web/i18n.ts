@@ -1,255 +1,92 @@
 import type { Locale } from "../shared/types.js";
+import type { SiteId } from "../shared/sites.js";
 import commonEn from "./locales/common/en.json";
 import commonDe from "./locales/common/de.json";
 import commonRo from "./locales/common/ro.json";
+import commonHu from "./locales/common/hu.json";
 import looEn from "./sites/loo/locales/en.json";
 import looDe from "./sites/loo/locales/de.json";
 import looRo from "./sites/loo/locales/ro.json";
+import looHu from "./sites/loo/locales/hu.json";
 import kippeEn from "./sites/kippe/locales/en.json";
 import kippeDe from "./sites/kippe/locales/de.json";
 import kippeRo from "./sites/kippe/locales/ro.json";
-import type { SiteId } from "../shared/sites.js";
+import kippeHu from "./sites/kippe/locales/hu.json";
 import kebabEn from "./sites/kebab/locales/en.json";
 import kebabDe from "./sites/kebab/locales/de.json";
 import kebabRo from "./sites/kebab/locales/ro.json";
+import kebabHu from "./sites/kebab/locales/hu.json";
 import waterEn from "./sites/water/locales/en.json";
 import waterDe from "./sites/water/locales/de.json";
 import waterRo from "./sites/water/locales/ro.json";
+import waterHu from "./sites/water/locales/hu.json";
 import transitEn from "./sites/transit/locales/en.json";
 import transitDe from "./sites/transit/locales/de.json";
 import transitRo from "./sites/transit/locales/ro.json";
+import transitHu from "./sites/transit/locales/hu.json";
 import chargeEn from "./sites/charge/locales/en.json";
 import chargeDe from "./sites/charge/locales/de.json";
 import chargeRo from "./sites/charge/locales/ro.json";
+import chargeHu from "./sites/charge/locales/hu.json";
+import atmEn from "./sites/atm/locales/en.json";
+import atmDe from "./sites/atm/locales/de.json";
+import atmRo from "./sites/atm/locales/ro.json";
+import atmHu from "./sites/atm/locales/hu.json";
+import stayEn from "./sites/stay/locales/en.json";
+import stayDe from "./sites/stay/locales/de.json";
+import stayRo from "./sites/stay/locales/ro.json";
+import stayHu from "./sites/stay/locales/hu.json";
 type Dictionary = Record<
   | keyof typeof commonEn
   | keyof typeof looEn
+  | keyof typeof kippeEn
   | keyof typeof kebabEn
   | keyof typeof waterEn
   | keyof typeof transitEn
-  | keyof typeof chargeEn,
+  | keyof typeof chargeEn
+  | keyof typeof atmEn
+  | keyof typeof stayEn,
   string
 >;
-// Food labels extend the shared presentation type; existing sites keep their own copy.
-const foodFallback = Object.fromEntries(
-  Object.entries(kebabDe).filter(
-    ([key]) => !Object.hasOwn(commonDe, key) && !Object.hasOwn(looDe, key),
-  ),
-) as Pick<
-  typeof kebabDe,
-  Exclude<keyof typeof kebabDe, keyof typeof commonDe | keyof typeof looDe>
->;
-const waterFallback = Object.fromEntries(
-  Object.entries(waterDe).filter(
-    ([key]) => !Object.hasOwn(commonDe, key) && !Object.hasOwn(looDe, key),
-  ),
-) as Pick<
-  typeof waterDe,
-  Exclude<keyof typeof waterDe, keyof typeof commonDe | keyof typeof looDe>
->;
-const transitFallback = Object.fromEntries(
-  Object.entries(transitDe).filter(
-    ([key]) =>
-      !Object.hasOwn(commonDe, key) &&
-      !Object.hasOwn(looDe, key) &&
-      !Object.hasOwn(kebabDe, key),
-  ),
-) as Pick<
-  typeof transitDe,
-  Exclude<
-    keyof typeof transitDe,
-    keyof typeof commonDe | keyof typeof looDe | keyof typeof kebabDe
-  >
->;
-const chargeFallback = Object.fromEntries(
-  Object.entries(chargeDe).filter(
-    ([key]) =>
-      ![commonDe, looDe, kebabDe, waterDe, transitDe].some((dict) =>
-        Object.hasOwn(dict, key),
-      ),
-  ),
-) as Pick<
-  typeof chargeDe,
-  Exclude<
-    keyof typeof chargeDe,
-    | keyof typeof commonDe
-    | keyof typeof looDe
-    | keyof typeof kebabDe
-    | keyof typeof waterDe
-    | keyof typeof transitDe
-  >
->;
-export const siteDictionaries: Record<SiteId, Record<Locale, Dictionary>> = {
-  transit: {
-    en: {
-      ...chargeFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonEn,
-      ...transitDe,
-      ...transitEn,
-    },
-    de: {
-      ...chargeFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...transitDe,
-    },
-    ro: {
-      ...chargeFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonRo,
-      ...transitDe,
-      ...transitRo,
-    },
-  },
-  water: {
-    en: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonEn,
-      ...waterDe,
-      ...waterEn,
-    },
-    de: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...waterDe,
-    },
-    ro: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonRo,
-      ...waterDe,
-      ...waterRo,
-    },
-  },
-  kebab: {
-    en: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...commonDe,
-      ...commonEn,
-      ...kebabDe,
-      ...kebabEn,
-    },
-    de: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...commonDe,
-      ...kebabDe,
-    },
-    ro: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...commonDe,
-      ...commonRo,
-      ...kebabDe,
-      ...kebabRo,
-    },
-  },
-  loo: {
-    en: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonEn,
-      ...looDe,
-      ...looEn,
-    },
-    de: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...looDe,
-    },
-    ro: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonRo,
-      ...looDe,
-      ...looRo,
-    },
-  },
-  kippe: {
-    en: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonEn,
-      ...kippeDe,
-      ...kippeEn,
-    },
-    de: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...kippeDe,
-    },
-    ro: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonRo,
-      ...kippeDe,
-      ...kippeRo,
-    },
-  },
-  charge: {
-    en: {
-      ...chargeFallback,
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonEn,
-      ...chargeDe,
-      ...chargeEn,
-    },
-    de: {
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...chargeDe,
-    },
-    ro: {
-      ...transitFallback,
-      ...waterFallback,
-      ...foodFallback,
-      ...commonDe,
-      ...commonRo,
-      ...chargeDe,
-      ...chargeRo,
-    },
-  },
+const common = { en: commonEn, de: commonDe, ro: commonRo, hu: commonHu };
+const localized = {
+  loo: { en: looEn, de: looDe, ro: looRo, hu: looHu },
+  kippe: { en: kippeEn, de: kippeDe, ro: kippeRo, hu: kippeHu },
+  kebab: { en: kebabEn, de: kebabDe, ro: kebabRo, hu: kebabHu },
+  water: { en: waterEn, de: waterDe, ro: waterRo, hu: waterHu },
+  transit: { en: transitEn, de: transitDe, ro: transitRo, hu: transitHu },
+  charge: { en: chargeEn, de: chargeDe, ro: chargeRo, hu: chargeHu },
+  atm: { en: atmEn, de: atmDe, ro: atmRo, hu: atmHu },
+  stay: { en: stayEn, de: stayDe, ro: stayRo, hu: stayHu },
 };
+const fallback = Object.assign(
+  {},
+  looDe,
+  kippeDe,
+  kebabDe,
+  waterDe,
+  transitDe,
+  chargeDe,
+  atmDe,
+  stayDe,
+);
+export const siteDictionaries = Object.fromEntries(
+  Object.entries(localized).map(([id, content]) => [
+    id,
+    Object.fromEntries(
+      (["en", "de", "ro", "hu"] as const).map((locale) => [
+        locale,
+        {
+          ...fallback,
+          ...commonDe,
+          ...common[locale],
+          ...content.de,
+          ...content[locale],
+        },
+      ]),
+    ),
+  ]),
+) as Record<SiteId, Record<Locale, Dictionary>>;
 export const dictionaries = siteDictionaries.loo;
 export type TranslationKey = keyof Dictionary;
 export function chooseLocale(

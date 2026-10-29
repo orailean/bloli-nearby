@@ -68,7 +68,7 @@ export function normalizeSeller(r: SourceRecord): Facility | null {
     sellerType = "shop";
   else return null;
   const names: Facility["names"] = {};
-  for (const lang of ["en", "de", "ro"] as const)
+  for (const lang of ["en", "de", "ro", "hu"] as const)
     if (t[`name:${lang}`]) names[lang] = t[`name:${lang}`];
   return applySellerDefaults({
     id: `${r.sourceType}/${r.sourceId}`,

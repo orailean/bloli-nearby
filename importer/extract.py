@@ -76,6 +76,10 @@ def kinds(tags):
     if tags.get('type') in ('route', 'route_master', 'collection', 'destination_sign') or tags.get('public_transport') in ('stop_area', 'stop_area_group'):
         return []
     result = []
+    if tags.get('amenity') == 'atm' or tags.get('atm') == 'yes':
+        result.append('atm')
+    if tags.get('tourism') in ('hotel','motel','guest_house','hostel','apartment','chalet','camp_site','caravan_site'):
+        result.append('accommodation')
     if tags.get('amenity') == 'charging_station':
         result.append('charge')
     if transit_candidate(tags):
@@ -115,7 +119,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
           **({'coverageSource': boundary_source, 'coverageChecksum': boundary_checksum} if boundary_source else {}),
           **({'countryCode': country_code} if country_code else {}),
           **({'sourceChecksum': source_checksum} if source_checksum else {}),
-          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge'], 'transitContextComplete': True})
+          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation'], 'transitContextComplete': True})
     transport_context=TransportContext(context_path,fingerprint)
     def object_kinds(tags,source_type,source_id):
         result=kinds(tags)
@@ -131,7 +135,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     area_relation_members = {}
     area_relation_tags = {}
     transit_relations = {}
-    area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge'}
+    area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation'}
 
     class SiteMembers(osmium.SimpleHandler):
         def relation(self, obj):
@@ -348,6 +352,10 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     broken_charge=[key for key in missing if 'charge' in handler.expected[key]]
     if broken_charge:
         raise ValueError(f'Incomplete charge geometries: {len(broken_charge)}; sources: {sorted(broken_charge)[:30]}')
+    for kind in ('atm', 'accommodation'):
+        broken=[key for key in missing if kind in handler.expected[key]]
+        if broken:
+            raise ValueError(f'Incomplete {kind} geometries: {len(broken)}; sources: {sorted(broken)[:30]}')
     transport_context.close()
     if geometry_only:
         output.write(json.dumps({'kind':'geometryComplete','records':handler.count})+'\n')

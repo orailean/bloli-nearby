@@ -82,7 +82,7 @@ class SellerExtractionTests(unittest.TestCase):
         sellers = [r for r in rows if r['kind'] == 'seller']
         self.assertEqual({r['sourceType'] + '/' + r['sourceId'] for r in sellers},
                          {'node/1', 'node/2', 'way/10', 'way/11', 'relation/20', 'relation/21'})
-        self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge'])
+        self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation'])
         dual = [r for r in rows if r.get('sourceType') == 'node' and r.get('sourceId') == '1']
         self.assertEqual({r['kind'] for r in dual}, {'facility', 'seller'})
         self.assertEqual(dual[0]['tags'], dual[1]['tags'])
@@ -95,7 +95,7 @@ class SellerExtractionTests(unittest.TestCase):
 
     def test_empty_seller_extract_still_declares_category_for_count_validation(self):
         rows = self.extract_rows('<node id="1" lat="53.07" lon="8.80" version="1"><tag k="amenity" v="parking"/></node>')
-        self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge'])
+        self.assertEqual(rows[0]['categories'], ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation'])
         self.assertEqual(rows[-1]['records'], 0)
 
     def test_missing_seller_geometry_fails_instead_of_completing(self):

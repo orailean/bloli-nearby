@@ -1,3 +1,4 @@
+import { ACCOMMODATION_TYPES } from "./nearby-types.js";
 import { CHARGE_CONNECTORS, CHARGE_POWERS } from "./charge-types.js";
 import { TRANSIT_MODES } from "./transit-modes.js";
 import type { Category } from "./sites.js";
@@ -51,7 +52,7 @@ export function normalizeFacility(r: SourceRecord): Facility | null {
         : "unknown";
   const wheelchair = get("wheelchair") || t.wheelchair;
   const names: Facility["names"] = {};
-  for (const lang of ["en", "de", "ro"] as const)
+  for (const lang of ["en", "de", "ro", "hu"] as const)
     if (t[`name:${lang}`]) names[lang] = t[`name:${lang}`];
   return {
     id: `${r.sourceType}/${r.sourceId}`,
@@ -100,13 +101,14 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   if (
-    (!["toilets", "water", "charge"].includes(category) && p.has("fee")) ||
+    (!["toilets", "water", "charge", "atm"].includes(category) &&
+      p.has("fee")) ||
     (category !== "tobacco" && p.has("sellerType"))
   )
     throw new AppError("INVALID_QUERY");
   if (
     (category !== "transit" && p.has("mode")) ||
-    (category === "transit" && p.has("openNow"))
+    (["transit", "accommodation"].includes(category) && p.has("openNow"))
   )
     throw new AppError("INVALID_QUERY");
   const mode = p.get("mode") ?? "all";
@@ -125,6 +127,20 @@ export function parseSearch(
     chargeKeys.some((k) => p.getAll(k).length > 1)
   )
     throw new AppError("INVALID_QUERY");
+  const currency = p.get("currency") ?? "all",
+    deposit = p.get("deposit") ?? "all",
+    accommodationType = p.get("accommodationType") ?? "all";
+  if (
+    (category !== "atm" && ["currency", "deposit"].some((k) => p.has(k))) ||
+    (category !== "accommodation" && p.has("accommodationType")) ||
+    (currency !== "all" && !/^[A-Z]{3}$/.test(currency)) ||
+    !["all", "yes"].includes(deposit) ||
+    !["all", ...ACCOMMODATION_TYPES].includes(accommodationType as never) ||
+    ["currency", "deposit", "accommodationType"].some(
+      (k) => p.getAll(k).length > 1,
+    )
+  )
+    throw new AppError("INVALID_QUERY");
   const sellerType = p.get("sellerType") ?? "all";
   if (
     !["all", "machine", "shop", "fuel"].includes(sellerType) ||
@@ -139,13 +155,26 @@ export function parseSearch(
     !Number.isInteger(limit) ||
     limit < 1 ||
     limit > 100 ||
-    !["all", "free", "paid"].includes(fee) ||
+    !(
+      category === "atm"
+        ? ["all", "free", "paid", "unknown"]
+        : ["all", "free", "paid"]
+    ).includes(fee) ||
     p.getAll("fee").length > 1 ||
     !["true", "false"].includes(openNow) ||
     p.getAll("openNow").length > 1
   )
     throw new AppError("INVALID_QUERY");
   return {
+    ...(category === "atm"
+      ? { currency, deposit: deposit as SearchQuery["deposit"] }
+      : {}),
+    ...(category === "accommodation"
+      ? {
+          accommodationType:
+            accommodationType as SearchQuery["accommodationType"],
+        }
+      : {}),
     ...(category === "transit" ? { mode: mode as SearchQuery["mode"] } : {}),
     ...(category === "charge"
       ? {

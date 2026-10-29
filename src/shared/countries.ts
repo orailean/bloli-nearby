@@ -60,6 +60,8 @@ export const COUNTRIES: readonly CountryProfile[] = [
 ];
 
 const floorVariable: Record<Category, string> = {
+  atm: "ATMS",
+  accommodation: "ACCOMMODATIONS",
   toilets: "TOILETS",
   tobacco: "SELLERS",
   kebab: "KEBABS",
@@ -81,8 +83,11 @@ export function minimumForCountry(
   category: Category,
   env: NodeJS.ProcessEnv = process.env,
 ): number | undefined {
-  const specific = env[`MIN_${country.toUpperCase()}_${floorVariable[category]}`];
-  const configured = specific ?? (country === "de" ? env[legacyGermanyVariables[category]!] : undefined);
+  const specific =
+    env[`MIN_${country.toUpperCase()}_${floorVariable[category]}`];
+  const configured =
+    specific ??
+    (country === "de" ? env[legacyGermanyVariables[category]!] : undefined);
   if (configured === undefined || !/^\d+$/.test(configured)) return undefined;
   const minimum = Number(configured);
   return Number.isSafeInteger(minimum) && minimum > 0 ? minimum : undefined;
