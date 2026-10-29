@@ -30,16 +30,16 @@
 - [x] 4.1 Extend generated shells, Docker gateway, Nginx vhost templates and renewal deploy hook coverage to both domains using the shared upstream.
 - [x] 4.2 Verify normalizers, imports, filters, missing/unknown fields, embedded ATM assumptions, Stay reception semantics and directions with relevant unit/integration checks.
 - [x] 4.3 Verify all eight site identities on desktop and 320/390/430 px in all languages, map/list/radius/selection, keyboard behavior, external actions and overflow.
-- [ ] 4.4 Extend live production probes to both new sites/countries and compare place/nearby timing with existing six-site baselines.
+- [x] 4.4 Extend live production probes to both new sites/countries and compare place/nearby timing with existing six-site baselines.
 - [x] 4.5 Document eight-category refresh, country floors, source reuse, local debugging, production updates, backup and incompatible-importer rollback.
 
 ## 5. Controlled production rollout
 
 - [x] 5.1 Record VM resources, six-site counts/IDs/timings, verified source pins, private configuration and timer state; take/verify backup and pause refresh.
 - [x] 5.2 Merge approved implementation into main, push and deploy compatible additive API/importer/web from main; verify existing sites remain healthy.
-- [ ] 5.3 Measure DE candidates from retained verified source without publication, configure new national floors and publish/verify its eight-category snapshot.
-- [ ] 5.4 Measure/publish/verify RO, then AT, then HU sequentially with separate floors, retained Transit context and independent failure/rollback evidence.
-- [ ] 5.5 Verify new national readiness and existing six-category identities/counts, border behavior and searches in Munich/Bucharest/Vienna/Budapest; take/verify cutover backup.
-- [ ] 5.6 Configure Docker Nginx vhosts/TLS for both domains, validate/reload and verify certificate renewal with deploy hooks.
-- [ ] 5.7 Run final eight-site live API/browser/performance checks, back up, resume/check existing refresh scheduling and stop temporary local services.
-- [ ] 5.8 Save dated VM protocol with exact commands/paths/sources/counts/sizes/backups/results; commit/push source-only work, sync production main and clean fully merged feature branches.
+- [x] 5.3 Measure DE candidates from retained verified source without publication, configure new national floors and publish/verify its eight-category snapshot.
+- [x] 5.4 Measure/publish/verify RO, then AT, then HU sequentially with separate floors, retained Transit context and independent failure/rollback evidence.
+- [x] 5.5 Verify new national readiness and existing six-category identities/counts, border behavior and searches in Munich/Bucharest/Vienna/Budapest; take/verify cutover backup.
+- [x] 5.6 Configure Docker Nginx vhosts/TLS for both domains, validate/reload and verify certificate renewal with deploy hooks.
+- [x] 5.7 Run final eight-site live API/browser/performance checks, back up, resume/check existing refresh scheduling and stop temporary local services.
+- [x] 5.8 Save dated VM protocol with exact commands/paths/sources/counts/sizes/backups/results; commit/push source-only work, sync production main and clean fully merged feature branches.
