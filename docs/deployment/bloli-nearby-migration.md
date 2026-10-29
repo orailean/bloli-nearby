@@ -1,6 +1,6 @@
 # Bloli Nearby production migration and updates
 
-The six public sites are `loo.bloli.com` (Find a Loo), `kippe.bloli.com` (Kippe), `kebab.bloli.com` (Kebab), `water.bloli.com`, `transit.bloli.com` and `charge.bloli.com`. They share one gateway/frontend, API, PostGIS database and scheduled Germany importer. The canonical checkout is `/home/oliver/stack/bloli-nearby` and source is `git@github.com:orailean/bloli-nearby.git`.
+The six public sites are `loo.bloli.com` (Find a Loo), `kippe.bloli.com` (Kippe), `kebab.bloli.com` (Kebab), `water.bloli.com`, `transit.bloli.com` and `charge.bloli.com`. They share one gateway/frontend, API, PostGIS database and sequential country-aware importer. Germany remains active; Romania is first, with Austria and Hungary behind validation gates. The canonical checkout is `/home/oliver/stack/bloli-nearby` and source is `git@github.com:orailean/bloli-nearby.git`.
 
 ## Current resource identities
 
@@ -47,7 +47,7 @@ docker compose up -d --wait api web
 
 Verify **all six** public domains. `/api/health` is liveness; `/api/ready` and `/api/status` are category-aware using the request hostname. `npm run build` generates separate initial HTML metadata for each site while sharing versioned assets. Unknown production hosts and cross-category overrides are rejected.
 
-Dataset refresh is separate: build the importer when its code changes, then use `scripts/update.sh` or let the weekly timer run. The scheduled job resolves one latest verified Germany snapshot for all categories. Monitor job outcomes per site and save logs. Backup/restore includes locations, category memberships/metadata, legacy toilets, settlements and import jobs.
+Dataset refresh is separate: build the importer when its code changes, then use `scripts/update.sh` or let the weekly timer run. The scheduled job queries active countries and refreshes them one at a time from independently checksum-verified sources. It continues after country-level failures and exits nonzero if any failed. Monitor per-country outcomes through `/api/status` and systemd logs. Backup/restore includes shared locations, country memberships/snapshots, category metadata, legacy toilets, settlements and import jobs. See [multi-country operations](multi-country-coverage.md) for cache locations, targeted retry, measured floors and country activation gates.
 
 ## Rollback
 
@@ -66,10 +66,10 @@ Rollback of the rename uses the same controlled connection shutdown, temporary l
 Location data updates are scheduled by **systemd**, through these files:
 
 - `/etc/systemd/system/bloli-nearby-refresh.timer`: Sundays at **03:15 Europe/Berlin**, with up to **30 minutes random delay**; persistent timers catch missed runs after downtime.
-- `/etc/systemd/system/bloli-nearby-refresh.service`: runs `/usr/bin/docker compose --profile tools run --rm importer` as `oliver`, working directory `/home/oliver/stack/bloli-nearby`.
+- `/etc/systemd/system/bloli-nearby-refresh.service`: runs `/home/oliver/stack/bloli-nearby/scripts/update.sh` as `oliver`, working directory `/home/oliver/stack/bloli-nearby`.
 - `/etc/systemd/system/bloli-nearby-backup.timer`: daily at **04:30 Europe/Berlin**, with up to **15 minutes random delay**; invokes the companion backup service/script.
 
-The old `find-a-loo-refresh.timer` and `find-a-loo-backup.timer` are disabled. There must be only one active refresh/backup pair. The weekly importer updates toilets, tobacco sellers, kebab places, drinking water, transit, charging stations and shared settlements from a single verified Germany source. Visible map tiles continue loading directly in users' browsers; the job does not download raster map tiles.
+The old `find-a-loo-refresh.timer` and `find-a-loo-backup.timer` are disabled. There must be only one active refresh/backup pair. The weekly importer updates toilets, tobacco sellers, kebab places, drinking water, transit, charging stations and shared settlements for each active country from its own verified source. Visible map tiles continue loading directly in users' browsers; the job does not download raster map tiles.
 
 Inspect schedules, exact configuration and refresh history:
 

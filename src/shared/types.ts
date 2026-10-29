@@ -10,12 +10,14 @@ import type {
   TransitMode,
 } from "./transit-modes.js";
 import type { Category, SiteProfile, SellerType } from "./sites.js";
+import type { CountryCode, CountryStatus } from "./countries.js";
 export type Locale = "en" | "de" | "ro";
 export type Fee = "free" | "paid" | "unknown";
 export type FeeFilter = "all" | "free" | "paid";
 export interface SourceRecord {
   sourceType: "node" | "way" | "relation";
   sourceId: string;
+  version?: number | null;
   lat: number;
   lon: number;
   transport?: TransitContext;
@@ -25,6 +27,8 @@ export interface Facility {
   id: string;
   sourceType: SourceRecord["sourceType"];
   sourceId: string;
+  countryCode?: "de" | "ro" | "at" | "hu";
+  timezone?: string;
   lat: number;
   lon: number;
   name: string | null;
@@ -67,6 +71,8 @@ export interface Settlement {
   lat: number;
   lon: number;
   names: Partial<Record<Locale, string>>;
+  countryCode?: CountryCode;
+  countryName?: string;
 }
 export interface SearchQuery {
   lat: number;
@@ -88,7 +94,28 @@ export interface Dataset {
   count: number;
   stale: boolean;
   source: string | null;
-  latestJob: { status: string; finishedAt: string | null } | null;
+  latestJob: { status: string; startedAt?: string; finishedAt: string | null; error?: string | null } | null;
+  countries?: CountryCoverage[];
+}
+export interface CountryCoverage {
+  code: CountryCode;
+  name: string;
+  timezone: string;
+  status: CountryStatus;
+  ready: boolean;
+  datasetAt: string | null;
+  importedAt: string | null;
+  count: number;
+  settlementCount: number;
+  source: string | null;
+  stale: boolean;
+  latestRefresh: {
+    status: string;
+    startedAt: string;
+    finishedAt: string | null;
+    error: string | null;
+    counts: Partial<Record<"toilets" | "tobacco" | "kebab" | "water" | "transit" | "charge" | "settlements", number>>;
+  } | null;
 }
 export interface SearchResponse {
   items: Facility[];

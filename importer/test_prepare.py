@@ -14,8 +14,9 @@ class PrepareTests(unittest.TestCase):
         old_expressions = 'nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco'
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            data = root / 'data'
-            data.mkdir()
+            data_root = root / 'data'
+            data = data_root / 'countries' / 'de'
+            data.mkdir(parents=True)
             tools = root / 'bin'
             tools.mkdir()
             source = data / 'source.osm.pbf'
@@ -47,7 +48,7 @@ elif name == 'osmium':
                 executable.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{driver}" "$0" "$@"\n')
                 executable.chmod(0o755)
             prepared_script = root / 'prepare.sh'
-            prepared_script.write_text(script.replace('/data/', str(data) + '/'))
+            prepared_script.write_text(script.replace('/data', str(data_root)))
             environment = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
                            'DATA_URL': source_url, 'PREPARE_TEST_LOG': str(log),
                            'PREPARE_TEST_CHECKSUM': checksum}

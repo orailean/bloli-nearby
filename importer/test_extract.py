@@ -20,9 +20,19 @@ class ExtractTests(unittest.TestCase):
    rows=[json.loads(line) for line in out.getvalue().splitlines()]
    records=[r for r in rows if r.get('kind')=='facility']
    self.assertEqual({r['sourceType']+'/'+r['sourceId'] for r in records},{'node/1','way/10','relation/20'})
+   self.assertEqual({r['version'] for r in records},{1})
    self.assertTrue(all(53.07<=r['lat']<=53.071 for r in records))
    self.assertEqual(rows[-1]['kind'],'complete')
    self.assertEqual(len([r for r in rows if r.get('kind')=='settlement']),1)
+ def test_metadata_retains_the_exact_coverage_boundary_provenance(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML)
+   out=io.StringIO();extract(str(p), {'type':'MultiPolygon','coordinates':[[[[5,47],[16,47],[16,56],[5,56],[5,47]]]]},out,'fixture','2026-10-25T00:00:00Z',boundary_source='https://download.geofabrik.de/europe/romania.poly',boundary_checksum='a'*64,country_code='ro',source_checksum='b'*32)
+   metadata=json.loads(out.getvalue().splitlines()[0])
+   self.assertEqual(metadata['coverageSource'],'https://download.geofabrik.de/europe/romania.poly')
+   self.assertEqual(metadata['coverageChecksum'],'a'*64)
+   self.assertEqual(metadata['countryCode'],'ro')
+   self.assertEqual(metadata['sourceChecksum'],'b'*32)
  def test_incomplete_geometry_fails_instead_of_publishing_partial_data(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'fixture.osm';p.write_text(XML.replace('<nd ref="4"/>','<nd ref="999"/>'))
@@ -40,6 +50,38 @@ class ExtractTests(unittest.TestCase):
    ways=[json.loads(line) for line in out.getvalue().splitlines() if '"sourceType": "way"' in line]
    self.assertEqual(len(ways),1)
    self.assertTrue(53.07<=ways[0]['lat']<=53.071)
+ def test_malformed_closed_facility_area_falls_back_to_its_mapped_line(self):
+  extra='''<node id="7" lat="53.072" lon="8.803"/><node id="8" lat="53.073" lon="8.804"/><node id="9" lat="53.073" lon="8.803"/><node id="10" lat="53.072" lon="8.804"/>
+  <way id="12" version="1"><nd ref="7"/><nd ref="8"/><nd ref="9"/><nd ref="10"/><nd ref="7"/><tag k="amenity" v="toilets"/></way>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>',extra+'</osm>'))
+   out=io.StringIO();extract(str(p), {'type':'MultiPolygon','coordinates':[[[[5,47],[16,47],[16,56],[5,56],[5,47]]]]},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   malformed=[r for r in rows if r.get('sourceId')=='12']
+   self.assertEqual(len(malformed),1)
+   self.assertEqual(malformed[0]['kind'],'facility')
+   self.assertEqual(rows[-1]['kind'],'complete')
+ def test_incomplete_multipolygon_facility_uses_a_mapped_member_point(self):
+  extra='''<way id="12" version="1"><nd ref="2"/><nd ref="3"/></way><way id="13" version="1"><nd ref="4"/><nd ref="5"/></way>
+  <relation id="21" version="1"><member type="way" ref="12" role="outer"/><member type="way" ref="13" role="outer"/><tag k="type" v="multipolygon"/><tag k="amenity" v="toilets"/></relation>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>',extra+'</osm>'))
+   out=io.StringIO();extract(str(p), {'type':'MultiPolygon','coordinates':[[[[5,47],[16,47],[16,56],[5,56],[5,47]]]]},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   relation=[r for r in rows if r.get('sourceId')=='21']
+   self.assertEqual(len(relation),1)
+   self.assertEqual(relation[0]['kind'],'facility')
+   self.assertEqual(rows[-1]['kind'],'complete')
+ def test_multipolygon_without_constructible_area_uses_member_tags_for_fallback(self):
+  extra='''<relation id="22" version="1"><member type="node" ref="2" role="outer"/><tag k="type" v="multipolygon"/><tag k="amenity" v="toilets"/></relation>'''
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>',extra+'</osm>'))
+   out=io.StringIO();extract(str(p), {},out,'fixture','2026-10-25T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   relation=[r for r in rows if r.get('sourceId')=='22']
+   self.assertEqual(len(relation),1)
+   self.assertEqual(relation[0]['kind'],'facility')
+   self.assertEqual(rows[-1]['kind'],'complete')
  def test_train_route_with_onboard_toilets_is_not_a_fixed_facility(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'fixture.osm';p.write_text(XML.replace('</osm>', '<relation id="98" version="1"><member type="way" ref="11" role=""/><tag k="type" v="route"/><tag k="route" v="train"/><tag k="toilets" v="yes"/></relation></osm>'))

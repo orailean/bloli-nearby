@@ -1,5 +1,5 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
-# The importer holds filesystem and database locks for safe concurrent scheduling.
-./scripts/compose.sh --profile tools run --rm importer
+# Refresh every active country in order, retaining each country's last good snapshot on failure.
+exec ./scripts/refresh-countries.sh

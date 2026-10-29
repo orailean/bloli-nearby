@@ -1,6 +1,6 @@
 # Charge deployment and data rules
 
-Charge is the sixth hostname on the existing shared stack: `https://charge.bloli.com`, category `charge`. It uses the existing API, web gateway, PostGIS database, importer, Germany source volume, tile policy, and external Nginx. No new host port, permanent container, database or Docker volume is needed. Austria/Romania coverage remains on hold.
+Charge is the sixth hostname on the existing shared stack: `https://charge.bloli.com`, category `charge`. It uses the existing API, web gateway, PostGIS database, country-aware importer, existing import volume, tile policy, and external Nginx. No new host port, permanent container, database or Docker volume is needed. Multi-country coverage is controlled by the shared staged rollout; check `/api/status` and [multi-country operations](multi-country-coverage.md) for which countries are active.
 
 ## What counts as a charging station
 
@@ -10,7 +10,7 @@ A read-only scan of the retained `germany-261025.osm.pbf` found 45,081 matching 
 
 Only explicit car connector tags qualify for connector-specific matches. Each connector and its mapped output power remain tied to the same socket entry; a CCS connector cannot accidentally inherit a separate Type 2 socket's output. Missing or conditional specifications stay unknown. Public, customer and destination access is represented from explicit access tags; destination/customer access is labelled. Private, permit-only, locked/key-only, conditional-access, inactive, and explicitly non-car stations are excluded. A station with unknown access may still appear under the unfiltered results, but is not described as public.
 
-Charging fees are kept separate from parking fees. Missing and conditional tariffs stay unknown; mapped fee text is source information, not a guaranteed current price. `Accessible now` checks mapped access hours in Europe/Berlin. Unknown or conditional hours are excluded and never assumed to mean 24/7. OSM does not provide live connector occupancy, charger health, guaranteed charging speed or a live tariff. Google Maps directions use driving mode and point to the mapped station location; follow local signs for vehicle access.
+Charging fees are kept separate from parking fees. Missing and conditional tariffs stay unknown; mapped fee text is source information, not a guaranteed current price. `Accessible now` checks mapped access hours in the station's country timezone. Unknown or conditional hours are excluded and never assumed to mean 24/7. OSM does not provide live connector occupancy, charger health, guaranteed charging speed or a live tariff. Google Maps directions use driving mode and point to the mapped station location; follow local signs for vehicle access.
 
 ## Local development
 
@@ -36,6 +36,6 @@ After TLS is ready, verify `https://charge.bloli.com` serves the Charge shell, `
 
 ## Routine updates and rollback
 
-Use [the regular production update procedure](production-updates.md) to deploy application code. Use the existing weekly refresh service for all six categories; do not run a legacy five-category importer after Charge has been published. See the [map data storage guide](data-storage.md) for the retained `/data/source.osm.pbf` and `/data/transit-context.sqlite` paths; these are not rendered map tiles.
+Use [the regular production update procedure](production-updates.md) to deploy application code. Use the existing weekly refresh service for all six categories; do not run a legacy five-category importer after Charge has been published. See the [map data storage guide](data-storage.md) for Germany's retained files under `/data/countries/de/`; these are not rendered map tiles.
 
 For rollback, pause the shared refresh timer first. Prefer a compatible code rollback that still understands all six active categories. Do not restore a pre-Charge five-category dump over the current schema with `pg_restore --clean`; restore it into a fresh separate database, verify it, and switch the application only with compatible older images and importer paused. Preserve the active volume and a fresh post-Charge backup until rollback is fully verified.

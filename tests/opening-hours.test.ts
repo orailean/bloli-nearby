@@ -38,6 +38,38 @@ test("German local time handles winter, summer and overnight opening", () => {
     true,
   );
 });
+test("mixed-country schedules use each facility's timezone at the same instant", () => {
+  const munich = {
+    ...facility("Mo 12:00-13:00"),
+    timezone: "Europe/Berlin",
+    countryCode: "de",
+  } as Parameters<typeof isOpenNow>[0];
+  const bucharest = {
+    ...facility("Mo 12:00-13:00"),
+    timezone: "Europe/Bucharest",
+    countryCode: "ro",
+  } as Parameters<typeof isOpenNow>[0];
+  const instant = new Date("2026-10-26T10:30:00Z");
+  assert.equal(isOpenNow(munich, instant), false);
+  assert.equal(isOpenNow(bucharest, instant), true);
+  assert.equal(isOpenNow(munich, instant), false, "request order is stable");
+});
+test("Romanian local opening survives its DST jump while Germany stays closed", () => {
+  const munich = {
+    ...facility("Su 03:00-04:00"),
+    timezone: "Europe/Berlin",
+    countryCode: "de",
+  } as Parameters<typeof isOpenNow>[0];
+  const bucharest = {
+    ...facility("Su 03:00-04:00"),
+    timezone: "Europe/Bucharest",
+    countryCode: "ro",
+  } as Parameters<typeof isOpenNow>[0];
+  const beforeEuropeanDstJump = new Date("2026-03-29T00:30:00Z");
+  assert.equal(isOpenNow(bucharest, beforeEuropeanDstJump), true);
+  assert.equal(isOpenNow(munich, beforeEuropeanDstJump), false);
+  assert.equal(isOpenNow(bucharest, beforeEuropeanDstJump), true);
+});
 test("holiday-dependent schedules without state context remain uncertain", () => {
   assert.equal(
     isOpenNow(

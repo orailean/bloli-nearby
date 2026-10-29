@@ -465,6 +465,30 @@ a svg:not([aria-label]) {
 .input-wrap input::placeholder {
   color: #758b82;
 }
+.country-filter {
+  display: flex;
+  flex: 0 0 190px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 8px;
+}
+.country-filter label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+.country-filter select {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
 .search-submit {
   height: 44px;
   width: 44px;
@@ -890,6 +914,16 @@ a svg:not([aria-label]) {
 .dataset-line .status-dot {
   width: 5px;
   height: 5px;
+}
+.dataset-country-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 0 20px 12px;
+  color: var(--muted);
+}
+.dataset-country-line small {
+  font-size: 9px;
 }
 .empty-state {
   display: flex;
@@ -1509,6 +1543,15 @@ a svg:not([aria-label]) {
     padding: 4px 4px 4px 8px;
     gap: 10px;
     width: 100%;
+  }
+  .country-filter {
+    flex: none;
+    width: 100%;
+    padding: 3px 7px;
+  }
+  .country-filter select {
+    min-height: 38px;
+    font-size: 13px;
   }
   .input-wrap label {
     font-size: 10px;

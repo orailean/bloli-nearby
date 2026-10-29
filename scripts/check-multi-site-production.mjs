@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
 const results = {};
+const expectedCountries = (process.env.EXPECTED_COUNTRIES || "de,ro")
+  .split(",").map((value) => value.trim()).filter(Boolean);
+const countryLabels = {
+  de: { de: "Deutschland", en: "Germany", ro: "Germania" },
+  ro: { de: "Rumänien", en: "Romania", ro: "România" },
+  at: { de: "Österreich", en: "Austria", ro: "Austria" },
+  hu: { de: "Ungarn", en: "Hungary", ro: "Ungaria" },
+};
 const browser = await chromium.launch();
 try {
   for (const id of (
@@ -20,6 +28,18 @@ try {
     }));
     assert.equal(status.status, 200);
     assert.equal(status.body.ready, true);
+    const countryStates = new Map((status.body.countries || []).map((country) => [country.code, country]));
+    for (const code of expectedCountries) {
+      const country = countryStates.get(code);
+      assert.ok(country, `${id}: status must include ${code}`);
+      assert.equal(country.status, "active", `${id}: ${code} should be active`);
+      assert.equal(country.ready, true, `${id}: ${code} snapshot should be ready`);
+      assert.ok(country.datasetAt, `${id}: ${code} source date should be present`);
+    }
+    for (const code of ["ro", "at", "hu"].filter((code) => !expectedCountries.includes(code))) {
+      const country = countryStates.get(code);
+      if (country) assert.equal(country.status, "pending", `${id}: ${code} must remain pending`);
+    }
     const query = "lat=48.1391&lon=11.4729&radius=5000";
     const all = await fetch(`${base}/api/locations?${query}`).then((r) =>
       r.json(),
@@ -32,6 +52,22 @@ try {
           (id === "kippe" ? !!item.sellerType : !item.sellerType),
       ),
     );
+    const countrySearches = {
+      ro: { name: "Bucharest", lat: 44.4268, lon: 26.1025 },
+      at: { name: "Vienna", lat: 48.2082, lon: 16.3738 },
+      hu: { name: "Budapest", lat: 47.4979, lon: 19.0402 },
+    };
+    for (const code of expectedCountries.filter((country) => country !== "de")) {
+      const city = countrySearches[code];
+      assert.ok(city, `${code}: a city probe is configured`);
+      const results = await fetch(`${base}/api/locations?lat=${city.lat}&lon=${city.lon}&radius=5000`).then((r) => r.json());
+      assert.ok(results.items.length > 0, `${id}: ${city.name} results`);
+      assert.ok(results.items.every((item) => item.countryCode === code), `${id}: ${city.name} results must identify ${code}`);
+      if (code === "ro") {
+      const settlements = await fetch(`${base}/api/settlements?q=bucuresti&country=ro`).then((r) => r.json());
+      assert.ok(settlements.items.some((item) => item.countryCode === "ro"), `${id}: unaccented Romanian settlement match`);
+      }
+    }
     if (id === "kebab") {
       assert.ok(
         all.items.every(
@@ -172,6 +208,14 @@ try {
       )
       .toBeGreaterThan(0);
     await expect(page.locator(".radius-control select")).toHaveValue("500");
+    if (expectedCountries.length > 1) {
+      for (const code of expectedCountries) {
+        await expect(page.locator(".dataset-country-line")).toContainText(
+          countryLabels[code].en,
+          { timeout: 25000 },
+        );
+      }
+    }
     await page.getByRole("button", { name: "München", exact: true }).click();
     await page.locator(".radius-control select").selectOption("5000");
     await expect(page.locator(".result-select").first()).toBeVisible();
@@ -201,6 +245,17 @@ try {
       for (const lang of ["de", "ro", "en"]) {
         await page.locator("#language").selectOption(lang);
         await page.evaluate(() => document.fonts.ready);
+        if (expectedCountries.length > 1) {
+          const coverage = expectedCountries.map((code) => countryLabels[code][lang]);
+          for (const name of coverage) {
+            await expect(page.locator(".hero-copy > p")).toContainText(name);
+          }
+          await expect
+            .poll(() =>
+              page.locator('meta[name="description"]').getAttribute("content"),
+            )
+            .toContain(coverage[coverage.length - 1]);
+        }
         assert.equal(
           await page.evaluate(
             () =>
@@ -233,6 +288,7 @@ try {
       count: status.body.count,
       datasetAt: status.body.datasetAt,
       importedAt: status.body.importedAt,
+      countries: [...countryStates].map(([code, country]) => ({ code, status: country.status, ready: country.ready, datasetAt: country.datasetAt })),
       munichResults: all.items.length,
       initialHtml: true,
       mapImagesLoaded: true,

@@ -1,4 +1,5 @@
 import { resolveSite } from "../shared/sites.js";
+import { COUNTRIES, type CountryCode } from "../shared/countries.js";
 import { createServer } from "node:http";
 import type pg from "pg";
 import type { AppConfig } from "../shared/types.js";
@@ -66,13 +67,24 @@ export function createApi(pool: pg.Pool, config: Partial<AppConfig> = {}) {
           await searchToilets(pool, parseSearch(u.searchParams)),
         );
       if (u.pathname === "/api/settlements")
-        return send(200, {
-          items: await searchSettlements(
-            pool,
-            (u.searchParams.get("q") || "").trim(),
-            site.category,
-          ),
-        });
+        {
+          const countryValues = u.searchParams.getAll("country");
+          const selectedCountry = countryValues[0] ?? "all";
+          if (
+            countryValues.length > 1 ||
+            (selectedCountry !== "all" &&
+              !COUNTRIES.some((country) => country.code === selectedCountry))
+          )
+            throw new AppError("INVALID_QUERY");
+          return send(200, {
+            items: await searchSettlements(
+              pool,
+              (u.searchParams.get("q") || "").trim(),
+              site.category,
+              selectedCountry as CountryCode | "all",
+            ),
+          });
+        }
       return send(404, { error: "NOT_FOUND" });
     } catch (error) {
       if (error instanceof AppError)

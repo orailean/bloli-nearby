@@ -3,6 +3,8 @@ import { createInterface } from "node:readline";
 import type pg from "pg";
 import { importDataset } from "./import.js";
 import type { RefreshContext } from "./refresh.js";
+import { minimumForCountry, minimumSettlementsForCountry } from "../shared/countries.js";
+import type { CountryCode } from "../shared/countries.js";
 export async function importFile(
   pool: pg.Pool,
   path: string,
@@ -40,18 +42,23 @@ export async function importFile(
   }
 
   try {
+    const countryCode = (meta.countryCode || "de") as CountryCode;
     return await importDataset(
       pool,
       records(),
       {
         ...meta,
-        minimumFacilities: Number(process.env.MIN_FACILITIES || 1000),
-        minimumSettlements: Number(process.env.MIN_SETTLEMENTS || 1000),
-        minimumSellers: Number(process.env.MIN_SELLERS || 100),
-        minimumTransit: Number(process.env.MIN_TRANSIT_STOPS || 1000),
-        minimumChargeStations: Number(process.env.MIN_CHARGE_STATIONS || 100),
-        minimumWaterPoints: Number(process.env.MIN_WATER_POINTS || 100),
-        minimumKebabs: Number(process.env.MIN_KEBABS || 100),
+        countryCode,
+        sourceChecksum: meta.sourceChecksum,
+        boundarySource: meta.coverageSource,
+        boundaryChecksum: meta.coverageChecksum,
+        minimumFacilities: minimumForCountry(countryCode, "toilets"),
+        minimumSettlements: minimumSettlementsForCountry(countryCode),
+        minimumSellers: minimumForCountry(countryCode, "tobacco"),
+        minimumTransit: minimumForCountry(countryCode, "transit"),
+        minimumChargeStations: minimumForCountry(countryCode, "charge"),
+        minimumWaterPoints: minimumForCountry(countryCode, "water"),
+        minimumKebabs: minimumForCountry(countryCode, "kebab"),
         minimumRatio: Number(process.env.MIN_IMPORT_RATIO || 0.75),
       },
       context,
