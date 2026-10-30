@@ -61,7 +61,7 @@
   "how1": "Válaszd ki a helyet",
   "how1Text": "Használd a helyzetedet, keress települést vagy irányítószámot, vagy válassz egy pontot a térképen.",
   "privacyTitle": "Egy kis magánszféra is jár.",
-  "privacyText": "A keresések a webhely szerverén futnak. Nem tárolunk helyelőzményeket. A nyelvválasztásodat csak ez a böngésző menti. Az OpenStreetMap megkapja az IP-címedet és a megtekintett térképcsempékre vonatkozó kéréseket. A Google Maps csak akkor nyílik meg, ha útvonalat kérsz. A nevek és a nyitvatartási adatok közösségi térképadatokból származnak, és hiányosak lehetnek. A térképfeliratok a térképszolgáltató nyelvét követik.",
+  "privacyText": "A keresések a webhely szerverén futnak. Nem tárolunk helyelőzményeket. A nyelvválasztásodat csak ez a böngésző menti. Az OpenStreetMap megkapja az IP-címedet és a megtekintett térképcsempékre vonatkozó kéréseket. A Google Maps csak akkor nyílik meg, ha útvonalat kérsz. A nevek és a nyitvatartási adatok közösségi térképadatokból származnak, és hiányosak lehetnek. A térképfeliratok a térképszolgáltató nyelvét követik. Ezek a nyilvános webhelyek a Cloudflare Web Analytics szolgáltatást használják a látogatások és a webhelyek teljesítményének mérésére.",
   "choosePoint": "Hely kiválasztása",
   "zoomIn": "Nagyítás",
   "zoomOut": "Kicsinyítés",

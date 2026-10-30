@@ -61,7 +61,7 @@
   "how1": "Alege locul",
   "how1Text": "Folosește locația ta, caută localitatea sau codul poștal ori alege un punct pe hartă.",
   "privacyTitle": "Și puțină intimitate.",
-  "privacyText": "Căutările rulează pe serverul acestui site. Nu stocăm istoricul locațiilor. Limba aleasă este salvată doar în acest browser. OpenStreetMap primește adresa ta IP și porțiunile de hartă vizualizate. Google Maps se deschide doar când alegi indicațiile de orientare. Numele și programul provin din date comunitare și pot fi incomplete. Etichetele hărții urmează limba furnizorului.",
+  "privacyText": "Căutările rulează pe serverul acestui site. Nu stocăm istoricul locațiilor. Limba aleasă este salvată doar în acest browser. OpenStreetMap primește adresa ta IP și porțiunile de hartă vizualizate. Google Maps se deschide doar când alegi indicațiile de orientare. Numele și programul provin din date comunitare și pot fi incomplete. Etichetele hărții urmează limba furnizorului. Aceste site-uri publice folosesc Cloudflare Web Analytics pentru a măsura vizitele și performanța site-urilor.",
   "choosePoint": "Alege un loc",
   "zoomIn": "Mărește",
   "zoomOut": "Micșorează",

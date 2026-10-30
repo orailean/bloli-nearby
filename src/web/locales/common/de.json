@@ -61,7 +61,7 @@
   "how1": "Wähle deinen Ort",
   "how1Text": "Nutze deinen Standort, suche einen Ort oder eine PLZ oder wähle einen Kartenpunkt.",
   "privacyTitle": "Ein bisschen Privatsphäre gehört dazu.",
-  "privacyText": "Suchen laufen auf dem Server dieser Website. Wir speichern keinen Standortverlauf. Deine Sprachwahl wird nur in diesem Browser gespeichert. OpenStreetMap erhält deine IP-Adresse und die angezeigten Kartenkacheln. Google Maps öffnet sich nur, wenn du die Wegbeschreibung auswählst. Namen und Öffnungszeiten stammen aus gemeinschaftlichen Kartendaten und können unvollständig sein. Kartenbeschriftungen folgen der Sprache des Kartenanbieters.",
+  "privacyText": "Suchen laufen auf dem Server dieser Website. Wir speichern keinen Standortverlauf. Deine Sprachwahl wird nur in diesem Browser gespeichert. OpenStreetMap erhält deine IP-Adresse und die angezeigten Kartenkacheln. Google Maps öffnet sich nur, wenn du die Wegbeschreibung auswählst. Namen und Öffnungszeiten stammen aus gemeinschaftlichen Kartendaten und können unvollständig sein. Kartenbeschriftungen folgen der Sprache des Kartenanbieters. Diese öffentlichen Websites verwenden Cloudflare Web Analytics, um Besuche und die Website-Leistung zu messen.",
   "choosePoint": "Ort auswählen",
   "zoomIn": "Vergrößern",
   "zoomOut": "Verkleinern",

@@ -86,6 +86,8 @@ Production uses one weekly `bloli-nearby-refresh.timer` and one daily `bloli-nea
 
 ## Map policy, privacy and licenses
 
+Each public site includes its own Cloudflare Web Analytics beacon for visits and site performance. Native Vite development has no beacon. See [analytics configuration and deployment](docs/deployment/web-analytics.md) for hostname/token mappings, privacy copy and verification steps.
+
 Normal interactive OSM raster tiles retain attribution, browser caching and Referer; there is no bulk tile download, proxy, offline pack or prefetch. Public tiles have no availability guarantee; a permitted alternative provider remains configurable. The provider receives IP/viewed tile coordinates. Searches do not store location history and query URLs are not logged routinely. Explicit language preference is stored locally; opening directions sends the destination to Google Maps.
 
 Map/location data is © OpenStreetMap contributors under ODbL, via Geofabrik. Preserve source attribution and applicable database-sharing obligations. See [OSM copyright](https://www.openstreetmap.org/copyright), [tile policy](https://operations.osmfoundation.org/policies/tiles/) and [third-party notices](THIRD_PARTY_NOTICES.md). Downloaded PBFs, databases, dumps, screenshots, built assets and secrets remain outside Git. The repository is `git@github.com:orailean/bloli-nearby.git`.
