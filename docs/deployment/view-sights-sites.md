@@ -34,6 +34,8 @@ Category-specific types live in `src/shared/tourism-types.ts`; normalizers in `s
 
 Duplicate type filters, invalid types and cross-category filters return `INVALID_QUERY`. SQL applies type and fee filters before the result limit. Unknown hours are excluded by Open now. `/api/status` and `/api/ready` remain scoped to the request hostname, with country-specific counts and refresh outcomes.
 
+Physical tourist relations support empty type, multipolygon, boundary, site, building, bridge, artwork and multilinestring. Nested physical site members are resolved recursively, and bridge outlines (then across members) take precedence over unrelated underneath members. Logical networks, person collections and other unsupported relation types are not nearby destinations. Missing geometry for a qualifying physical feature still aborts preparation.
+
 The extractor emits ten-category metadata and records with kind `view` or `sights`, reconstructs node/way/relation geometry and aborts publication on missing fixed geometry. The expanded source-filter expression invalidates the existing filtered-PBF cache without discarding the retained source snapshot. Countries continue to use independent source/coverage provenance.
 
 Existing complete eight-category non-German snapshots remain importable during rollout. Once either new category is published for a country, subsequent imports must include it, using the existing active-category omission guard. New country activation still requires all ten verified categories. Germany retains its historical partial-category bootstrap behavior. Publication is atomic; suspicious count drops or failed imports preserve the previous active snapshot.
@@ -79,3 +81,5 @@ npm exec playwright -- test tests/e2e/multi-site.spec.ts
 ```
 
 The new checks cover explicit tags, tower/historic precedence, access/lifecycle exclusion, unknown/conditional values, unsafe links, geometry failures, valid synthetic source identities, query isolation, SQL filtering before the cap, failed publication retention, ten-category country activation, all four languages and 320/390/430/1440px browser layouts. Analytics checks verify View's token and the absence of a Sights beacon pending configuration.
+
+The production rollout is recorded in [the View/Sights protocol](protocol-2026-10-30-view-sights.md), including source measurements, floors, backups and TLS checks.

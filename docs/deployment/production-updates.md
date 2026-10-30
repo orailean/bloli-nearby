@@ -1,8 +1,8 @@
 # Updating Bloli Nearby in production
 
-Current eight-site deployment: see [ATM and Stay](atm-stay-sites.md). Existing operations: see [Bloli Nearby migration and updates](bloli-nearby-migration.md), [multi-country operations](multi-country-coverage.md), [Water setup](water-site.md), [Transit setup](transit-site.md) and [Charge setup](charge-site.md).
+Current ten-site deployment: see [View and Sights](view-sights-sites.md) and its [rollout protocol](protocol-2026-10-30-view-sights.md). Earlier eight-site rollout: [ATM and Stay](atm-stay-sites.md). Existing operations: see [Bloli Nearby migration and updates](bloli-nearby-migration.md), [multi-country operations](multi-country-coverage.md), [Water setup](water-site.md), [Transit setup](transit-site.md) and [Charge setup](charge-site.md).
 
-Production path: `/home/oliver/stack/bloli-nearby` on `ssh-contabo`. Public sites: https://loo.bloli.com, https://kippe.bloli.com, https://kebab.bloli.com, https://water.bloli.com, https://transit.bloli.com and https://charge.bloli.com. The existing Docker Nginx owns ports 80/443; this app publishes no host ports. The production `.env` persists `COMPOSE_FILE=compose.yaml:compose.production.yaml` so operational commands retain the external `nginx_default` network and alias `bloli-nearby-web`.
+Production path: `/home/oliver/stack/bloli-nearby` on `ssh-contabo`. Public sites: https://loo.bloli.com, https://kippe.bloli.com, https://kebab.bloli.com, https://water.bloli.com, https://transit.bloli.com, https://charge.bloli.com, https://atm.bloli.com, https://stay.bloli.com, https://view.bloli.com and https://sights.bloli.com. The existing Docker Nginx owns ports 80/443; this app publishes no host ports. The production `.env` persists `COMPOSE_FILE=compose.yaml:compose.production.yaml` so operational commands retain the external `nginx_default` network and alias `bloli-nearby-web`.
 
 ## Update application code
 
@@ -59,11 +59,11 @@ sudo journalctl -u bloli-nearby-backup.service -n 100 --no-pager
 sudo systemctl start bloli-nearby-backup.service
 ```
 
-The daily backup timer runs around 04:30–04:45 Europe/Berlin. Dumps are in the project's `backups/` directory. Monitor disk usage and arrange secure off-host backups; this deployment does not delete older backups automatically. Back up `.env`, `.secrets/db_password`, and host `/etc/letsencrypt` securely as well. Do not publish them in Git.
+The daily backup timer runs around 04:30–04:45 Europe/Berlin. Dumps are in the project's `backups/` directory. Each completed dump is structurally checked with `pg_restore --list` before publication; older generated `bloli-nearby-TIMESTAMP.dump` files are then removed, retaining the latest verified dump. Monitor disk usage and arrange secure off-host backups; backup pruning happens only after the new dump and archive check succeed. A directory lock prevents overlapping dumps. If a process was killed without cleanup, confirm that no backup is running before removing a stale `backups/.backup.lock` directory. Back up `.env`, `.secrets/db_password`, and host `/etc/letsencrypt` securely as well. Do not publish them in Git.
 
 ## Roll back app code
 
-Pause `bloli-nearby-refresh.timer` before an incompatible rollback. Once Transit is active, do not run an older category importer against the eight-category database. Keep refresh paused until compatible code is restored or a matching pre-change backup is restored, then resume the timer explicitly.
+Pause `bloli-nearby-refresh.timer` before an incompatible rollback. Once View and Sights are active, do not run an older category importer against the ten-category database. Keep refresh paused until compatible code is restored or a matching pre-change backup is restored, then resume the timer explicitly.
 
 Use the recorded previous commit, replacing `PREVIOUS_COMMIT` below. Keep the current database unless the code change requires a matching pre-update schema/data snapshot.
 
@@ -110,7 +110,7 @@ sudo systemctl restart bloli-nearby-refresh.timer bloli-nearby-backup.timer
 Certificate renewal uses the existing Snap Certbot timer and the domain-scoped hook documented in [the HTTPS setup guide](contabo-nginx.md). Verify each app lineage without changing unrelated sites' renewal configuration:
 
 ```bash
-for domain in loo.bloli.com kippe.bloli.com kebab.bloli.com water.bloli.com transit.bloli.com charge.bloli.com; do
+for domain in loo.bloli.com kippe.bloli.com kebab.bloli.com water.bloli.com transit.bloli.com charge.bloli.com atm.bloli.com stay.bloli.com view.bloli.com sights.bloli.com; do
   sudo /snap/bin/certbot renew --cert-name "$domain" --dry-run --run-deploy-hooks --no-random-sleep-on-renew
 done
 ```
