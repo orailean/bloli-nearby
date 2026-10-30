@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
+. ./scripts/operation-lock.sh
 
 target=${1:-}
 if [ "$#" -gt 1 ]; then

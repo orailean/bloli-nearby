@@ -4,6 +4,7 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync, mkdirSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { installFlockShim } from "./helpers/flock.js";
 
 function harness() {
   const root = mkdtempSync(join(tmpdir(), "bloli-refresh-countries-"));
@@ -11,6 +12,8 @@ function harness() {
   const bin = join(scripts, "compose.sh");
   const source = readFileSync("scripts/refresh-countries.sh", "utf8");
   mkdirSync(scripts, { recursive: true });
+  writeFileSync(join(scripts,"operation-lock.sh"),readFileSync("scripts/operation-lock.sh","utf8"));
+  installFlockShim(scripts);
   writeFileSync(join(scripts, "refresh-countries.sh"), source, { mode: 0o755 });
   writeFileSync(
     bin,
@@ -23,7 +26,7 @@ esac
 `,
     { mode: 0o755 },
   );
-  return { root, log: join(root, "calls"), script: join(scripts, "refresh-countries.sh") };
+  return { root, bin: scripts, log: join(root, "calls"), script: join(scripts, "refresh-countries.sh") };
 }
 
 test("scheduled country refresh runs sequentially, continues after failure, and reports nonzero", () => {
@@ -31,7 +34,7 @@ test("scheduled country refresh runs sequentially, continues after failure, and 
   try {
     const result = spawnSync("/bin/sh", [h.script], {
       encoding: "utf8",
-      env: { ...process.env, TEST_LOG: h.log, TEST_COUNTRIES: "de ro at hu" },
+      env: { ...process.env, PATH: `${h.bin}:${process.env.PATH}`, TEST_LOG: h.log, TEST_COUNTRIES: "de ro at hu" },
     });
     assert.equal(result.status, 1);
     const calls = readFileSync(h.log, "utf8");
@@ -53,7 +56,7 @@ test("targeted retry runs only the requested country and rejects unknown codes",
   try {
     const result = spawnSync("/bin/sh", [h.script, "ro"], {
       encoding: "utf8",
-      env: { ...process.env, TEST_LOG: h.log, TEST_COUNTRIES: "de ro at hu" },
+      env: { ...process.env, PATH: `${h.bin}:${process.env.PATH}`, TEST_LOG: h.log, TEST_COUNTRIES: "de ro at hu" },
     });
     assert.equal(result.status, 23);
     assert.equal(readFileSync(h.log, "utf8").trim().split("\n").length, 1);
@@ -61,7 +64,7 @@ test("targeted retry runs only the requested country and rejects unknown codes",
 
     const invalid = spawnSync("/bin/sh", [h.script, "fr"], {
       encoding: "utf8",
-      env: { ...process.env, TEST_LOG: h.log, TEST_COUNTRIES: "de ro at hu" },
+      env: { ...process.env, PATH: `${h.bin}:${process.env.PATH}`, TEST_LOG: h.log, TEST_COUNTRIES: "de ro at hu" },
     });
     assert.equal(invalid.status, 2);
     assert.match(invalid.stderr, /UNSUPPORTED_COUNTRY/);

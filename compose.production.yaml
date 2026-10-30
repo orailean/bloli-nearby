@@ -4,10 +4,10 @@ services:
   db:
     container_name: bloli-nearby-db
   api:
-    image: bloli-nearby-api:latest
+    image: ${BLOLI_API_IMAGE:-bloli-nearby-api:latest}
     container_name: bloli-nearby-api
   web:
-    image: bloli-nearby-web:latest
+    image: ${BLOLI_WEB_IMAGE:-bloli-nearby-web:latest}
     container_name: bloli-nearby-web
     ports: !reset []
     networks:
@@ -15,7 +15,7 @@ services:
       edge:
         aliases: [bloli-nearby-web]
   importer:
-    image: bloli-nearby-importer:latest
+    image: ${BLOLI_IMPORTER_IMAGE:-bloli-nearby-importer:latest}
 networks:
   edge:
     external: true
