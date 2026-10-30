@@ -2937,3 +2937,42 @@ html[data-site="stay"] {
   [data-site="atm"] *, [data-site="atm"] *::before, [data-site="atm"] *::after,
   [data-site="stay"] *, [data-site="stay"] *::before, [data-site="stay"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* View: a field notebook framing a mountain panorama. */
+html[data-site="view"] { --ink:#244c5a; --mint:#d4e9ed; --yellow:#f1c56a; --line:#c8dbe0; --muted:#536b76; background:#f5fafb; color:var(--ink); }
+[data-site="view"] .site-header { background:#f5fafb; }
+[data-site="view"] .brand-mark { background:#244c5a; color:#d4e9ed; border-radius:50% 50% 6px 6px; transform:none; }
+[data-site="view"] .brand-dot { color:#43846f; }
+[data-site="view"] .hero h1 { font-weight:650; letter-spacing:-3px; }
+[data-site="view"] .hero-art::before, [data-site="sights"] .hero-art::before { display:none; }
+.view-scene, .sights-scene { width:min(100%,390px); height:auto; }
+[data-site="view"] .art-caption { background:#f1c56a; color:#244c5a; box-shadow:none; border-radius:3px; transform:rotate(-3deg); }
+[data-site="view"] .workspace { border-color:#a4c0c9; }
+[data-site="view"] .workspace-toolbar { background:#eaf3f5; }
+[data-site="view"] .site-footer { background:#244c5a; color:#f5fafb; }
+[data-site="view"] .footer-main p, [data-site="view"] .footer-bottom { color:#d4e9ed; }
+/* Sights: a compact illustrated city guide. */
+html[data-site="sights"] { --ink:#383b75; --mint:#e7ebff; --yellow:#efa18a; --line:#d9ddee; --muted:#656781; background:#f6f8ff; color:var(--ink); }
+[data-site="sights"] .site-header { background:#f6f8ff; }
+[data-site="sights"] .brand-mark { background:#383b75; color:#e7ebff; border-radius:5px; transform:none; }
+[data-site="sights"] .brand-dot { color:#c55c50; }
+[data-site="sights"] .hero h1 { font-weight:750; letter-spacing:-2.7px; }
+[data-site="sights"] .art-caption { background:#383b75; color:#fff; box-shadow:none; border-radius:5px; transform:rotate(3deg); }
+[data-site="sights"] .workspace { border-color:#b7bfde; }
+[data-site="sights"] .workspace-toolbar { background:#eef0fb; }
+[data-site="sights"] .site-footer { background:#383b75; color:#f6f8ff; }
+[data-site="sights"] .footer-main p, [data-site="sights"] .footer-bottom { color:#e7ebff; }
+.tourist-filters { display:flex; flex-wrap:wrap; gap:10px; align-items:center; min-width:0; }
+.tourist-type-control { display:flex; align-items:center; flex-wrap:wrap; gap:7px; font-size:12px; font-weight:650; min-width:0; }
+.tourist-type-control select { min-height:44px; max-width:100%; min-width:0; border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:5px; padding:8px; }
+.tourist-kind { font-weight:650; color:var(--ink); font-size:12px; }
+.tourist-distance-note { border-top:1px solid var(--line); padding-top:10px; }
+[data-site="view"] .workspace-toolbar, [data-site="sights"] .workspace-toolbar { flex-wrap:wrap; }
+[data-site="view"] .locate-button, [data-site="view"] .search-submit, [data-site="view"] .walk-button, [data-site="view"] .fee-filters button.active,
+[data-site="sights"] .locate-button, [data-site="sights"] .search-submit, [data-site="sights"] .walk-button, [data-site="sights"] .fee-filters button.active { background:var(--ink); color:#fff; }
+@media (max-width:600px) {
+  .tourist-filters { width:100%; }
+  .tourist-type-control { width:100%; }
+  .tourist-type-control select { flex:1; width:0; }
+  [data-site="view"] .hero h1, [data-site="sights"] .hero h1 { letter-spacing:-1.8px; }
+}

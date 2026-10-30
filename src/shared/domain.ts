@@ -1,3 +1,4 @@
+import { VIEW_TYPES, SIGHT_TYPES } from "./tourism-types.js";
 import { ACCOMMODATION_TYPES } from "./nearby-types.js";
 import { CHARGE_CONNECTORS, CHARGE_POWERS } from "./charge-types.js";
 import { TRANSIT_MODES } from "./transit-modes.js";
@@ -101,7 +102,9 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   if (
-    (!["toilets", "water", "charge", "atm"].includes(category) &&
+    (!["toilets", "water", "charge", "atm", "view", "sights"].includes(
+      category,
+    ) &&
       p.has("fee")) ||
     (category !== "tobacco" && p.has("sellerType"))
   )
@@ -141,6 +144,17 @@ export function parseSearch(
     )
   )
     throw new AppError("INVALID_QUERY");
+  const viewType = p.get("viewType") ?? "all",
+    sightType = p.get("sightType") ?? "all";
+  if (
+    (category !== "view" && p.has("viewType")) ||
+    (category !== "sights" && p.has("sightType")) ||
+    !["all", ...VIEW_TYPES].includes(viewType) ||
+    !["all", ...SIGHT_TYPES].includes(sightType) ||
+    p.getAll("viewType").length > 1 ||
+    p.getAll("sightType").length > 1
+  )
+    throw new AppError("INVALID_QUERY");
   const sellerType = p.get("sellerType") ?? "all";
   if (
     !["all", "machine", "shop", "fuel"].includes(sellerType) ||
@@ -166,6 +180,12 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   return {
+    ...(category === "view"
+      ? { viewType: viewType as SearchQuery["viewType"] }
+      : {}),
+    ...(category === "sights"
+      ? { sightType: sightType as SearchQuery["sightType"] }
+      : {}),
     ...(category === "atm"
       ? { currency, deposit: deposit as SearchQuery["deposit"] }
       : {}),

@@ -68,20 +68,20 @@ if [ ! -f "$DATA_DIR/transit-context.sqlite" ] || [ ! -f "$DATA_DIR/transit-cont
 else
   printf '[transit-context] Reusing source-bound relation context\n'
 fi
-FILTER_EXPRESSIONS='nwr/amenity=atm nwr/atm=yes nwr/tourism=hotel,motel,guest_house,hostel,apartment,chalet,camp_site,caravan_site nwr/amenity=charging_station nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco nwr/cuisine nwr/amenity=drinking_water nwr/drinking_water nwr/drinking_water:refill nwr/fountain=drinking nwr/railway=station,halt,tram_stop,platform,subway_entrance,train_station_entrance nwr/highway=bus_stop,platform nwr/amenity=bus_station,taxi,ferry_terminal nwr/aerialway=station nwr/public_transport=station,platform,stop_position,entrance r/public_transport=stop_area'
+FILTER_EXPRESSIONS='nwr/tourism=viewpoint,museum,attraction nwr/tower:type=observation nwr/historic=castle,ruins,monument,memorial,archaeological_site nwr/amenity=atm nwr/atm=yes nwr/tourism=hotel,motel,guest_house,hostel,apartment,chalet,camp_site,caravan_site nwr/amenity=charging_station nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco nwr/cuisine nwr/amenity=drinking_water nwr/drinking_water nwr/drinking_water:refill nwr/fountain=drinking nwr/railway=station,halt,tram_stop,platform,subway_entrance,train_station_entrance nwr/highway=bus_stop,platform nwr/amenity=bus_station,taxi,ferry_terminal nwr/aerialway=station nwr/public_transport=station,platform,stop_position,entrance r/public_transport=stop_area'
 filter_key="$DATA_URL|$FILTER_EXPRESSIONS"
 if [ -f "$DATA_DIR/filtered.osm.pbf" ] && [ -f "$DATA_DIR/filtered.source" ] && [ "$(cat "$DATA_DIR/filtered.source")" = "$filter_key" ]; then
   printf '[filter] Reusing completed filtered snapshot\n'
 else
   rm -f "$DATA_DIR/filtered.source"
-  printf '[filter] Extracting all eight categories, places and postal boundaries\n'
+  printf '[filter] Extracting all ten categories, places and postal boundaries\n'
   # This word list is a fixed set of filter arguments, not user input.
   osmium tags-filter "$DATA_DIR/source.osm.pbf" $FILTER_EXPRESSIONS -o "$DATA_DIR/filtered.osm.pbf" --overwrite
   printf '%s\n' "$filter_key" > "$DATA_DIR/filtered.source"
 fi
-printf '[geometry-preflight] Validating all eight categories and settlements\n'
+printf '[geometry-preflight] Validating all ten categories and settlements\n'
 python3 /app/importer/extract.py "$DATA_DIR/filtered.osm.pbf" "$DATA_DIR/coverage.poly" --source "$DATA_URL" --transport-context "$DATA_DIR/transit-context.sqlite" --context-fingerprint "$context_key" --boundary-source "$POLY_URL" --boundary-checksum "$boundary_checksum" --country-code "$COUNTRY_CODE" --source-checksum "$expected" --geometry-only
-printf '[geometry] Building complete eight-category and settlement records\n'
+printf '[geometry] Building complete ten-category and settlement records\n'
 python3 /app/importer/extract.py "$DATA_DIR/filtered.osm.pbf" "$DATA_DIR/coverage.poly" --source "$DATA_URL" --transport-context "$DATA_DIR/transit-context.sqlite" --context-fingerprint "$context_key" --boundary-source "$POLY_URL" --boundary-checksum "$boundary_checksum" --country-code "$COUNTRY_CODE" --source-checksum "$expected" > "$DATA_DIR/extracted.jsonl.part"
 mv "$DATA_DIR/extracted.jsonl.part" "$DATA_DIR/extracted.jsonl"
 printf '[publish] Source preparation complete\n'

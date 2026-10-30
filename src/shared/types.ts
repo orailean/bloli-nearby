@@ -28,6 +28,7 @@ export interface SourceRecord {
   transport?: TransitContext;
   tags: Record<string, string>;
 }
+import type { TouristData, ViewType, SightType } from "./tourism-types.js";
 export interface Facility {
   id: string;
   sourceType: SourceRecord["sourceType"];
@@ -58,6 +59,7 @@ export interface Facility {
   charging?: ChargingData;
   atm?: AtmData;
   accommodation?: AccommodationData;
+  tourist?: TouristData;
   waterType?: "point" | "refill";
   bottle?: string | null;
   seasonal?: string | null;
@@ -92,6 +94,8 @@ export interface SearchQuery {
   currency?: string;
   deposit?: "all" | "yes";
   accommodationType?: AccommodationType | "all";
+  viewType?: ViewType | "all";
+  sightType?: SightType | "all";
   connector?: ChargeConnectorFilter;
   minPowerKw?: ChargePower;
   chargeAccess?: ChargeAccessFilter;
@@ -139,6 +143,8 @@ export interface CountryCoverage {
         | "charge"
         | "atm"
         | "accommodation"
+        | "view"
+        | "sights"
         | "settlements",
         number
       >

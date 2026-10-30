@@ -1,6 +1,6 @@
 # Bloli Nearby
 
-One self-hosted OpenStreetMap discovery platform with eight focused sites, covering Germany, Romania, Austria and Hungary:
+One self-hosted OpenStreetMap discovery platform with ten focused sites, covering Germany, Romania, Austria and Hungary:
 
 - **[Find a Loo](https://loo.bloli.com)** — public toilets, free/paid filters and mapped opening hours.
 - **[Kippe](https://kippe.bloli.com)** — cigarette machines, tobacco shops, Lotto outlets, kiosks, Spätis, supermarkets, newsagents and petrol stations; machine/shop/petrol-station filters and mapped hours/payment details.
@@ -10,8 +10,10 @@ One self-hosted OpenStreetMap discovery platform with eight focused sites, cover
 - **[Charge](https://charge.bloli.com)** — mapped car charging stations, connector/power/access filters and driving directions.
 - **[ATM](https://atm.bloli.com)** — mapped cash machines, currency/deposit/machine-fee filters and mapped access hours.
 - **[Stay](https://stay.bloli.com)** — hotels, guesthouses, hostels, apartments, holiday homes, campsites and motorhome sites, mapped contact details and driving directions.
+- **[View](https://view.bloli.com)** — mapped viewpoints and observation towers, type/fee/hours filters and mapped elevation/access details.
+- **[Sights](https://sights.bloli.com)** — mapped museums, attractions, castles, ruins, monuments, memorials and archaeological sites, with type filters and visitor details.
 
-All eight share one React/Leaflet frontend build, Node API, PostGIS database and country-aware importer. Site profiles select distinct branding, artwork, translations, metadata, filters and details by hostname. All four countries use independent verified snapshots. No paid API or Google Maps key is needed; directions open externally in Google Maps. Browser map backgrounds load normal public OSM tiles directly. Downloaded OSM data supplies local location and postcode searches, not self-hosted map tiles.
+All ten share one React/Leaflet frontend build, Node API, PostGIS database and country-aware importer. Site profiles select distinct branding, artwork, translations, metadata, filters and details by hostname. All four countries use independent verified snapshots. No paid API or Google Maps key is needed; directions open externally in Google Maps. Browser map backgrounds load normal public OSM tiles directly. Downloaded OSM data supplies local location and postcode searches, not self-hosted map tiles.
 
 ## Native local development
 
@@ -25,9 +27,9 @@ npm run dev:api # terminal 1
 npm run dev     # terminal 2
 ```
 
-Open `http://loo.localhost:5173`, `http://kippe.localhost:5173`, `http://kebab.localhost:5173`, `http://water.localhost:5173`, `http://transit.localhost:5173` `http://charge.localhost:5173`, `http://atm.localhost:5173` and `http://stay.localhost:5173`. All eight use the same services. For a fresh mixed sample database and `npm run seed:sample`, follow the guide; the seed command refuses to overwrite existing data. The [detailed local debugging guide](docs/development/local-debugging.md) also retains optional regional source workflows.
+Open `http://loo.localhost:5173`, `http://kippe.localhost:5173`, `http://kebab.localhost:5173`, `http://water.localhost:5173`, `http://transit.localhost:5173` `http://charge.localhost:5173`, `http://atm.localhost:5173` and `http://stay.localhost:5173`. All ten use the same services. Add `http://view.localhost:5173` and `http://sights.localhost:5173` for the new tourist sites. For a fresh mixed sample database and `npm run seed:sample`, follow the guide; the seed command refuses to overwrite existing data. The [detailed local debugging guide](docs/development/local-debugging.md) also retains optional regional source workflows.
 
-Translation JSON is separate under `src/web/locales/common/{de,en,ro,hu}.json` and `src/web/sites/{loo,kippe,kebab,water,transit,charge,atm,stay}/locales/{de,en,ro,hu}.json`. Unsupported browser languages fall back to German; an explicit language choice persists per origin. Site modules compose artwork, filters and details around common search/map behavior.
+Translation JSON is separate under `src/web/locales/common/{de,en,ro,hu}.json` and `src/web/sites/{loo,kippe,kebab,water,transit,charge,atm,stay,view,sights}/locales/{de,en,ro,hu}.json`. Unsupported browser languages fall back to German; an explicit language choice persists per origin. Site modules compose artwork, filters and details around common search/map behavior.
 
 ## Containers and production
 
@@ -44,7 +46,7 @@ docker compose --profile tools build importer
 scripts/update.sh
 ```
 
-The importer resolves each active country's immutable Geofabrik snapshot and published checksum, filters all six categories and settlements, reconstructs fixed geometries and atomically publishes validated country data. Germany's existing source is retained; each additional country uses a separate path inside the same Docker volume. See [multi-country operations](docs/deployment/multi-country-coverage.md) for country floors, targeted retries and the staged activation gates.
+The importer resolves each active country's immutable Geofabrik snapshot and published checksum, filters all ten categories and settlements, reconstructs fixed geometries and atomically publishes validated country data. Germany's existing source is retained; each additional country uses a separate path inside the same Docker volume. See [multi-country operations](docs/deployment/multi-country-coverage.md) for country floors, targeted retries and the staged activation gates.
 
 Tag rules are documented in [tobacco classification](docs/implementation/tobacco-tagging.md). Lotto outlets, kiosks, convenience stores/Spätis, newsagents, supermarkets, shops offering Lotto and petrol stations are included by assuming cigarette sales, without a special sales label. Explicit tobacco=no is excluded. Customer/private restrictions, inactive places and explicit negative product tags are preserved or excluded appropriately. Unknown prices and payments remain unknown. Shop hours remain unknown unless mapped; machines without mapped hours are labelled as assumed open 24/7. Missing fixed toilet/seller/kebab geometry or a suspicious count/drop aborts publication and preserves the old active data. Imports omitting any already-active category are rejected rather than mixing shared source snapshots.
 
@@ -86,7 +88,7 @@ Production uses one weekly `bloli-nearby-refresh.timer` and one daily `bloli-nea
 
 ## Map policy, privacy and licenses
 
-Each public site includes its own Cloudflare Web Analytics beacon for visits and site performance. Native Vite development has no beacon. See [analytics configuration and deployment](docs/deployment/web-analytics.md) for hostname/token mappings, privacy copy and verification steps.
+The nine configured public sites include their own Cloudflare Web Analytics beacons; Sights awaits its token. These beacons are used for visits and site performance. Native Vite development has no beacon. See [analytics configuration and deployment](docs/deployment/web-analytics.md) for hostname/token mappings, privacy copy and verification steps.
 
 Normal interactive OSM raster tiles retain attribution, browser caching and Referer; there is no bulk tile download, proxy, offline pack or prefetch. Public tiles have no availability guarantee; a permitted alternative provider remains configurable. The provider receives IP/viewed tile coordinates. Searches do not store location history and query URLs are not logged routinely. Explicit language preference is stored locally; opening directions sends the destination to Google Maps.
 
@@ -111,3 +113,7 @@ See [Water setup and updates](docs/deployment/water-site.md). The small guarded 
 ### Charge
 
 [Charge](https://charge.bloli.com) finds mapped car charging stations. It supports CCS, Type 2, CHAdeMO and other recognized car connectors, minimum mapped output, public/customer access, charging fees and mapped access hours. Connector and power filters must match one socket record. Destination/customer access remains labelled; explicit private and non-car sources are excluded. OSM has no live occupancy, equipment health or guaranteed current tariffs. Directions use driving mode. See [Charge rollout and data rules](docs/deployment/charge-site.md); native host: `http://charge.localhost:5173`.
+
+## View and Sights
+
+[View and Sights setup](docs/deployment/view-sights-sites.md) documents classification, local samples, mapped details, type filters, country publication floors, analytics and staged production rollout. Both new sites use walking directions. Distances are straight-line distances; View does not assess hiking-route suitability.

@@ -14,6 +14,7 @@ import { sites } from "../src/shared/sites.js";
 
 test("built site shells each include only their assigned Cloudflare beacon", () => {
   const tokens = {
+    view: "66e9fa7dd6aa48dea133dfb9a1611a12",
     loo: "e801fcd3a63d4dab89cdf795c0c065df",
     kippe: "a88104d9b5474836b0b83c7c3040667a",
     kebab: "8c9c02f97f134755a37d8e278a57fa17",
@@ -36,7 +37,12 @@ test("built site shells each include only their assigned Cloudflare beacon", () 
     execFileSync(process.execPath, [
       join(temp, "scripts/build-site-shells.mjs"),
     ]);
-    assert.deepEqual(Object.keys(tokens).sort(), Object.keys(sites).sort());
+    assert.deepEqual(
+      Object.keys(tokens).sort(),
+      Object.keys(sites)
+        .filter((id) => id !== "sights")
+        .sort(),
+    );
     for (const [id, expectedToken] of Object.entries(tokens)) {
       const html = readFileSync(join(temp, `dist/index-${id}.html`), "utf8");
       const scripts = [
@@ -57,6 +63,12 @@ test("built site shells each include only their assigned Cloudflare beacon", () 
         );
       }
       assert.ok(html.indexOf(scripts[0][0]) < html.indexOf("</body>"));
+    }
+    for (const id of ["sights"]) {
+      const html = readFileSync(join(temp, `dist/index-${id}.html`), "utf8");
+      assert.doesNotMatch(html, /cloudflareinsights|data-cf-beacon/);
+      assert.ok(html.includes(`data-site="${id}"`));
+      assert.ok(html.includes(`https://${id}.bloli.com/`));
     }
     assert.doesNotMatch(
       readFileSync("index.html", "utf8"),

@@ -57,6 +57,8 @@ export async function importFile(
         sourceChecksum: meta.sourceChecksum,
         boundarySource: meta.coverageSource,
         boundaryChecksum: meta.coverageChecksum,
+        minimumViews: minimumForCountry(countryCode, "view"),
+        minimumSights: minimumForCountry(countryCode, "sights"),
         minimumAtms: minimumForCountry(countryCode, "atm"),
         minimumAccommodations: minimumForCountry(countryCode, "accommodation"),
         minimumFacilities: minimumForCountry(countryCode, "toilets"),

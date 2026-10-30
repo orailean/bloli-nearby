@@ -20,9 +20,9 @@ export async function datasetStatus(
     await pool.query(
       `SELECT c.code,c.name,c.timezone,c.status,d.dataset_at,d.imported_at,d.source,d.location_count,d.settlement_count,
         j.id AS job_id,j.status AS job_status,j.started_at AS job_started_at,j.finished_at AS job_finished_at,j.error AS job_error,
-        j.facility_count,j.seller_count,j.kebab_count,j.water_count,j.transit_count,j.charge_count,j.atm_count,j.accommodation_count,j.settlement_count AS job_settlement_count
+        j.facility_count,j.seller_count,j.kebab_count,j.water_count,j.transit_count,j.charge_count,j.atm_count,j.accommodation_count,j.view_count,j.sights_count,j.settlement_count AS job_settlement_count
        FROM countries c LEFT JOIN country_datasets d ON d.country_code=c.code AND d.category=$1
-       LEFT JOIN LATERAL(SELECT id,status,started_at,finished_at,error,facility_count,seller_count,kebab_count,water_count,transit_count,charge_count,atm_count,accommodation_count,settlement_count FROM import_jobs WHERE country_code=c.code ORDER BY id DESC LIMIT 1) j ON true
+       LEFT JOIN LATERAL(SELECT id,status,started_at,finished_at,error,facility_count,seller_count,kebab_count,water_count,transit_count,charge_count,atm_count,accommodation_count,view_count,sights_count,settlement_count FROM import_jobs WHERE country_code=c.code ORDER BY id DESC LIMIT 1) j ON true
        ORDER BY c.rollout_order`,
       [category],
     )
@@ -55,6 +55,8 @@ export async function datasetStatus(
             charge: row.charge_count,
             atm: row.atm_count,
             accommodation: row.accommodation_count,
+            view: row.view_count,
+            sights: row.sights_count,
             settlements: row.job_settlement_count,
           },
         }
@@ -157,7 +159,9 @@ export async function searchLocations(
             ? `AND ($7='all' OR c.data->'atm'->'currencies' ? $7) AND ($8='all' OR c.data->'atm'->>'deposit'=$8)`
             : category === "accommodation"
               ? `AND ($7='all' OR c.data->'accommodation'->>'type'=$7)`
-              : ""
+              : category === "view" || category === "sights"
+                ? `AND ($7='all' OR c.data->'tourist'->>'type'=$7)`
+                : ""
       }
       ORDER BY c.location_id,m.source_version DESC,m.country_code
       ) unique_results ORDER BY distance,id`;
@@ -179,6 +183,8 @@ export async function searchLocations(
       parameters.push(q.currency ?? "all", q.deposit ?? "all");
     if (category === "accommodation")
       parameters.push(q.accommodationType ?? "all");
+    if (category === "view") parameters.push(q.viewType ?? "all");
+    if (category === "sights") parameters.push(q.sightType ?? "all");
     let rows: Array<{
       data: Facility;
       distance: number;

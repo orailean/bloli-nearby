@@ -3,7 +3,7 @@ set -eu
 
 # Scope this new hook to the app certificates, leaving other lineages alone.
 case " ${RENEWED_DOMAINS:-} " in
-    *" loo.bloli.com "*|*" kippe.bloli.com "*|*" kebab.bloli.com "*|*" water.bloli.com "*|*" transit.bloli.com "*|*" charge.bloli.com "*|*" atm.bloli.com "*|*" stay.bloli.com "*) ;;
+    *" loo.bloli.com "*|*" kippe.bloli.com "*|*" kebab.bloli.com "*|*" water.bloli.com "*|*" transit.bloli.com "*|*" charge.bloli.com "*|*" atm.bloli.com "*|*" stay.bloli.com "*|*" view.bloli.com "*|*" sights.bloli.com "*) ;;
     *) exit 0 ;;
 esac
 

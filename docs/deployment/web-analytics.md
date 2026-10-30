@@ -1,9 +1,10 @@
 # Cloudflare Web Analytics
 
-The eight public Bloli Nearby sites include the supplied Cloudflare Web Analytics beacon, with a separate token for each hostname. Configuration lives alongside each site's metadata in [`scripts/build-site-shells.mjs`](../../scripts/build-site-shells.mjs).
+The nine configured public Bloli Nearby sites include the supplied Cloudflare Web Analytics beacon, with a separate token for each hostname. Configuration lives alongside each site's metadata in [`scripts/build-site-shells.mjs`](../../scripts/build-site-shells.mjs).
 
 | Hostname            | Beacon token                       |
 | ------------------- | ---------------------------------- |
+| `view.bloli.com`    | `66e9fa7dd6aa48dea133dfb9a1611a12` |
 | `loo.bloli.com`     | `e801fcd3a63d4dab89cdf795c0c065df` |
 | `kippe.bloli.com`   | `a88104d9b5474836b0b83c7c3040667a` |
 | `kebab.bloli.com`   | `8c9c02f97f134755a37d8e278a57fa17` |
@@ -17,7 +18,7 @@ These are public browser beacon identifiers, visible in page source, rather than
 
 ## How it is included
 
-`npm run build` runs Vite and then the shell generator. The generator inserts one script immediately before `</body>` in each `dist/index-<site>.html`:
+`npm run build` runs Vite and then the shell generator. The generator inserts one script immediately before `</body>` in each configured `dist/index-<site>.html`:
 
 ```html
 <!-- Cloudflare Web Analytics -->
@@ -29,7 +30,7 @@ These are public browser beacon identifiers, visible in page source, rather than
 <!-- End Cloudflare Web Analytics -->
 ```
 
-[`docker/gateway.conf`](../../docker/gateway.conf) selects the generated shell from the request hostname, including for application fallback routes. Each shell therefore carries only its own token. The source `index.html` and generic `dist/index.html` contain no beacon, so native Vite development does not send analytics through this integration. Serving a generated site shell during a production preview does load its beacon.
+[`docker/gateway.conf`](../../docker/gateway.conf) selects the generated shell from the request hostname, including for application fallback routes. Each configured shell therefore carries only its own token. A site without an assigned token omits the beacon. The source `index.html` and generic `dist/index.html` contain no beacon, so native Vite development does not send analytics through this integration. Serving a generated site shell during a production preview does load its beacon.
 
 The integration loads the supplied browser beacon; it does not add custom events or explicitly send search coordinates. The shared privacy text in German, English, Romanian and Hungarian discloses Cloudflare Web Analytics usage for visits and site performance.
 
@@ -57,4 +58,6 @@ node --import tsx --test tests/analytics-shells.test.ts
 npm run build
 ```
 
-The focused regression check runs the actual shell generator in a temporary directory and checks all eight token assignments, one beacon per shell, isolation between sites and the absence of analytics in the shared development template.
+The focused regression check runs the actual shell generator in a temporary directory and checks all nine token assignments, one beacon per shell, isolation between sites and the absence of analytics in the shared development template.
+
+Sights currently has no assigned analytics token and its shell omits the beacon.

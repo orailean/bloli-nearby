@@ -60,6 +60,8 @@ export const COUNTRIES: readonly CountryProfile[] = [
 ];
 
 const floorVariable: Record<Category, string> = {
+  view: "VIEWPOINTS",
+  sights: "SIGHTS",
   atm: "ATMS",
   accommodation: "ACCOMMODATIONS",
   toilets: "TOILETS",

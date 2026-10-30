@@ -10,9 +10,11 @@ for (const group of [
   "sites/water/locales",
   "sites/transit/locales",
   "sites/charge/locales",
+  "sites/view/locales",
+  "sites/sights/locales",
 ]) {
   test(`${group} has matching translated keys`, () => {
-    const dictionaries = ["de", "en", "ro"].map((locale) =>
+    const dictionaries = ["de", "en", "ro", "hu"].map((locale) =>
       JSON.parse(
         readFileSync(
           new URL(`../src/web/${group}/${locale}.json`, import.meta.url),

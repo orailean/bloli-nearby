@@ -20,7 +20,7 @@ try {
       "Use a fresh development database; sample seeding will not replace an existing dataset",
     );
   const categoryFloors = [
-    "TOILETS", "SELLERS", "KEBABS", "WATER_POINTS", "TRANSIT_STOPS", "CHARGE_STATIONS", "ATMS", "ACCOMMODATIONS", "SETTLEMENTS",
+    "TOILETS", "SELLERS", "KEBABS", "WATER_POINTS", "TRANSIT_STOPS", "CHARGE_STATIONS", "ATMS", "ACCOMMODATIONS", "VIEWPOINTS", "SIGHTS", "SETTLEMENTS",
   ];
   for (const code of ["de", "ro", "at", "hu"] as const)
     for (const suffix of categoryFloors)

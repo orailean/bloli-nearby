@@ -12,7 +12,7 @@ const countryLabels = {
 const browser = await chromium.launch();
 try {
   for (const id of (
-    process.env.SITES || "loo,kippe,kebab,water,transit,charge,atm,stay"
+    process.env.SITES || "loo,kippe,kebab,water,transit,charge,atm,stay,view,sights"
   ).split(",")) {
     const base = `https://${id}.bloli.com`;
     const htmlResponse = await fetch(base);
@@ -67,6 +67,14 @@ try {
       const settlements = await fetch(`${base}/api/settlements?q=bucuresti&country=ro`).then((r) => r.json());
       assert.ok(settlements.items.some((item) => item.countryCode === "ro"), `${id}: unaccented Romanian settlement match`);
       }
+    }
+    if(id==='view'||id==='sights'){
+      assert.ok(all.items.every(item=>item.category===id&&item.tourist));
+      const key=id==='view'?'viewType':'sightType', type=id==='view'?'tower':'museum';
+      const filtered=await fetch(`${base}/api/locations?${query}&${key}=${type}`).then(r=>r.json());
+      assert.ok(filtered.items.every(item=>item.tourist.type===type));
+      const cross=id==='view'?'sightType=museum':'viewType=tower';
+      assert.equal((await fetch(`${base}/api/locations?${query}&${cross}`)).status,400);
     }
     if(id==='atm'){
       assert.ok(all.items.every(item=>item.category==='atm'&&item.atm));

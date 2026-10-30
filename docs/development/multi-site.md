@@ -64,3 +64,9 @@ Open `http://charge.localhost:5173` (or `http://localhost:5173/?site=charge`) wi
 ## ATM, Stay and Hungarian
 
 Open `http://atm.localhost:5173` and `http://stay.localhost:5173` using the same native API/Vite pair. The guarded sample now includes all eight categories in DE/RO/AT/HU; use a fresh disposable sample database, not an existing saved development directory. ATM uses walking directions and mapped-access Open now; Stay uses driving directions and type filtering without an Open now/room-availability claim. Every site supports German, English, Romanian and Hungarian from separate JSON dictionaries.
+
+## View and Sights
+
+Use `http://view.localhost:5173` and `http://sights.localhost:5173` with the same native API/Vite pair and Docker-only PostGIS. Both support DE/EN/RO/HU, type and entry-fee filters, mapped Open now, and walking directions. View includes mapped viewpoints and observation towers; Sights includes museums, attractions and selected historic destinations. See [classification and rollout](../deployment/view-sights-sites.md).
+
+The guarded `seed:sample` fixture now contains ten categories, with two synthetic View records and seven synthetic Sights records per country. It requires a fresh local database; existing development snapshots remain preserved. The two new categories require their own measured publication floors outside the guarded sample workflow.

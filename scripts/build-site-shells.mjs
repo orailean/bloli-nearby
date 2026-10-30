@@ -4,6 +4,22 @@ const template = await readFile(
   "utf8",
 );
 const profiles = {
+  view: {
+    domain: "view.bloli.com",
+    title: "View · Die nächste Aussicht wartet.",
+    description:
+      "Entdecke erfasste Aussichtspunkte und Aussichtstürme in den freigeschalteten Ländern. Mit Zugangsdetails und Höhenangaben aus OpenStreetMap.",
+    color: "#244c5a",
+    analyticsToken: "66e9fa7dd6aa48dea133dfb9a1611a12",
+  },
+  sights: {
+    domain: "sights.bloli.com",
+    title: "Sights · Gleich um die Ecke: Geschichte.",
+    description:
+      "Finde erfasste Sehenswürdigkeiten, Museen, Burgen und Denkmäler in den freigeschalteten Ländern. Mit Öffnungszeiten und Besuchsdetails aus OpenStreetMap.",
+    color: "#383b75",
+    analyticsToken: null,
+  },
   atm: {
     domain: "atm.bloli.com",
     analyticsToken: "19d2b3ccec7048d5a752c81573edef0b",
@@ -89,7 +105,9 @@ for (const [id, profile] of Object.entries(profiles)) {
     )
     .replace(
       "</body>",
-      `<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='${JSON.stringify({ token: profile.analyticsToken })}'></script><!-- End Cloudflare Web Analytics --></body>`,
+      profile.analyticsToken
+        ? `<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='${JSON.stringify({ token: profile.analyticsToken })}'></script><!-- End Cloudflare Web Analytics --></body>`
+        : "</body>",
     );
   await writeFile(new URL(`../dist/index-${id}.html`, import.meta.url), html);
 }

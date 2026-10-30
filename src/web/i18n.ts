@@ -36,6 +36,14 @@ import stayEn from "./sites/stay/locales/en.json";
 import stayDe from "./sites/stay/locales/de.json";
 import stayRo from "./sites/stay/locales/ro.json";
 import stayHu from "./sites/stay/locales/hu.json";
+import viewEn from "./sites/view/locales/en.json";
+import viewDe from "./sites/view/locales/de.json";
+import viewRo from "./sites/view/locales/ro.json";
+import viewHu from "./sites/view/locales/hu.json";
+import sightsEn from "./sites/sights/locales/en.json";
+import sightsDe from "./sites/sights/locales/de.json";
+import sightsRo from "./sites/sights/locales/ro.json";
+import sightsHu from "./sites/sights/locales/hu.json";
 type Dictionary = Record<
   | keyof typeof commonEn
   | keyof typeof looEn
@@ -45,11 +53,15 @@ type Dictionary = Record<
   | keyof typeof transitEn
   | keyof typeof chargeEn
   | keyof typeof atmEn
-  | keyof typeof stayEn,
+  | keyof typeof stayEn
+  | keyof typeof viewEn
+  | keyof typeof sightsEn,
   string
 >;
 const common = { en: commonEn, de: commonDe, ro: commonRo, hu: commonHu };
 const localized = {
+  view: { en: viewEn, de: viewDe, ro: viewRo, hu: viewHu },
+  sights: { en: sightsEn, de: sightsDe, ro: sightsRo, hu: sightsHu },
   loo: { en: looEn, de: looDe, ro: looRo, hu: looHu },
   kippe: { en: kippeEn, de: kippeDe, ro: kippeRo, hu: kippeHu },
   kebab: { en: kebabEn, de: kebabDe, ro: kebabRo, hu: kebabHu },
@@ -69,6 +81,8 @@ const fallback = Object.assign(
   chargeDe,
   atmDe,
   stayDe,
+  viewDe,
+  sightsDe,
 );
 export const siteDictionaries = Object.fromEntries(
   Object.entries(localized).map(([id, content]) => [

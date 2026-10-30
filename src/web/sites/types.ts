@@ -9,7 +9,12 @@ import type {
 } from "../../shared/charge-types.js";
 import type { dictionaries } from "../i18n.js";
 export type Content = typeof dictionaries.en;
+import type { ViewType, SightType } from "../../shared/tourism-types.js";
 export interface FilterProps {
+  viewType?: ViewType | "all";
+  onViewType?: (value: ViewType | "all") => void;
+  sightType?: SightType | "all";
+  onSightType?: (value: SightType | "all") => void;
   currency?: string;
   onCurrency?: (value: string) => void;
   deposit?: "all" | "yes";

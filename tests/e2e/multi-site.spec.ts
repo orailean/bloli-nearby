@@ -48,6 +48,8 @@ for (const id of [
   "charge",
   "atm",
   "stay",
+  "view",
+  "sights",
 ] as const) {
   for (const width of [1440, 320, 390, 430]) {
     test(`${id} ${width}px shares search, keeps its category and fits every locale`, async ({
@@ -99,7 +101,7 @@ for (const id of [
         expect(q.get("radius")).toMatch(/^(500|1000|2000|3000|5000)$/);
         expect(q.has("sellerType")).toBe(id === "kippe");
         expect(q.has("fee")).toBe(
-          ["loo", "water", "charge", "atm"].includes(id),
+          ["loo", "water", "charge", "atm", "view", "sights"].includes(id),
         );
         if (["kebab", "water", "transit"].includes(id))
           expect(q.has("sellerType")).toBe(false);
@@ -144,6 +146,11 @@ for (const id of [
                   },
                 }
               : {}),
+            ...(["view", "sights"].includes(id) ? {
+              category: id,
+              tourist: {type:id === "view" ? ["viewpoint","tower","viewpoint"][i] : ["museum","castle","ruins"][i],elevation:"1200",height:null,direction:"90-180",phone:"+49123"},
+              website:"https://example.com",
+            } : {}),
             ...(id === "stay"
               ? {
                   category: "accommodation",
@@ -267,6 +274,10 @@ for (const id of [
               q.get("accommodationType") === "all" ||
               item.accommodation?.type === q.get("accommodationType")
             );
+          if (id === "view" || id === "sights") {
+            const type = q.get(id === "view" ? "viewType" : "sightType");
+            return (type === "all" || item.tourist?.type === type) && (q.get("fee") === "all" || item.fee === q.get("fee"));
+          }
           if (id !== "charge") return true;
           const charging = item.charging as
             | { connectors: { type: string; outputKw: number | null }[] }
@@ -449,6 +460,16 @@ for (const id of [
         await page.locator(".atm-select select").nth(1).selectOption("yes");
         await expect(page.locator(".result-row")).toHaveCount(1);
         await page.locator(".atm-select select").nth(1).selectOption("all");
+      }
+      if (id === "view" || id === "sights") {
+        await page.locator(".tourist-type-control select").selectOption(id === "view" ? "tower" : "castle");
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel")).toContainText("straight-line");
+        await expect(page.locator(".detail-panel .walk-button")).toHaveAttribute("href",/travelmode=walking/);
+        await expect(page.locator('.detail-panel a[href="https://example.com"]')).toBeVisible();
+        if (id === "view") await expect(page.locator(".detail-panel")).toContainText("1200");
+        await page.locator(".tourist-type-control select").selectOption("all");
       }
       if (id === "stay") {
         await expect(page.locator(".open-now-control")).toHaveCount(0);

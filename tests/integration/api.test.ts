@@ -1281,6 +1281,10 @@ test(
           coordinates: [[[[20, 43], [30, 43], [30, 49], [20, 49], [20, 43]]]],
         };
         const roRows = [
+          {kind:"view",sourceType:"node",sourceId:"81012",lat:44.4301,lon:26.1,tags:{tourism:"viewpoint",fee:"no",ele:"1200","name:hu":"Kilátó"},version:1},
+          {kind:"view",sourceType:"node",sourceId:"81013",lat:44.431,lon:26.1,tags:{man_made:"tower","tower:type":"observation",fee:"yes",opening_hours:"24/7"},version:1},
+          {kind:"sights",sourceType:"node",sourceId:"81014",lat:44.4301,lon:26.1,tags:{tourism:"museum",fee:"yes",opening_hours:"24/7"},version:1},
+          {kind:"sights",sourceType:"node",sourceId:"81015",lat:44.431,lon:26.1,tags:{historic:"ruins",ruins:"yes",fee:"no"},version:1},
           { kind: "facility", sourceType: "node", sourceId: "81001", lat: 44.43, lon: 26.1, tags: { amenity: "toilets", name: "București WC", fee: "no" }, version: 1 },
           { kind: "seller", sourceType: "node", sourceId: "81002", lat: 44.43, lon: 26.1, tags: { shop: "tobacco", name: "Tutun" }, version: 1 },
           { kind: "kebab", sourceType: "node", sourceId: "81003", lat: 44.43, lon: 26.1, tags: { amenity: "fast_food", cuisine: "kebab", name: "Shaorma" }, version: 1 },
@@ -1303,7 +1307,7 @@ test(
           boundarySource: "https://download.geofabrik.de/europe/romania.poly",
           boundaryChecksum: "a".repeat(64),
           coverage: roCoverage,
-          categories: ["toilets", "tobacco", "kebab", "water", "transit", "charge", "atm", "accommodation"] as Category[],
+          categories: ["toilets", "tobacco", "kebab", "water", "transit", "charge", "atm", "accommodation", "view", "sights"] as Category[],
           minimumFacilities: 1,
           minimumSellers: 1,
           minimumKebabs: 1,
@@ -1312,6 +1316,8 @@ test(
           minimumChargeStations: 1,
           minimumAtms: 1,
           minimumAccommodations: 1,
+          minimumViews: 1,
+          minimumSights: 1,
           minimumSettlements: 1,
           minimumRatio: 0.5,
         };
@@ -1321,12 +1327,15 @@ test(
         assert.equal(measured.atms,1);assert.equal(measured.accommodations,1);
         assert.deepEqual((await pool.query("SELECT category,location_count,imported_at FROM country_datasets ORDER BY country_code,category")).rows,beforeMeasure);
         assert.equal((await pool.query('SELECT count(*)::int n FROM import_jobs')).rows[0].n,jobsBeforeMeasure);
+        // A retained eight-category snapshot can still be measured before new-category rollout.
+        const legacy = await importDataset(pool,(async function*(){yield* roRows.filter(row=>!["view","sights"].includes(row.kind));})(),{...countryOptions,categories:countryOptions.categories.filter(category=>!["view","sights"].includes(category)),measureOnly:true});
+        assert.equal(legacy.views,0);assert.equal(legacy.sights,0);
         await importDataset(pool, (async function* () { yield* roRows; })(), countryOptions);
         await migrate(pool);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='de' AND location_id='node/81001'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='de' AND settlement_id='node/81007'")).rows[0].n, 0);
-        assert.equal((await pool.query("SELECT count(*)::int n FROM country_datasets WHERE country_code='ro'")).rows[0].n, 8);
-        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 8);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_datasets WHERE country_code='ro'")).rows[0].n, 10);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 12);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro' AND location_id='node/81008'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81009'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT source_version FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81007'")).rows[0].source_version, 0);
@@ -1337,6 +1346,28 @@ test(
         assert.equal(pendingStatus.body.countries.find((c: any) => c.code === "ro").status, "pending");
         assert.equal((await get("/api/settlements?q=bucuresti&country=ro")).body.error, "COUNTRY_NOT_ACTIVE");
         await activateCountry(pool, "ro");
+        for (const site of ["view", "sights"] as const) {
+          const response = await new Promise<{status:number|undefined;body:any}>((resolve,reject) => {
+            httpGet({hostname:"127.0.0.1",port:address.port,path:"/api/locations?lat=44.43&lon=26.1",headers:{Host:`${site}.bloli.com`}},res=>{
+              let body="";res.on("data",chunk=>body+=chunk);res.on("end",()=>resolve({status:res.statusCode,body:JSON.parse(body)}));
+            }).on("error",reject);
+          });
+          assert.equal(response.status,200);
+          assert.equal(response.body.items.length,2);
+          assert.ok(response.body.items.every((item:any)=>item.category===site&&item.countryCode==="ro"));
+        }
+        const tower = await get('/api/locations?site=view&lat=44.43&lon=26.1&viewType=tower&limit=1&openNow=true');
+        assert.equal(tower.status,200);assert.deepEqual(tower.body.items.map((item:any)=>item.id),['node/81013']);
+        const ruins = await get('/api/locations?site=sights&lat=44.43&lon=26.1&sightType=ruins&fee=free&limit=1');
+        assert.equal(ruins.status,200);assert.equal(ruins.body.items[0].id,'node/81015');
+        const openRuins = await get('/api/locations?site=sights&lat=44.43&lon=26.1&sightType=ruins&openNow=true');
+        assert.deepEqual(openRuins.body.items,[]);
+        assert.equal((await get('/api/locations?site=view&lat=44.43&lon=26.1&sightType=museum')).status,400);
+        const viewStatus = await get('/api/status?site=view');assert.equal(viewStatus.body.ready,true);
+        assert.equal(viewStatus.body.countries.find((country:any)=>country.code==='ro').latestRefresh.counts.view,2);
+        await assert.rejects(importDataset(pool,(async function*(){yield* roRows.filter(row=>row.kind!=="view");})(),{...countryOptions,categories:countryOptions.categories.filter(category=>category!=="view")}),/PARTIAL_CATEGORY_IMPORT/);
+        await assert.rejects(importDataset(pool,(async function*(){yield* roRows;})(),{...countryOptions,minimumViews:3}),/SUSPICIOUS_IMPORT/);
+        assert.equal((await get('/api/locations?site=view&lat=44.43&lon=26.1')).body.items.length,2);
         const atms=await get('/api/locations?site=atm&lat=44.43&lon=26.1&radius=500&currency=EUR&deposit=yes&fee=free&openNow=true');
         assert.equal(atms.status,200);assert.equal(atms.body.items.length,1);assert.equal(atms.body.items[0].names.hu,'Bankautomata');
         assert.equal((await get('/api/locations?site=atm&lat=44.43&lon=26.1&currency=HUF')).body.items.length,0);
