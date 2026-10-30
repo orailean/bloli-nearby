@@ -76,9 +76,10 @@ def kinds(tags):
     if tags.get('type') in ('route', 'route_master', 'collection', 'destination_sign') or tags.get('public_transport') in ('stop_area', 'stop_area_group'):
         return []
     result = []
-    if tags.get('tourism') == 'viewpoint' or (tags.get('man_made') == 'tower' and tags.get('tower:type') == 'observation'):
+    physical_tourism = tags.get('type', '') in ('', 'multipolygon', 'boundary', 'site', 'building', 'bridge', 'artwork', 'multilinestring')
+    if physical_tourism and (tags.get('tourism') == 'viewpoint' or (tags.get('man_made') == 'tower' and tags.get('tower:type') == 'observation')):
         result.append('view')
-    if tags.get('tourism') in ('museum', 'attraction') or tags.get('historic') in ('castle', 'ruins', 'monument', 'memorial', 'archaeological_site'):
+    if physical_tourism and (tags.get('tourism') in ('museum', 'attraction') or tags.get('historic') in ('castle', 'ruins', 'monument', 'memorial', 'archaeological_site')):
         result.append('sights')
     if tags.get('amenity') == 'atm' or tags.get('atm') == 'yes':
         result.append('atm')
@@ -139,6 +140,8 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     area_relation_members = {}
     area_relation_tags = {}
     transit_relations = {}
+    tourism_relations = {}
+    tourism_members = {}
     area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights'}
 
     class SiteMembers(osmium.SimpleHandler):
@@ -151,6 +154,14 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             if tags.get('type') in ('multipolygon', 'boundary') and area_categories.intersection(kinds(tags)):
                 area_relation_members[obj.id] = relation_members.get(obj.id, [])
                 area_relation_tags[obj.id] = tags
+            if {'view', 'sights'}.intersection(kinds(tags)):
+                tourism_relations[obj.id] = tags
+                members = relation_members.get(obj.id, [])
+                if tags.get('type') == 'bridge':
+                    outlines = [(m.type, m.ref) for m in obj.members if m.role == 'outline']
+                    across = [(m.type, m.ref) for m in obj.members if m.role == 'across']
+                    members = outlines or across or members
+                tourism_members[obj.id] = members
             if 'transit' in kinds(tags):
                 transit_relations[obj.id] = tags
             if tags.get('type') in ('site', 'building') and kinds(tags):
@@ -169,8 +180,8 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     SiteMembers().apply_file(filename)
     for members in area_relation_members.values():
         member_keys.update(members)
-    # Resolve only dependencies of physical passenger features, not route paths.
-    pending = list(transit_relations)
+    # Resolve bounded dependencies of fixed passenger/tourist features, never route collections.
+    pending = list(transit_relations) + list(tourism_relations)
     needed_relations = set()
     while pending:
         source_id = pending.pop()
@@ -309,7 +320,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             point = min(points, key=lambda p: (p.x-x)**2 + (p.y-y)**2)
             handler.write('relation', source_id, tags, point)
             handler.completed.add(('relation', source_id))
-    def passenger_member_point(source_id, visiting):
+    def passenger_member_point(source_id, visiting, tourist=False):
         key = ('r', source_id)
         if key in member_points:
             return member_points[key]
@@ -317,8 +328,9 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             return None
         visiting.add(source_id)
         points = []
-        for member_type, member_id in relation_members.get(source_id, []):
-            point = passenger_member_point(member_id, visiting) if member_type == 'r' else member_points.get((member_type, member_id))
+        members = tourism_members.get(source_id, relation_members.get(source_id, [])) if tourist else relation_members.get(source_id, [])
+        for member_type, member_id in members:
+            point = passenger_member_point(member_id, visiting, tourist) if member_type == 'r' else member_points.get((member_type, member_id))
             if point is not None:
                 points.append(point)
         visiting.remove(source_id)
@@ -334,6 +346,12 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     for source_id, tags in transit_relations.items():
         if ('relation', source_id) not in handler.completed:
             point = passenger_member_point(source_id, set())
+            if point is not None:
+                handler.write('relation', source_id, tags, point)
+                handler.completed.add(('relation', source_id))
+    for source_id, tags in tourism_relations.items():
+        if ('relation', source_id) not in handler.completed:
+            point = passenger_member_point(source_id, set(), tourist=True)
             if point is not None:
                 handler.write('relation', source_id, tags, point)
                 handler.completed.add(('relation', source_id))

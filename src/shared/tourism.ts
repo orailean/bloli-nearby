@@ -18,6 +18,16 @@ function touristPlace(
   const t = record.tags;
   if (
     !base ||
+    ![
+      "",
+      "multipolygon",
+      "boundary",
+      "site",
+      "building",
+      "bridge",
+      "artwork",
+      "multilinestring",
+    ].includes(t.type || "") ||
     [
       "disused",
       "abandoned",

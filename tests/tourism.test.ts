@@ -137,3 +137,22 @@ test("the ten-category sample never assigns conflicting coordinates to an OSM id
   assert.ok(rows[0].categories.includes("sights"));
   assert.equal(rows.at(-1).records, rows.length - 2);
 });
+
+test("tourist normalizers reject logical networks and person collections", () => {
+  for (const type of ["network", "person", "historic:waterway", "water"]) {
+    assert.equal(
+      normalizeSights({
+        ...record({ type, tourism: "attraction", historic: "memorial" }),
+        sourceType: "relation",
+      }),
+      null,
+    );
+    assert.equal(
+      normalizeView({
+        ...record({ type, tourism: "viewpoint" }),
+        sourceType: "relation",
+      }),
+      null,
+    );
+  }
+});
