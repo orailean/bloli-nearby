@@ -11,7 +11,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "npm run dev:api",
+      command: process.env.CI ? "npm start" : "npm run dev:api",
       url: "http://127.0.0.1:3100/api/health",
       reuseExistingServer: !process.env.CI,
       env: {
