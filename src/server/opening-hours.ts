@@ -24,6 +24,8 @@ function localCalendarDate(at: Date, timezone: string): Date {
   // opening_hours reads native local Date fields. Constructing those fields from
   // the venue's IANA zone preserves the venue's weekday and wall clock without
   // mutating process.env.TZ or changing other requests' evaluation context.
+  // API/test runtimes start in UTC so host DST gaps cannot normalize a venue's
+  // otherwise valid local hour. Keep TZ=UTC in native scripts and the API image.
   return new Date(
     value("year"),
     value("month") - 1,

@@ -155,4 +155,6 @@ The importer intentionally rejects a substantial count drop or timestamp regress
 
 ## Tests use a different database
 
+Use the npm API/debug/test commands, which explicitly start in `TZ=UTC`, matching the API image. When starting the API directly with `node`, set `TZ=UTC` as well. Venue-local opening hours are evaluated separately for each country; the host runtime must not apply its own DST gap to those wall-clock fields.
+
 Integration tests truncate app tables. Set `TEST_DATABASE_URL` to a separate disposable PostGIS database, not your dev sample or production database. The browser suite's existing city fixtures use Bremen. Keep those fixtures separate from any optional Munich sample. See [README](../../README.md) and [verification](../verification/implementation.md).

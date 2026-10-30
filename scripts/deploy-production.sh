@@ -20,7 +20,14 @@ case "$command" in
 esac
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
-cd "${BLOLI_DEPLOY_ROOT:-$script_dir/..}"
+app_root=${BLOLI_DEPLOY_ROOT:-}
+if [[ -z $app_root ]]; then
+  case "$script_dir" in
+    */.deploy/bin) app_root="$script_dir/../.." ;;
+    *) app_root="$script_dir/.." ;;
+  esac
+fi
+cd "$app_root"
 export COMPOSE_FILE=compose.yaml:compose.production.yaml
 . "$script_dir/operation-lock.sh"
 export DOCKER_CONFIG="$PWD/.deploy/docker"

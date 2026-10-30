@@ -8,16 +8,16 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "dev:api": "node --env-file-if-exists=.env.local --import tsx --watch src/server/main.ts",
+    "dev:api": "TZ=UTC node --env-file-if-exists=.env.local --import tsx --watch src/server/main.ts",
     "build": "tsc --noEmit && vite build && node scripts/build-site-shells.mjs",
-    "start": "tsx src/server/main.ts",
-    "test": "tsx --test tests/*.test.ts",
-    "test:integration": "tsx --test tests/integration/*.test.ts",
+    "start": "TZ=UTC tsx src/server/main.ts",
+    "test": "TZ=UTC tsx --test tests/*.test.ts",
+    "test:integration": "TZ=UTC tsx --test tests/integration/*.test.ts",
     "test:e2e": "playwright test",
     "import": "tsx src/server/import-cli.ts",
     "country": "tsx src/server/country-cli.ts",
     "migrate": "tsx src/server/migrate-cli.ts",
-    "debug:api": "node --env-file=.env.local --inspect=127.0.0.1:9229 --import tsx --watch src/server/main.ts",
+    "debug:api": "TZ=UTC node --env-file=.env.local --inspect=127.0.0.1:9229 --import tsx --watch src/server/main.ts",
     "seed:sample": "node --env-file-if-exists=.env.local --import tsx scripts/seed-sample.ts"
   },
   "dependencies": {

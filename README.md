@@ -62,6 +62,8 @@ Radius choices are **0.5, 1, 2, 3 and 5 km**, with **0.5 km default**. Radius ch
 
 ## Verification
 
+The native API and test npm commands start with `TZ=UTC`, as does the API image. Venue schedules still use each venue's country timezone; UTC prevents the host's own DST gaps from normalizing a valid venue wall-clock hour.
+
 ```bash
 npm test
 npm run build

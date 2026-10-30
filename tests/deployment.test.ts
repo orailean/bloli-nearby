@@ -89,6 +89,18 @@ test("bootstrap baseline survives fast-forwarding source before the first pipeli
   } finally { f.cleanup(); }
 });
 
+test("operator can finalize using the installed stable helper without extra environment",()=>{
+  const f=fixture(); try {
+    const r=f.run(); assert.equal(r.status,0,r.stderr+r.stdout);
+    const bin=join(f.app,".deploy/bin"); mkdirSync(bin);
+    for(const file of ["deploy-production.sh","operation-lock.sh"]) copyFileSync(resolve("scripts",file),join(bin,file));
+    const env={...f.env}; delete (env as Partial<typeof env>).BLOLI_DEPLOY_ROOT;
+    const finalized=spawnSync("bash",[join(bin,"deploy-production.sh"),"finalize",f.sha,"success"],{env,encoding:"utf8"});
+    assert.equal(finalized.status,0,finalized.stderr);
+    assert.equal(existsSync(join(f.app,".deploy/current.json")),true);
+  } finally { f.cleanup(); }
+});
+
 for (const failure of ["FAIL_PULL", "BAD_LABEL", "FAIL_BACKUP", "RUNNING_IMPORT"]) {
   test(`${failure} leaves source and release configuration unchanged`, () => {
     const f=fixture(); try {
