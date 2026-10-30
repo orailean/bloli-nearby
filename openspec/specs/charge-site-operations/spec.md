@@ -1,5 +1,7 @@
 # Charge site operations
 
+## Purpose
+
 This capability covers shared-host routing, local development, production import, TLS renewal, verification, and rollback for Charge.
 
 ## Requirements

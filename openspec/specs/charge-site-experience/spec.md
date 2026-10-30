@@ -1,5 +1,7 @@
 # Charge site experience
 
+## Purpose
+
 This capability defines the accessible, multilingual user experience for discovering and navigating to mapped EV charging stations.
 
 ## Requirements
