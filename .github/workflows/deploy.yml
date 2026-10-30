@@ -1,0 +1,189 @@
+name: Check and deploy
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # Public standard runners are free. Require budget confirmation if made private.
+    if: github.event.repository.private == false || vars.FREE_CI_CONFIRMED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
+        env:
+          POSTGRES_USER: bloli_ci
+          POSTGRES_PASSWORD: ci-disposable-only
+          POSTGRES_DB: bloli_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U bloli_ci -d bloli_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      TEST_DATABASE_URL: postgres://bloli_ci:ci-disposable-only@127.0.0.1:5432/bloli_ci
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.22.0'
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:integration
+      - name: Python extractor tests
+        run: |
+          python3 -m venv /tmp/bloli-importer-tests
+          /tmp/bloli-importer-tests/bin/pip install -r importer/requirements.txt
+          /tmp/bloli-importer-tests/bin/python -m unittest discover -s importer
+      - name: Fresh browser database
+        run: |
+          node --input-type=module <<'JS'
+          import pg from 'pg';
+          const client = new pg.Client(process.env.TEST_DATABASE_URL);
+          await client.connect();
+          await client.query('CREATE DATABASE bloli_browser');
+          await client.end();
+          JS
+      - name: Seed browser fixtures
+        env:
+          DATABASE_URL: postgres://bloli_ci:ci-disposable-only@127.0.0.1:5432/bloli_browser
+        run: npm run seed:sample
+      - run: npx --no-install playwright install --with-deps chromium webkit
+      - name: Browser regressions
+        env:
+          TEST_DATABASE_URL: postgres://bloli_ci:ci-disposable-only@127.0.0.1:5432/bloli_browser
+        run: npm run test:e2e
+
+  publish:
+    needs: check
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      vars.CONTABO_DEPLOY_ENABLED == 'true' &&
+      (github.event.repository.private == false || vars.FREE_CI_CONFIRMED == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      api: ${{ steps.images.outputs.api }}
+      web: ${{ steps.images.outputs.web }}
+      importer: ${{ steps.images.outputs.importer }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Registry login
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Build and publish exact revision
+        id: images
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          docker buildx create --use --name bloli-release
+          for service in api web importer; do
+            image="ghcr.io/orailean/bloli-nearby-$service"
+            metadata="$RUNNER_TEMP/$service.json"
+            docker buildx build --platform linux/amd64 --push \
+              --file "docker/$service.Dockerfile" --tag "$image:$SOURCE_SHA" \
+              --label "org.opencontainers.image.source=https://github.com/orailean/bloli-nearby" \
+              --label "org.opencontainers.image.revision=$SOURCE_SHA" \
+              --metadata-file "$metadata" .
+            digest=$(jq -er '.["containerimage.digest"]' "$metadata")
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+            printf '%s=%s\n' "$service" "$digest" >> "$GITHUB_OUTPUT"
+            printf '%s: `%s@%s`\n' "$service" "$image" "$digest" >> "$GITHUB_STEP_SUMMARY"
+          done
+      - name: Registry logout
+        if: always()
+        run: docker logout ghcr.io
+
+  deploy:
+    needs: publish
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      vars.CONTABO_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 30
+    concurrency:
+      group: contabo-production
+      cancel-in-progress: false
+    env:
+      SOURCE_SHA: ${{ github.sha }}
+      API_DIGEST: ${{ needs.publish.outputs.api }}
+      WEB_DIGEST: ${{ needs.publish.outputs.web }}
+      IMPORTER_DIGEST: ${{ needs.publish.outputs.importer }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.22.0'
+      - run: npm ci --ignore-scripts
+      - run: npx --no-install playwright install --with-deps chromium
+      - name: Configure dedicated SSH identity
+        env:
+          DEPLOY_KEY: ${{ secrets.CONTABO_SSH_PRIVATE_KEY }}
+          KNOWN_HOSTS: ${{ secrets.CONTABO_SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/contabo_deploy"
+          printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          cat > "$HOME/.ssh/config" <<'SSH'
+          Host contabo-deploy
+            HostName 173.212.194.159
+            User oliver
+            IdentityFile ~/.ssh/contabo_deploy
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            BatchMode yes
+            ConnectTimeout 15
+            ServerAliveInterval 15
+            ServerAliveCountMax 4
+          SSH
+      - name: Configure read-only GHCR access on Contabo
+        env:
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+        run: |
+          test -n "$GHCR_READ_TOKEN"
+          printf '%s' "$GHCR_READ_TOKEN" | ssh contabo-deploy registry-login
+      - name: Deploy three immutable images
+        id: remote
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          for digest in "$API_DIGEST" "$WEB_DIGEST" "$IMPORTER_DIGEST"; do
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          done
+          ssh contabo-deploy "deploy $SOURCE_SHA $API_DIGEST $WEB_DIGEST $IMPORTER_DIGEST"
+      - name: Verify all ten public sites
+        id: browser
+        run: node scripts/check-multi-site-production.mjs
+      - name: Finalize successful release
+        if: success()
+        run: ssh contabo-deploy "finalize $SOURCE_SHA success"
+      - name: Record failed attempt
+        if: failure() && steps.remote.outcome != 'skipped' && steps.remote.outcome != ''
+        run: |
+          # A preflight failure has no pending record; preserve the original error.
+          ssh contabo-deploy "finalize $SOURCE_SHA failure" || true
+      - name: Remove temporary SSH credentials
+        if: always()
+        run: rm -f "$HOME/.ssh/contabo_deploy" "$HOME/.ssh/known_hosts" "$HOME/.ssh/config"

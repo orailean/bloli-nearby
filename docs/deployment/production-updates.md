@@ -1,5 +1,7 @@
 # Updating Bloli Nearby in production
 
+For the main-only GitHub Actions/GHCR workflow, activation steps and recovery, see [automated deployments](github-actions.md). After activation, the Compose wrapper reads the three immutable image references from `.deploy/release.env`; routine updates should use that pipeline. The source-build procedure below is the pre-pipeline/manual fallback and must not retag pinned GHCR images.
+
 Current ten-site deployment: see [View and Sights](view-sights-sites.md) and its [rollout protocol](protocol-2026-10-30-view-sights.md). Earlier eight-site rollout: [ATM and Stay](atm-stay-sites.md). Existing operations: see [Bloli Nearby migration and updates](bloli-nearby-migration.md), [multi-country operations](multi-country-coverage.md), [Water setup](water-site.md), [Transit setup](transit-site.md) and [Charge setup](charge-site.md).
 
 Production path: `/home/oliver/stack/bloli-nearby` on `ssh-contabo`. Public sites: https://loo.bloli.com, https://kippe.bloli.com, https://kebab.bloli.com, https://water.bloli.com, https://transit.bloli.com, https://charge.bloli.com, https://atm.bloli.com, https://stay.bloli.com, https://view.bloli.com and https://sights.bloli.com. The existing Docker Nginx owns ports 80/443; this app publishes no host ports. The production `.env` persists `COMPOSE_FILE=compose.yaml:compose.production.yaml` so operational commands retain the external `nginx_default` network and alias `bloli-nearby-web`.
