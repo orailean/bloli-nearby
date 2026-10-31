@@ -30,6 +30,14 @@ jobs:
     env:
       TEST_DATABASE_URL: postgres://bloli_ci:ci-disposable-only@127.0.0.1:5432/bloli_ci
     steps:
+      - name: Report deployment gate context
+        env:
+          GATE_EVENT: ${{ github.event_name }}
+          GATE_REF: ${{ github.ref }}
+          GATE_ENABLED: ${{ vars.CONTABO_DEPLOY_ENABLED }}
+          GATE_PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          printf '::notice title=Deployment gate::event=%s ref=%s enabled=[%s] private=%s\n' "$GATE_EVENT" "$GATE_REF" "$GATE_ENABLED" "$GATE_PRIVATE"
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
