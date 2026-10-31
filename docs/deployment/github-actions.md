@@ -122,4 +122,4 @@ Keep refresh paused until importer compatibility is confirmed. Returning to pipe
 
 ## Current activation status
 
-Implementation verification, host setup and pending first rollout are recorded in the [setup protocol](protocol-2026-10-30-github-actions.md). Keep `CONTABO_DEPLOY_ENABLED` unset until hosted checks pass and the owner is ready to enable the first deployment. GitHub CLI authentication is not required when the owner supplies the above configuration through the UI.
+The first production rollout succeeded in [run 41153636376](https://github.com/orailean/bloli-nearby/actions/runs/41153636376), including all ten public site checks and finalization. `CONTABO_DEPLOY_ENABLED=true` is enabled as a repository Actions variable. The [setup protocol](protocol-2026-10-30-github-actions.md) records image digests, the verified backup and an outstanding discrepancy: the published packages are anonymously readable despite the private-image design. Private visibility remains unresolved. GitHub CLI authentication is not required when the owner supplies configuration through the UI.

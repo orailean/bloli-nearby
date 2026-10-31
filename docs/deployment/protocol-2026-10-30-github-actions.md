@@ -50,8 +50,22 @@ The [third hosted run](https://github.com/orailean/bloli-nearby/actions/runs/411
 
 The [fourth hosted run](https://github.com/orailean/bloli-nearby/actions/runs/41150359924) at `ba2394c` passed the full hosted check job, including all 54 browser cases. `publish` and `deploy` were skipped because `CONTABO_DEPLOY_ENABLED` remains false, as intended. No images were published and production was not changed. The only source change since the run was triggered is this protocol update.
 
-## Pending activation
+## Successful first production rollout, 2026-10-31
 
-The owner has configured the required `production` environment secrets through GitHub's UI: `CONTABO_SSH_PRIVATE_KEY`, `CONTABO_SSH_KNOWN_HOSTS`, and `GHCR_READ_TOKEN` (classic PAT with only `read:packages`). Restrict that environment to `main`. Hosted checks now pass. The repository variable `CONTABO_DEPLOY_ENABLED` remains false; setting it to `true` and manually dispatching **Check and deploy** from `main` will publish the three private GHCR images and deploy them to Contabo. The first production rollout has not yet run.
+The owner configured the three production secrets and saved `CONTABO_DEPLOY_ENABLED=true` as a repository Actions variable. Earlier attempts skipped publication because this flag was saved as a secret; the workflow reads `vars`, not `secrets`. A nonsecret gate notice was added to diagnose that mismatch.
 
-After activation, verify the three packages remain private, and record the workflow URL, source SHA, image digests and backup path here. Until then, this is **implemented and host-prepared, with hosted checks verified and image publication/deployment pending**. Follow the [runbook](github-actions.md) for token renewal, abandoned pending-release recovery and explicit compatible application rollback.
+[Run 41153636376](https://github.com/orailean/bloli-nearby/actions/runs/41153636376) successfully checked, published, deployed, verified all ten public sites and finalized source `f328596ac3e1896563198984895340e29432a840`. Host `current.json` records success with `hostVerified=true`, finalized at `2026-10-31T01:18:22Z`; no pending marker remains. API/web are healthy, and all four countries report ready. Backup and refresh timers are active.
+
+Verified database backup: `/home/oliver/stack/bloli-nearby/backups/bloli-nearby-20261031T011226Z.dump` (335 MiB).
+
+| Service | Published SHA256 digest |
+| --- | --- |
+| API | `c7a7bb0257066732ca5ce2cba1a3519e3d048ee70009c18f8d0ae8c8ab497aa5` |
+| Web | `a52ac81a861731bea5d9d486c8917cf39e570a24d9eccf06161bae228db64191` |
+| Importer | `70750e46292ae9d36454a86bcf48032487be986e2fb1d622aa6205c5d9174f3f` |
+
+During inventory, found the installed refresh service still called the legacy direct importer. Installed the repository's reviewed unit and reloaded systemd; verified ExecStart now uses `scripts/update.sh` and the shared-lock country wrapper. No import was started and the timer stayed active.
+
+**Remaining discrepancy:** all three published image manifests returned HTTP 200 using anonymously issued GHCR tokens, including with curl configuration disabled. They are publicly readable, contrary to the private-image design. Publication permissions/visibility need operator review; do not describe private visibility as verified. GitHub documents that public packages cannot be made private again, so private replacements may require new package names. Production deployment itself is verified.
+
+Follow the [runbook](github-actions.md) for token renewal, abandoned pending-release recovery and compatible application rollback.
