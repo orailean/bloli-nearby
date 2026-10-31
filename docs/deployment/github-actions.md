@@ -122,4 +122,4 @@ Keep refresh paused until importer compatibility is confirmed. Returning to pipe
 
 ## Current activation status
 
-Implementation verification and UI/host setup status are recorded in the rollout protocol when a real pipeline run completes. Until then, `CONTABO_DEPLOY_ENABLED` must remain unset. GitHub CLI authentication is not required when the owner supplies the above configuration through the UI.
+Implementation verification, host setup and pending first rollout are recorded in the [setup protocol](protocol-2026-10-30-github-actions.md). Keep `CONTABO_DEPLOY_ENABLED` unset until hosted checks pass and the owner is ready to enable the first deployment. GitHub CLI authentication is not required when the owner supplies the above configuration through the UI.

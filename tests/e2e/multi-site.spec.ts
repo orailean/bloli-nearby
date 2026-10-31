@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { sites } from "../../src/shared/sites.js";
 const dataset = {
   ready: true,
@@ -528,12 +530,12 @@ for (const id of [
         await expect(page.locator("footer")).toBeAttached();
         if (id === "kebab")
           await page.screenshot({
-            path: `/private/tmp/bloli-kebab-${width}-${locale}.png`,
+            path: join(tmpdir(), `bloli-kebab-${width}-${locale}.png`),
             fullPage: true,
           });
       }
       await page.screenshot({
-        path: `/private/tmp/bloli-${id}-${width}.png`,
+        path: join(tmpdir(), `bloli-${id}-${width}.png`),
         fullPage: true,
       });
     });
