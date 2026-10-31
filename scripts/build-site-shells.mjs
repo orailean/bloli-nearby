@@ -4,6 +4,14 @@ const template = await readFile(
   "utf8",
 );
 const profiles = {
+  vend: {
+    domain: "vend.bloli.com",
+    title: "Vend · Kleine Pause. Frischer Schwung.",
+    description:
+      "Finde Verkaufsautomaten für Getränke, Snacks und Alltagsbedarf. Mit erfassten Produkten, Zahlungsarten und Öffnungszeiten aus OpenStreetMap.",
+    color: "#993e26",
+    analyticsToken: null,
+  },
   view: {
     domain: "view.bloli.com",
     title: "View · Die nächste Aussicht wartet.",

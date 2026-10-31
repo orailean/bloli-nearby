@@ -1281,12 +1281,18 @@ test(
           coordinates: [[[[20, 43], [30, 43], [30, 49], [20, 49], [20, 43]]]],
         };
         const roRows = [
+          ...[
+            {vending:'cigarettes'},
+            {vending:'drinks;snacks', 'payment:visa':'yes', opening_hours:'24/7', access:'public'},
+            {vending:'drinks', 'payment:coins':'yes', access:'customers'},
+            {},
+          ].map((tags,i)=>({kind:'vending',sourceType:'node',sourceId:i===0?'81002':String(81100+i),lat:44.43+i*0.0001,lon:26.1,tags:{amenity:'vending_machine',...tags},version:1})),
           {kind:"view",sourceType:"node",sourceId:"81012",lat:44.4301,lon:26.1,tags:{tourism:"viewpoint",fee:"no",ele:"1200","name:hu":"Kilátó"},version:1},
           {kind:"view",sourceType:"node",sourceId:"81013",lat:44.431,lon:26.1,tags:{man_made:"tower","tower:type":"observation",fee:"yes",opening_hours:"24/7"},version:1},
           {kind:"sights",sourceType:"node",sourceId:"81014",lat:44.4301,lon:26.1,tags:{tourism:"museum",fee:"yes",opening_hours:"24/7"},version:1},
           {kind:"sights",sourceType:"node",sourceId:"81015",lat:44.431,lon:26.1,tags:{historic:"ruins",ruins:"yes",fee:"no"},version:1},
           { kind: "facility", sourceType: "node", sourceId: "81001", lat: 44.43, lon: 26.1, tags: { amenity: "toilets", name: "București WC", fee: "no" }, version: 1 },
-          { kind: "seller", sourceType: "node", sourceId: "81002", lat: 44.43, lon: 26.1, tags: { shop: "tobacco", name: "Tutun" }, version: 1 },
+          { kind: "seller", sourceType: "node", sourceId: "81002", lat: 44.43, lon: 26.1, tags: { amenity: "vending_machine", vending: "cigarettes" }, version: 1 },
           { kind: "kebab", sourceType: "node", sourceId: "81003", lat: 44.43, lon: 26.1, tags: { amenity: "fast_food", cuisine: "kebab", name: "Shaorma" }, version: 1 },
           { kind: "water", sourceType: "node", sourceId: "81004", lat: 44.43, lon: 26.1, tags: { amenity: "drinking_water" }, version: 1 },
           { kind: "transit", sourceType: "node", sourceId: "81005", lat: 44.43, lon: 26.1, tags: { railway: "station", name: "Gara de Nord" }, transport: { groups: [], routes: [] }, version: 1 },
@@ -1307,7 +1313,7 @@ test(
           boundarySource: "https://download.geofabrik.de/europe/romania.poly",
           boundaryChecksum: "a".repeat(64),
           coverage: roCoverage,
-          categories: ["toilets", "tobacco", "kebab", "water", "transit", "charge", "atm", "accommodation", "view", "sights"] as Category[],
+          categories: ["toilets", "tobacco", "kebab", "water", "transit", "charge", "atm", "accommodation", "view", "sights", "vending"] as Category[],
           minimumFacilities: 1,
           minimumSellers: 1,
           minimumKebabs: 1,
@@ -1318,6 +1324,7 @@ test(
           minimumAccommodations: 1,
           minimumViews: 1,
           minimumSights: 1,
+          minimumVending: 1,
           minimumSettlements: 1,
           minimumRatio: 0.5,
         };
@@ -1328,14 +1335,14 @@ test(
         assert.deepEqual((await pool.query("SELECT category,location_count,imported_at FROM country_datasets ORDER BY country_code,category")).rows,beforeMeasure);
         assert.equal((await pool.query('SELECT count(*)::int n FROM import_jobs')).rows[0].n,jobsBeforeMeasure);
         // A retained eight-category snapshot can still be measured before new-category rollout.
-        const legacy = await importDataset(pool,(async function*(){yield* roRows.filter(row=>!["view","sights"].includes(row.kind));})(),{...countryOptions,categories:countryOptions.categories.filter(category=>!["view","sights"].includes(category)),measureOnly:true});
+        const legacy = await importDataset(pool,(async function*(){yield* roRows.filter(row=>!["view","sights","vending"].includes(row.kind));})(),{...countryOptions,categories:countryOptions.categories.filter(category=>!["view","sights","vending"].includes(category)),measureOnly:true});
         assert.equal(legacy.views,0);assert.equal(legacy.sights,0);
         await importDataset(pool, (async function* () { yield* roRows; })(), countryOptions);
         await migrate(pool);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='de' AND location_id='node/81001'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='de' AND settlement_id='node/81007'")).rows[0].n, 0);
-        assert.equal((await pool.query("SELECT count(*)::int n FROM country_datasets WHERE country_code='ro'")).rows[0].n, 10);
-        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 12);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_datasets WHERE country_code='ro'")).rows[0].n, 11);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 16);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro' AND location_id='node/81008'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81009'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT source_version FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81007'")).rows[0].source_version, 0);
@@ -1356,6 +1363,21 @@ test(
           assert.equal(response.body.items.length,2);
           assert.ok(response.body.items.every((item:any)=>item.category===site&&item.countryCode==="ro"));
         }
+        const vend = (suffix:string) => get('/api/locations?site=vend&lat=44.43&lon=26.1&'+suffix);
+        assert.equal((await vend('product=drinks&payment=card&vendAccess=public&limit=1')).body.items[0].id,'node/81101');
+        assert.equal((await vend('product=drinks&payment=cash')).body.items[0].id,'node/81102');
+        const tobaccoVend=(await vend('product=cigarettes')).body.items[0];
+        const tobaccoKippe=(await get('/api/locations?site=kippe&lat=44.43&lon=26.1&sellerType=machine')).body.items[0];
+        assert.equal(tobaccoVend.id,tobaccoKippe.id);
+        assert.equal(tobaccoVend.openingHours,null);
+        assert.equal(tobaccoVend.sellerType,undefined);
+        assert.equal(tobaccoKippe.openingHours,'24/7');
+        assert.equal(tobaccoKippe.hoursAssumed,true);
+        assert.equal((await vend('product=unknown')).body.items[0].id,'node/81103');
+        assert.equal((await vend('openNow=true')).body.items.length,1);
+        assert.equal((await vend('product=cigarettes&openNow=true')).body.items.length,0);
+        assert.equal((await vend('product=drinks&product=snacks')).status,400);
+        assert.equal((await get('/api/locations?site=loo&lat=44.43&lon=26.1&product=drinks')).status,400);
         const tower = await get('/api/locations?site=view&lat=44.43&lon=26.1&viewType=tower&limit=1&openNow=true');
         assert.equal(tower.status,200);assert.deepEqual(tower.body.items.map((item:any)=>item.id),['node/81013']);
         const ruins = await get('/api/locations?site=sights&lat=44.43&lon=26.1&sightType=ruins&fee=free&limit=1');

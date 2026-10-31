@@ -2976,3 +2976,21 @@ html[data-site="sights"] { --ink:#383b75; --mint:#e7ebff; --yellow:#efa18a; --li
   .tourist-type-control select { flex:1; width:0; }
   [data-site="view"] .hero h1, [data-site="sights"] .hero h1 { letter-spacing:-1.8px; }
 }
+
+html[data-site="vend"] { --ink:#602f25; --mint:#fcebdc; --yellow:#e9ba51; --line:#e5cbb8; --muted:#7c6258; background:#fff9ef; color:var(--ink); }
+[data-site="vend"] .site-header { background:#fff9ef; }
+[data-site="vend"] .brand-mark { background:#993e26; color:#fff4df; border-radius:10px; transform:none; }
+[data-site="vend"] .brand-dot { color:#993e26; }
+[data-site="vend"] .hero-art::before { display:none; }
+.vend-scene { width:min(100%,390px); height:auto; }
+[data-site="vend"] .art-caption { background:#602f25; color:#fff9ef; border-radius:7px; box-shadow:none; transform:rotate(-3deg); }
+[data-site="vend"] .workspace { border-color:#d5b49d; }
+[data-site="vend"] .workspace-toolbar { background:#fcebdc; flex-wrap:wrap; }
+[data-site="vend"] .site-footer { background:#602f25; color:#fff9ef; }
+[data-site="vend"] .footer-main p, [data-site="vend"] .footer-bottom { color:#fcebdc; }
+[data-site="vend"] .locate-button, [data-site="vend"] .search-submit, [data-site="vend"] .walk-button { background:#993e26; color:#fff; }
+.vend-filters { display:flex; gap:10px; flex-wrap:wrap; min-width:0; max-width:100%; }
+.vend-filters label { display:flex; flex-direction:column; gap:5px; font-size:12px; font-weight:650; min-width:0; max-width:100%; }
+.vend-filters select { max-width:100%; min-width:0; min-height:40px; padding:8px; border:1px solid var(--line); border-radius:8px; background:#fff9ef; color:var(--ink); font:inherit; }
+.vend-summary { color:var(--ink); font-size:12px; overflow-wrap:anywhere; }
+@media(max-width:600px) { .vend-filters { width:100%; } .vend-filters label { flex:1 1 140px; } [data-site="vend"] .hero h1 { letter-spacing:-1.8px; } }

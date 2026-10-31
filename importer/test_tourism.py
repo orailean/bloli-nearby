@@ -23,7 +23,7 @@ class TourismTests(unittest.TestCase):
             out = io.StringIO()
             extract(str(source), {}, out, 'fixture', '2026-10-30T00:00:00Z')
             rows = [json.loads(line) for line in out.getvalue().splitlines()]
-            self.assertEqual(len(rows[0]['categories']), 10)
+            self.assertEqual(len(rows[0]['categories']), 11)
             self.assertEqual({row['kind'] for row in rows[1:-1]}, {'view', 'sights'})
             self.assertEqual(rows[-1]['records'], 2)
             self.assertEqual(next(row for row in rows if row['kind'] == 'sights')['tags']['name:hu'], 'Vár')

@@ -12,6 +12,7 @@ for (const group of [
   "sites/charge/locales",
   "sites/view/locales",
   "sites/sights/locales",
+  "sites/vend/locales",
 ]) {
   test(`${group} has matching translated keys`, () => {
     const dictionaries = ["de", "en", "ro", "hu"].map((locale) =>

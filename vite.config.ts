@@ -15,6 +15,7 @@ export default defineConfig({
       "stay.localhost",
       "view.localhost",
       "sights.localhost",
+      "vend.localhost",
     ],
     proxy: { "/api": { target: "http://127.0.0.1:3100", changeOrigin: false } },
   },

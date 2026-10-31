@@ -1,3 +1,4 @@
+import { VENDING_PRODUCTS } from "./vending-types.js";
 import { VIEW_TYPES, SIGHT_TYPES } from "./tourism-types.js";
 import { ACCOMMODATION_TYPES } from "./nearby-types.js";
 import { CHARGE_CONNECTORS, CHARGE_POWERS } from "./charge-types.js";
@@ -155,6 +156,18 @@ export function parseSearch(
     p.getAll("sightType").length > 1
   )
     throw new AppError("INVALID_QUERY");
+  const product = p.get("product") ?? "all",
+    payment = p.get("payment") ?? "all",
+    vendAccess = p.get("vendAccess") ?? "all";
+  const vendingKeys = ["product", "payment", "vendAccess"];
+  if (
+    (category !== "vending" && vendingKeys.some((key) => p.has(key))) ||
+    vendingKeys.some((key) => p.getAll(key).length > 1) ||
+    !["all", ...VENDING_PRODUCTS].includes(product) ||
+    !["all", "cash", "card"].includes(payment) ||
+    !["all", "public"].includes(vendAccess)
+  )
+    throw new AppError("INVALID_QUERY");
   const sellerType = p.get("sellerType") ?? "all";
   if (
     !["all", "machine", "shop", "fuel"].includes(sellerType) ||
@@ -180,6 +193,13 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   return {
+    ...(category === "vending"
+      ? {
+          product: product as SearchQuery["product"],
+          payment: payment as SearchQuery["payment"],
+          vendAccess: vendAccess as SearchQuery["vendAccess"],
+        }
+      : {}),
     ...(category === "view"
       ? { viewType: viewType as SearchQuery["viewType"] }
       : {}),

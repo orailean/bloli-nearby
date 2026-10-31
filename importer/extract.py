@@ -76,6 +76,8 @@ def kinds(tags):
     if tags.get('type') in ('route', 'route_master', 'collection', 'destination_sign') or tags.get('public_transport') in ('stop_area', 'stop_area_group'):
         return []
     result = []
+    if tags.get('amenity') == 'vending_machine':
+        result.append('vending')
     physical_tourism = tags.get('type', '') in ('', 'multipolygon', 'boundary', 'site', 'building', 'bridge', 'artwork', 'multilinestring')
     if physical_tourism and (tags.get('tourism') == 'viewpoint' or (tags.get('man_made') == 'tower' and tags.get('tower:type') == 'observation')):
         result.append('view')
@@ -124,7 +126,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
           **({'coverageSource': boundary_source, 'coverageChecksum': boundary_checksum} if boundary_source else {}),
           **({'countryCode': country_code} if country_code else {}),
           **({'sourceChecksum': source_checksum} if source_checksum else {}),
-          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights'], 'transitContextComplete': True})
+          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights', 'vending'], 'transitContextComplete': True})
     transport_context=TransportContext(context_path,fingerprint)
     def object_kinds(tags,source_type,source_id):
         result=kinds(tags)
@@ -142,7 +144,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     transit_relations = {}
     tourism_relations = {}
     tourism_members = {}
-    area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights'}
+    area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights', 'vending'}
 
     class SiteMembers(osmium.SimpleHandler):
         def relation(self, obj):
@@ -374,7 +376,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     broken_charge=[key for key in missing if 'charge' in handler.expected[key]]
     if broken_charge:
         raise ValueError(f'Incomplete charge geometries: {len(broken_charge)}; sources: {sorted(broken_charge)[:30]}')
-    for kind in ('atm', 'accommodation', 'view', 'sights'):
+    for kind in ('atm', 'accommodation', 'view', 'sights', 'vending'):
         broken=[key for key in missing if kind in handler.expected[key]]
         if broken:
             raise ValueError(f'Incomplete {kind} geometries: {len(broken)}; sources: {sorted(broken)[:30]}')

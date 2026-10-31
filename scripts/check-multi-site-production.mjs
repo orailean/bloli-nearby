@@ -77,6 +77,17 @@ try {
       const cross=id==='view'?'sightType=museum':'viewType=tower';
       assert.equal((await request(`${base}/api/locations?${query}&${cross}`)).status,400);
     }
+    if(id==='vend'){
+      assert.ok(all.items.every(item=>item.category==='vending' && item.vending && !item.hoursAssumed && !item.sellerType));
+      for (const filter of ['product=drinks','payment=card','vendAccess=public']) {
+        const response=await request(`${base}/api/locations?${query}&${filter}`);
+        assert.equal(response.status,200);
+        const data=await response.json();
+        assert.ok(data.items.every(item=>filter==='product=drinks'?item.vending.groups.includes('drinks'):filter==='payment=card'?item.vending.payments.includes('card'):item.access==='public'));
+      }
+      assert.equal((await request(`${base}/api/locations?${query}&fee=all`)).status,400);
+      assert.equal((await request(`${base}/api/locations?${query}&product=drinks&product=snacks`)).status,400);
+    }
     if(id==='atm'){
       assert.ok(all.items.every(item=>item.category==='atm'&&item.atm));
       for(const query of ['currency=EUR','deposit=yes','fee=unknown']){

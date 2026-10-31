@@ -10,7 +10,18 @@ import type {
 import type { dictionaries } from "../i18n.js";
 export type Content = typeof dictionaries.en;
 import type { ViewType, SightType } from "../../shared/tourism-types.js";
+import type {
+  VendingProduct,
+  VendingPayment,
+  VendingAccess,
+} from "../../shared/vending-types.js";
 export interface FilterProps {
+  product?: VendingProduct | "all";
+  onProduct?: (value: VendingProduct | "all") => void;
+  payment?: VendingPayment;
+  onPayment?: (value: VendingPayment) => void;
+  vendAccess?: VendingAccess;
+  onVendAccess?: (value: VendingAccess) => void;
   viewType?: ViewType | "all";
   onViewType?: (value: ViewType | "all") => void;
   sightType?: SightType | "all";

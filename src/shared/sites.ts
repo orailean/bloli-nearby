@@ -8,7 +8,8 @@ export type SiteId =
   | "atm"
   | "stay"
   | "view"
-  | "sights";
+  | "sights"
+  | "vend";
 export type Category =
   | "toilets"
   | "tobacco"
@@ -19,7 +20,8 @@ export type Category =
   | "atm"
   | "accommodation"
   | "view"
-  | "sights";
+  | "sights"
+  | "vending";
 export type SellerType = "machine" | "shop" | "fuel";
 export interface SiteProfile {
   id: SiteId;
@@ -30,6 +32,14 @@ export interface SiteProfile {
   capabilities: { fee: boolean; sellerType: boolean; openNow: boolean };
 }
 export const sites: Record<SiteId, SiteProfile> = {
+  vend: {
+    id: "vend",
+    category: "vending",
+    name: "Vend",
+    domain: "vend.bloli.com",
+    directionsMode: "walking",
+    capabilities: { fee: false, sellerType: false, openNow: true },
+  },
   view: {
     id: "view",
     category: "view",

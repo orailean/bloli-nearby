@@ -1,3 +1,4 @@
+import { normalizeVending } from "../shared/vending.js";
 import { normalizeView, normalizeSights } from "../shared/tourism.js";
 import { normalizeAtm } from "../shared/atm.js";
 import { normalizeAccommodation } from "../shared/accommodation.js";
@@ -19,7 +20,8 @@ export type CategoryMinimum =
   | "minimumAtms"
   | "minimumAccommodations"
   | "minimumViews"
-  | "minimumSights";
+  | "minimumSights"
+  | "minimumVending";
 export interface CategoryImport {
   kind: string;
   minimum: CategoryMinimum;
@@ -34,10 +36,18 @@ export interface CategoryImport {
     | "atms"
     | "accommodations"
     | "views"
-    | "sights";
+    | "sights"
+    | "vendingMachines";
   normalize: (record: SourceRecord) => Facility | null;
 }
 export const categoryImports: Record<Category, CategoryImport> = {
+  vending: {
+    kind: "vending",
+    minimum: "minimumVending",
+    defaultMinimum: 100,
+    count: "vendingMachines",
+    normalize: normalizeVending,
+  },
   view: {
     kind: "view",
     minimum: "minimumViews",

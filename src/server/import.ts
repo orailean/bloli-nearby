@@ -32,6 +32,7 @@ export interface ImportOptions {
   minimumAccommodations?: number;
   minimumViews?: number;
   minimumSights?: number;
+  minimumVending?: number;
   measureOnly?: boolean;
 }
 export async function importDataset(
@@ -51,6 +52,7 @@ export async function importDataset(
   accommodations: number;
   views: number;
   sights: number;
+  vendingMachines: number;
 }> {
   if (!Number.isFinite(Date.parse(options.datasetAt)))
     throw new AppError("INVALID_DATASET_DATE");
@@ -101,7 +103,7 @@ export async function importDataset(
   if (
     countryCode !== "de" &&
     Object.keys(categoryImports)
-      .filter((category) => !["view", "sights"].includes(category))
+      .filter((category) => !["view", "sights", "vending"].includes(category))
       .some((category) => !categories.includes(category as Category))
   )
     throw new AppError("INCOMPLETE_COUNTRY_SNAPSHOT");
@@ -128,7 +130,7 @@ export async function importDataset(
         (options.measureOnly
           ? 1
           : countryCode === "de" &&
-              !["atm", "accommodation", "view", "sights"].includes(c)
+              !["atm", "accommodation", "view", "sights", "vending"].includes(c)
             ? categoryImports[c].defaultMinimum
             : minimumForCountry(countryCode, c));
       return n === undefined || !Number.isInteger(n) || n < 1;
@@ -276,6 +278,7 @@ export async function importDataset(
       accommodations: categoryCounts.get("accommodation") ?? 0,
       views: categoryCounts.get("view") ?? 0,
       sights: categoryCounts.get("sights") ?? 0,
+      vendingMachines: categoryCounts.get("vending") ?? 0,
       settlements: (
         await db.query("SELECT count(*)::int AS n FROM stage_settlements")
       ).rows[0].n as number,
@@ -299,7 +302,9 @@ export async function importDataset(
       const minimum =
         options[categoryImports[category].minimum] ??
         (countryCode === "de" &&
-        !["atm", "accommodation", "view", "sights"].includes(category)
+        !["atm", "accommodation", "view", "sights", "vending"].includes(
+          category,
+        )
           ? categoryImports[category].defaultMinimum
           : minimumForCountry(countryCode, category));
       if (
@@ -425,7 +430,7 @@ export async function importDataset(
       "DELETE FROM locations l WHERE NOT EXISTS(SELECT 1 FROM location_categories c WHERE c.location_id=l.id)",
     );
     await db.query(
-      "UPDATE import_jobs SET status='success',finished_at=now(),facility_count=$2,settlement_count=$3,seller_count=$4,kebab_count=$5,water_count=$6,transit_count=$7,charge_count=$8,atm_count=$9,accommodation_count=$10,view_count=$11,sights_count=$12 WHERE id=$1",
+      "UPDATE import_jobs SET status='success',finished_at=now(),facility_count=$2,settlement_count=$3,seller_count=$4,kebab_count=$5,water_count=$6,transit_count=$7,charge_count=$8,atm_count=$9,accommodation_count=$10,view_count=$11,sights_count=$12,vending_count=$13 WHERE id=$1",
       [
         jobId,
         counts.facilities,
@@ -439,6 +444,7 @@ export async function importDataset(
         categories.includes("accommodation") ? counts.accommodations : null,
         categories.includes("view") ? counts.views : null,
         categories.includes("sights") ? counts.sights : null,
+        categories.includes("vending") ? counts.vendingMachines : null,
       ],
     );
     await db.query("COMMIT");

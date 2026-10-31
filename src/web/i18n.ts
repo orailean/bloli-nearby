@@ -44,6 +44,10 @@ import sightsEn from "./sites/sights/locales/en.json";
 import sightsDe from "./sites/sights/locales/de.json";
 import sightsRo from "./sites/sights/locales/ro.json";
 import sightsHu from "./sites/sights/locales/hu.json";
+import vendEn from "./sites/vend/locales/en.json";
+import vendDe from "./sites/vend/locales/de.json";
+import vendRo from "./sites/vend/locales/ro.json";
+import vendHu from "./sites/vend/locales/hu.json";
 type Dictionary = Record<
   | keyof typeof commonEn
   | keyof typeof looEn
@@ -55,11 +59,13 @@ type Dictionary = Record<
   | keyof typeof atmEn
   | keyof typeof stayEn
   | keyof typeof viewEn
-  | keyof typeof sightsEn,
+  | keyof typeof sightsEn
+  | keyof typeof vendEn,
   string
 >;
 const common = { en: commonEn, de: commonDe, ro: commonRo, hu: commonHu };
 const localized = {
+  vend: { en: vendEn, de: vendDe, ro: vendRo, hu: vendHu },
   view: { en: viewEn, de: viewDe, ro: viewRo, hu: viewHu },
   sights: { en: sightsEn, de: sightsDe, ro: sightsRo, hu: sightsHu },
   loo: { en: looEn, de: looDe, ro: looRo, hu: looHu },
@@ -83,6 +89,7 @@ const fallback = Object.assign(
   stayDe,
   viewDe,
   sightsDe,
+  vendDe,
 );
 export const siteDictionaries = Object.fromEntries(
   Object.entries(localized).map(([id, content]) => [

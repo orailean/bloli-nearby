@@ -16,6 +16,12 @@ import type {
 } from "./transit-modes.js";
 import type { Category, SiteProfile, SellerType } from "./sites.js";
 import type { CountryCode, CountryStatus } from "./countries.js";
+import type {
+  VendingData,
+  VendingProduct,
+  VendingPayment,
+  VendingAccess,
+} from "./vending-types.js";
 export type Locale = "en" | "de" | "ro" | "hu";
 export type Fee = "free" | "paid" | "unknown";
 export type FeeFilter = "all" | "free" | "paid" | "unknown";
@@ -60,6 +66,7 @@ export interface Facility {
   atm?: AtmData;
   accommodation?: AccommodationData;
   tourist?: TouristData;
+  vending?: VendingData;
   waterType?: "point" | "refill";
   bottle?: string | null;
   seasonal?: string | null;
@@ -96,6 +103,9 @@ export interface SearchQuery {
   accommodationType?: AccommodationType | "all";
   viewType?: ViewType | "all";
   sightType?: SightType | "all";
+  product?: VendingProduct | "all";
+  payment?: VendingPayment;
+  vendAccess?: VendingAccess;
   connector?: ChargeConnectorFilter;
   minPowerKw?: ChargePower;
   chargeAccess?: ChargeAccessFilter;
@@ -145,6 +155,7 @@ export interface CountryCoverage {
         | "accommodation"
         | "view"
         | "sights"
+        | "vending"
         | "settlements",
         number
       >

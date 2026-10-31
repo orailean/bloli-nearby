@@ -52,6 +52,7 @@ for (const id of [
   "stay",
   "view",
   "sights",
+  "vend",
 ] as const) {
   for (const width of [1440, 320, 390, 430]) {
     test(`${id} ${width}px shares search, keeps its category and fits every locale`, async ({
@@ -111,6 +112,9 @@ for (const id of [
           expect(q.has("openNow")).toBe(false);
           expect(q.has("mode")).toBe(true);
         }
+        if (id === "vend") {
+          expect(q.has("product")).toBe(true); expect(q.has("payment")).toBe(true); expect(q.has("vendAccess")).toBe(true);
+        }
         if (id === "charge") {
           expect(q.has("connector")).toBe(true);
           expect(q.has("minPowerKw")).toBe(true);
@@ -153,6 +157,7 @@ for (const id of [
               tourist: {type:id === "view" ? ["viewpoint","tower","viewpoint"][i] : ["museum","castle","ruins"][i],elevation:"1200",height:null,direction:"90-180",phone:"+49123"},
               website:"https://example.com",
             } : {}),
+            ...(id === "vend" ? { category:"vending", vending:{ products:[i===0?'drinks':'coffee'], groups:[i===0?'drinks':'coffee'], payments:[i===0?'card':'cash'] } } : {}),
             ...(id === "stay"
               ? {
                   category: "accommodation",
@@ -276,6 +281,11 @@ for (const id of [
               q.get("accommodationType") === "all" ||
               item.accommodation?.type === q.get("accommodationType")
             );
+          if (id === "vend") {
+            if (q.get("product") !== "all" && !item.vending?.groups.includes(q.get("product")!)) return false;
+            if (q.get("payment") !== "all" && !item.vending?.payments.includes(q.get("payment")!)) return false;
+            if (q.get("vendAccess") === "public" && item.access !== "public") return false;
+          }
           if (id === "view" || id === "sights") {
             const type = q.get(id === "view" ? "viewType" : "sightType");
             return (type === "all" || item.tourist?.type === type) && (q.get("fee") === "all" || item.fee === q.get("fee"));
@@ -472,6 +482,16 @@ for (const id of [
         await expect(page.locator('.detail-panel a[href="https://example.com"]')).toBeVisible();
         if (id === "view") await expect(page.locator(".detail-panel")).toContainText("1200");
         await page.locator(".tourist-type-control select").selectOption("all");
+      }
+      if (id === "vend") {
+        await page.locator(".vend-filters select").nth(0).selectOption("drinks");
+        await page.locator(".vend-filters select").nth(1).selectOption("card");
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel")).toContainText("Stock and prices are not live");
+        await expect(page.locator(".walk-button")).toHaveAttribute("href",/travelmode=walking/);
+        await page.locator(".vend-filters select").nth(0).selectOption("all");
+        await page.locator(".vend-filters select").nth(1).selectOption("all");
       }
       if (id === "stay") {
         await expect(page.locator(".open-now-control")).toHaveCount(0);

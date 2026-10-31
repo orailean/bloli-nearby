@@ -1,4 +1,4 @@
-{"kind": "metadata", "source": "development-fixture-not-live-data", "datasetAt": "2026-10-25T00:00:00Z", "categories": ["toilets", "tobacco", "kebab", "water", "transit", "charge", "atm", "accommodation", "view", "sights"], "coverage": {"type": "MultiPolygon", "coordinates": [[[[5, 47], [16, 47], [16, 56], [5, 56], [5, 47]]]]}, "transitContextComplete": true}
+{"kind": "metadata", "source": "development-fixture-not-live-data", "datasetAt": "2026-10-25T00:00:00Z", "categories": ["toilets", "tobacco", "kebab", "water", "transit", "charge", "atm", "accommodation", "view", "sights", "vending"], "coverage": {"type": "MultiPolygon", "coordinates": [[[[5, 47], [16, 47], [16, 56], [5, 56], [5, 47]]]]}, "transitContextComplete": true}
 {"kind": "facility", "sourceType": "node", "sourceId": "900000", "lat": 48.1391, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 1", "fee": "no", "opening_hours": "24/7"}}
 {"kind": "facility", "sourceType": "node", "sourceId": "900001", "lat": 48.1396, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 2", "fee": "yes", "opening_hours": "off"}}
 {"kind": "facility", "sourceType": "node", "sourceId": "900002", "lat": 48.1401, "lon": 11.4729, "tags": {"amenity": "toilets", "name": "Sample WC München 3", "fee": "no", "opening_hours": "\"by appointment\""}}
@@ -74,4 +74,7 @@
 {"kind": "sights", "sourceType": "node", "sourceId": "901106", "lat": 48.1397, "lon": 11.4729, "version": 1, "tags": {"historic": "memorial", "fee": "no", "name": "Synthetic sights 7", "name:hu": "Minta 7", "access": "public"}}
 {"kind": "sights", "sourceType": "node", "sourceId": "901107", "lat": 48.1398, "lon": 11.4729, "version": 1, "tags": {"historic": "archaeological_site", "fee": "no", "name": "Synthetic sights 8", "name:hu": "Minta 8", "access": "public"}}
 {"kind": "sights", "sourceType": "node", "sourceId": "901108", "lat": 48.1399, "lon": 11.4729, "version": 1, "tags": {"tourism": "attraction", "fee": "no", "name": "Synthetic sights 9", "name:hu": "Minta 9", "access": "public"}}
-{"kind": "complete", "records": 75}
+{"kind": "vending", "sourceType": "node", "sourceId": "902100", "lat": 48.1391, "lon": 11.4729, "version": 1, "tags": {"amenity": "vending_machine", "name": "Synthetic vending 0", "vending": "drinks;snacks", "payment:visa": "yes", "opening_hours": "24/7", "access": "public"}}
+{"kind": "vending", "sourceType": "node", "sourceId": "902101", "lat": 48.1392, "lon": 11.4729, "version": 1, "tags": {"amenity": "vending_machine", "name": "Synthetic vending 1", "vending": "coffee", "payment:coins": "yes", "access": "customers"}}
+{"kind": "vending", "sourceType": "node", "sourceId": "902102", "lat": 48.1393, "lon": 11.4729, "version": 1, "tags": {"amenity": "vending_machine", "name": "Synthetic vending 2"}}
+{"kind": "complete", "records": 78}

@@ -40,7 +40,7 @@ test("built site shells each include only their assigned Cloudflare beacon", () 
     assert.deepEqual(
       Object.keys(tokens).sort(),
       Object.keys(sites)
-        .filter((id) => id !== "sights")
+        .filter((id) => !["sights", "vend"].includes(id))
         .sort(),
     );
     for (const [id, expectedToken] of Object.entries(tokens)) {
@@ -64,7 +64,7 @@ test("built site shells each include only their assigned Cloudflare beacon", () 
       }
       assert.ok(html.indexOf(scripts[0][0]) < html.indexOf("</body>"));
     }
-    for (const id of ["sights"]) {
+    for (const id of ["sights", "vend"]) {
       const html = readFileSync(join(temp, `dist/index-${id}.html`), "utf8");
       assert.doesNotMatch(html, /cloudflareinsights|data-cf-beacon/);
       assert.ok(html.includes(`data-site="${id}"`));

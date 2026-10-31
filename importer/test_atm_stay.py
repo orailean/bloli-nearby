@@ -17,7 +17,7 @@ class AtmStayTests(unittest.TestCase):
    p=Path(d)/'sample.osm';p.write_text(xml);out=io.StringIO()
    extract(str(p),{},out,'fixture','2026-10-27T00:00:00Z')
    rows=[json.loads(line) for line in out.getvalue().splitlines()]
-   self.assertEqual(len(rows[0]['categories']),10)
+   self.assertEqual(len(rows[0]['categories']),11)
    self.assertEqual({row['kind'] for row in rows[1:-1]},{'atm','accommodation'})
    self.assertEqual(rows[-1]['records'],2)
    self.assertEqual(next(r for r in rows if r['kind']=='accommodation')['tags']['name:hu'],'Szálloda')

@@ -6,13 +6,14 @@ import * as water from "./water/index.js";
 import * as transit from "./transit/index.js";
 import * as atm from "./atm/index.js";
 import * as view from "./view/index.js";
+import * as vend from "./vend/index.js";
 import * as sights from "./sights/index.js";
 import * as stay from "./stay/index.js";
 import * as charge from "./charge/index.js";
 const shellSite = document.documentElement.dataset.site;
 export const siteOverride =
   import.meta.env.DEV &&
-  /^(localhost|127\.0\.0\.1|\[::1\]|loo\.localhost|kippe\.localhost|kebab\.localhost|water\.localhost|transit\.localhost|charge\.localhost|atm\.localhost|stay\.localhost|view\.localhost|sights\.localhost)$/.test(
+  /^(localhost|127\.0\.0\.1|\[::1\]|loo\.localhost|kippe\.localhost|kebab\.localhost|water\.localhost|transit\.localhost|charge\.localhost|atm\.localhost|stay\.localhost|view\.localhost|sights\.localhost|vend\.localhost)$/.test(
     location.hostname,
   )
     ? (new URLSearchParams(location.search).get("site") ?? undefined)
@@ -34,4 +35,5 @@ export const sitePresentation = {
   stay,
   view,
   sights,
+  vend,
 };

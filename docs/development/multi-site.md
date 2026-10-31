@@ -70,3 +70,7 @@ Open `http://atm.localhost:5173` and `http://stay.localhost:5173` using the same
 Use `http://view.localhost:5173` and `http://sights.localhost:5173` with the same native API/Vite pair and Docker-only PostGIS. Both support DE/EN/RO/HU, type and entry-fee filters, mapped Open now, and walking directions. View includes mapped viewpoints and observation towers; Sights includes museums, attractions and selected historic destinations. See [classification and rollout](../deployment/view-sights-sites.md).
 
 The guarded `seed:sample` fixture now contains ten categories, with two synthetic View records and seven synthetic Sights records per country. It requires a fresh local database; existing development snapshots remain preserved. The two new categories require their own measured publication floors outside the guarded sample workflow.
+
+## Vend
+
+Use `http://vend.localhost:5173` or the development override `?site=vend`. The shared sample now contains eleven categories, including multi-product/card, coffee/cash and unknown-product vending machines in every country. Use a fresh sample database. Vend supports product, payment, public-access and mapped-hours filters in all four languages; see [Vend classification and deployment](../deployment/vend-site.md).
