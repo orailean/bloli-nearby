@@ -166,7 +166,8 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
                 tourism_members[obj.id] = members
             if 'transit' in kinds(tags):
                 transit_relations[obj.id] = tags
-            if tags.get('type') in ('site', 'building') and kinds(tags):
+            # type=node relations attach features to one mapped point; place them there.
+            if tags.get('type') in ('site', 'building', 'node') and kinds(tags):
                 members = [(m.type, m.ref) for m in obj.members if m.type in ('n', 'w')]
                 if tags.get('type') == 'building':
                     outlines = [(m.type, m.ref) for m in obj.members
