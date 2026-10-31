@@ -55,5 +55,5 @@
 
 - [x] Write exact setup and recovery commands without real secrets; verify against implemented interfaces.
 - [x] Run repository tests/build, strict OpenSpec validation and diff checks. Request one independent whole-change review and address material findings.
-- [ ] Check GitHub authentication and account free-budget/visibility settings. Configure and verify Contabo/GitHub only once access is available and zero-spend settings are verified; otherwise leave activation explicitly pending with precise missing inputs. Never ask for tokens in chat.
-- [ ] Observe a real main pipeline and public checks before claiming production completion; record run URL, commit, image digests and backup path. Commit docs and provide final verification/activation status.
+- [x] Check GitHub authentication and account free-budget/visibility settings. Configure and verify Contabo/GitHub only once access is available and zero-spend settings are verified; otherwise leave activation explicitly pending with precise missing inputs. Never ask for tokens in chat.
+- [x] Observe a real main pipeline and public checks before claiming production completion; record run URL, commit, image digests and backup path. Commit docs and provide final verification/activation status.
