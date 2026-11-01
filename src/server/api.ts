@@ -1,6 +1,8 @@
 import { resolveSite } from "../shared/sites.js";
 import { COUNTRIES, type CountryCode } from "../shared/countries.js";
 import { createServer } from "node:http";
+import { randomUUID } from "node:crypto";
+import { performance } from "node:perf_hooks";
 import type pg from "pg";
 import type { AppConfig } from "../shared/types.js";
 import { AppError, parseSearch } from "../shared/domain.js";
@@ -10,8 +12,22 @@ import {
   searchLocations,
   searchSettlements,
 } from "./repository.js";
+import { logEvent, sanitizeError } from "./log.js";
+// Logged operation names; anything else is "other" so paths never carry visitor input.
+const OPERATIONS = new Set([
+  "/api/site",
+  "/api/config",
+  "/api/status",
+  "/api/ready",
+  "/api/locations",
+  "/api/toilets",
+  "/api/settlements",
+]);
 export function createApi(pool: pg.Pool, config: Partial<AppConfig> = {}) {
   return createServer(async (req, res) => {
+    const started = performance.now();
+    let operation = "other",
+      siteId: string | undefined;
     const send = (status: number, body: unknown) => {
       res.writeHead(status, {
         "Content-Type": "application/json; charset=utf-8",
@@ -24,6 +40,7 @@ export function createApi(pool: pg.Pool, config: Partial<AppConfig> = {}) {
       if (req.method !== "GET" && req.method !== "HEAD")
         return send(405, { error: "METHOD_NOT_ALLOWED" });
       const u = new URL(req.url || "/", "http://localhost");
+      if (OPERATIONS.has(u.pathname)) operation = u.pathname;
       if (u.pathname === "/api/health") return send(200, { ok: true });
       const production = process.env.NODE_ENV === "production";
       if (production && u.searchParams.has("site"))
@@ -34,6 +51,7 @@ export function createApi(pool: pg.Pool, config: Partial<AppConfig> = {}) {
         u.searchParams.get("site") || process.env.DEV_SITE,
       );
       if (!site) return send(421, { error: "UNKNOWN_SITE" });
+      siteId = site.id;
       if (u.pathname === "/api/site") return send(200, site);
       if (u.pathname === "/api/config")
         return send(200, {
@@ -89,8 +107,17 @@ export function createApi(pool: pg.Pool, config: Partial<AppConfig> = {}) {
     } catch (error) {
       if (error instanceof AppError)
         return send(error.status, { error: error.code });
-      // Never log request URLs, query coordinates, connection strings, or raw database errors.
-      console.error("api_operation_failed");
+      // Only validated identifiers and a sanitized error: never request URLs,
+      // query coordinates, headers, connection strings or raw database errors.
+      const requestId = randomUUID();
+      logEvent("error", "api_operation_failed", {
+        operation,
+        site: siteId,
+        requestId,
+        durationMs: Math.round(performance.now() - started),
+        error: sanitizeError(error),
+      });
+      res.setHeader("X-Request-Id", requestId);
       return send(503, { error: "SERVICE_UNAVAILABLE" });
     }
   });

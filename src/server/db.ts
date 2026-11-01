@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import pg from "pg";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { performance } from "node:perf_hooks";
+import { logEvent } from "./log.js";
 export function databaseOptions(
   env: NodeJS.ProcessEnv = process.env,
   readSecret: (path: string) => string = (path) =>
@@ -35,6 +37,8 @@ export async function migrate(
   );
   const checksum = createHash("sha256").update(schema).digest("hex");
   const client = await pool.connect();
+  const started = performance.now();
+  const elapsed = () => Math.round(performance.now() - started);
   try {
     // The idempotent schema takes exclusive table locks even when nothing
     // changes, which deadlocks against live API reads. Skip an applied version.
@@ -48,12 +52,18 @@ export async function migrate(
           checksum,
         ])
       ).rows.length
-    )
+    ) {
+      logEvent("info", "schema_migration", {
+        status: "skipped",
+        durationMs: elapsed(),
+      });
       return;
+    }
     // Schema backfills may touch every existing OSM row. Keep the normal
     // request timeout for searches, but do not interrupt a one-time migration.
     await client.query("SET statement_timeout = 0");
-    for (let attempt = 1; ; attempt++) {
+    let attempt = 1;
+    for (; ; attempt++) {
       try {
         await client.query(schema);
         break;
@@ -65,6 +75,7 @@ export async function migrate(
           attempt >= attempts
         )
           throw error;
+        logEvent("warn", "schema_migration_retry", { attempt, code: "40P01" });
         await new Promise((resolve) =>
           setTimeout(resolve, attempt * retryDelayMs),
         );
@@ -74,6 +85,11 @@ export async function migrate(
       "INSERT INTO schema_state(checksum) VALUES($1) ON CONFLICT(singleton) DO UPDATE SET checksum=EXCLUDED.checksum,applied_at=now()",
       [checksum],
     );
+    logEvent("info", "schema_migration", {
+      status: "applied",
+      attempts: attempt,
+      durationMs: elapsed(),
+    });
   } finally {
     try {
       await client.query("SET statement_timeout = 30000");

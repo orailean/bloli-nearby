@@ -109,6 +109,7 @@ jobs:
               --file "docker/$service.Dockerfile" --tag "$image:$SOURCE_SHA" \
               --label "org.opencontainers.image.source=https://github.com/orailean/bloli-nearby" \
               --label "org.opencontainers.image.revision=$SOURCE_SHA" \
+              --build-arg "REVISION=$SOURCE_SHA" \
               --metadata-file "$metadata" .
             digest=$(jq -er '.["containerimage.digest"]' "$metadata")
             [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]

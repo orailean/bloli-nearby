@@ -7,4 +7,7 @@ COPY --chown=node:node src/server ./src/server
 COPY --chown=node:node src/shared ./src/shared
 USER node
 EXPOSE 3100
+# Last, so a new revision does not invalidate dependency layers.
+ARG REVISION=unknown
+ENV BLOLI_SERVICE=api BLOLI_REVISION=$REVISION
 CMD ["node", "--import", "tsx", "src/server/main.ts"]

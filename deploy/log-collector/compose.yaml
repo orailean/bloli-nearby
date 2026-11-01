@@ -1,0 +1,48 @@
+# Optional Grafana Cloud log collector, a separate Compose project so deployments
+# (compose.yaml:compose.production.yaml) never start, stop or recreate it.
+# Start and stop only through scripts/log-collector.sh; see docs/deployment/cloud-logs.md.
+name: bloli-nearby-logs
+services:
+  alloy:
+    image: grafana/alloy:v1.21.3@sha256:8ab871206bd2d8f89277f53abffee5f452a293980788d52f85fa183a87a505a4
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/alloy-data
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --disable-reporting
+    environment:
+      LOKI_URL: ${LOKI_URL:-https://logs-prod-012.grafana.net/loki/api/v1/push}
+      LOKI_USERNAME: ${LOKI_USERNAME:-1857320}
+      LOG_ENV: ${LOG_ENV:-production}
+    # Metrics and debug UI on host loopback only, for scripts/log-collector.sh status.
+    ports: ['127.0.0.1:12345:12345']
+    secrets: [grafana_logs_token]
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+      # Read positions and journal cursors survive restarts. A fresh path, not the
+      # image's /var/lib/alloy, which belongs to uid 473 and would need DAC_OVERRIDE.
+      - alloy_data:/alloy-data
+      # Read-only mount, but the Docker API itself is not read-only: this grants
+      # root-equivalent access to the daemon. Sources are restricted in config.alloy.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log/journal:/var/log/journal:ro
+      - /run/log/journal:/run/log/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    # Root without capabilities: reads only files it owns (socket, journal, state).
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    cpus: '0.25'
+    mem_limit: 256m
+    pids_limit: 128
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: '2'}
+secrets:
+  grafana_logs_token:
+    file: ${GRAFANA_LOGS_TOKEN_FILE:-../../.secrets/grafana_logs_token}
+volumes:
+  alloy_data:

@@ -1,5 +1,6 @@
 import { createPool, migrate } from "./db.js";
 import { createApi } from "./api.js";
+import { logEvent } from "./log.js";
 const pool = createPool();
 await migrate(pool);
 const server = createApi(pool, {
@@ -8,10 +9,9 @@ const server = createApi(pool, {
   tileMaxZoom: Number(process.env.TILE_MAX_ZOOM || 19),
   contactEmail: process.env.CONTACT_EMAIL,
 });
-server.listen(
-  Number(process.env.PORT || 3100),
-  process.env.HOST || "0.0.0.0",
-  () => console.log("Bloli Nearby API listening"),
+const port = Number(process.env.PORT || 3100);
+server.listen(port, process.env.HOST || "0.0.0.0", () =>
+  logEvent("info", "api_started", { port }),
 );
 for (const signal of ["SIGTERM", "SIGINT"])
   process.on(signal, () =>

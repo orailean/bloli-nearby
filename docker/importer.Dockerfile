@@ -9,4 +9,6 @@ RUN npm ci --omit=dev --ignore-scripts
 COPY src/server ./src/server
 COPY src/shared ./src/shared
 COPY importer ./importer
+ARG REVISION=unknown
+ENV BLOLI_SERVICE=importer BLOLI_REVISION=$REVISION
 ENTRYPOINT ["/app/importer/run.sh"]

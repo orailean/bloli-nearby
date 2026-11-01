@@ -38,14 +38,23 @@ if [ -z "$countries" ]; then
   exit 1
 fi
 
-failed=0
+started=$(date +%s)
+list=$(echo $countries | tr ' ' ',')
+echo "[refresh] result=started countries=$list"
+failed=
 for code in $countries; do
+  country_started=$(date +%s)
   if run_country "$code"; then
-    echo "[refresh] country=$code result=success"
+    echo "[refresh] country=$code result=success duration_s=$(($(date +%s) - country_started))"
   else
     result=$?
-    echo "[refresh] country=$code result=failed exit=$result" >&2
-    failed=1
+    echo "[refresh] country=$code result=failed exit=$result duration_s=$(($(date +%s) - country_started))" >&2
+    failed=${failed:+$failed,}$code
   fi
 done
-exit "$failed"
+summary="countries=$list failed=${failed:-none} duration_s=$(($(date +%s) - started))"
+if [ -n "$failed" ]; then
+  echo "[refresh] result=failed $summary" >&2
+  exit 1
+fi
+echo "[refresh] result=success $summary"

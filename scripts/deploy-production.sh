@@ -2,7 +2,10 @@
 set -euo pipefail
 umask 077
 
-die() { echo "$*" >&2; exit 1; }
+reason=
+die() { reason=${1%%:*}; echo "$*" >&2; exit 1; }
+# One journal line per outcome for log collection; logging never blocks a deployment.
+event() { logger -t bloli-nearby-deploy -- "[deploy] $*" 2>/dev/null || true; }
 valid_sha() { [[ $1 =~ ^[0-9a-f]{40}$ ]]; }
 valid_digest() { [[ $1 =~ ^sha256:[0-9a-f]{64}$ ]]; }
 command=${1:-}
@@ -18,6 +21,9 @@ case "$command" in
     [[ $# == 3 && ($3 == success || $3 == failure) ]] || die INVALID_DEPLOY_COMMAND ;;
   *) die INVALID_DEPLOY_COMMAND ;;
 esac
+if [[ $command != registry-login ]]; then
+  trap 'status=$?; ((status == 0)) || event "command=$command sha=$sha result=failed exit=$status reason=${reason:-unexpected}"' EXIT
+fi
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
 app_root=${BLOLI_DEPLOY_ROOT:-}
@@ -70,10 +76,12 @@ if [[ $command == finalize ]]; then
       done < <(docker image ls "$repository" --no-trunc --format '{{.ID}}')
     done
   fi
+  event "command=finalize sha=$sha result=$3"
   echo "RELEASE_FINALIZED: $sha $3"
   exit 0
 fi
 
+event "command=deploy sha=$sha result=started"
 [[ ! -f .deploy/pending.json ]] || die 'PENDING_RELEASE: inspect and finalize the previous attempt first'
 [[ $(git branch --show-current) == main ]] || die NOT_ON_MAIN
 [[ -z $(git status --porcelain --untracked-files=normal) ]] || die DIRTY_CHECKOUT
@@ -136,4 +144,5 @@ for site in loo kippe kebab water transit charge atm stay view sights vend; do
     jq -e '.ready == true and ([.countries[] | select(.status == "active" and .ready == true) | .code] | sort == ["at","de","hu","ro"])' >/dev/null
 done
 jq '.hostVerified = true' .deploy/pending.json | atomic_json .deploy/pending.json
+event "command=deploy sha=$sha result=host_verified duration_s=$SECONDS backup=$backup"
 echo "RELEASE_PENDING_BROWSER_CHECKS: $sha backup=$backup"

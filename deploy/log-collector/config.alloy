@@ -1,0 +1,175 @@
+// Bloli Nearby log collection for Grafana Cloud Logs.
+// Sources are allowlisted twice: by Docker/journal filter and by relabel keep rules.
+// Stream labels stay low-cardinality: app, env, service. Everything else is a field.
+
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+// Containers: only this Compose project's long-running services. The one-off
+// importer is collected through the refresh unit, whose journal carries its output.
+discovery.docker "bloli" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "15s"
+
+  filter {
+    name   = "label"
+    values = ["com.docker.compose.project=bloli-nearby"]
+  }
+}
+
+discovery.relabel "bloli" {
+  targets = discovery.docker.bloli.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "bloli-nearby"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    regex         = "api|web|db"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+loki.source.docker "bloli" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.bloli.output
+  refresh_interval = "15s"
+  forward_to       = [loki.process.privacy.receiver]
+}
+
+// Scheduled jobs and deployment outcomes from the host journal.
+loki.relabel "journal" {
+  forward_to = []
+
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    regex         = "bloli-nearby-(refresh|backup)\\.service"
+    target_label  = "service"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__journal_syslog_identifier"]
+    regex         = "bloli-nearby-deploy"
+    target_label  = "service"
+    replacement   = "deploy"
+  }
+
+  rule {
+    source_labels = ["service"]
+    regex         = "refresh|backup|deploy"
+    action        = "keep"
+  }
+}
+
+loki.source.journal "units" {
+  // Same-field matches are ORed by journald.
+  matches        = "_SYSTEMD_UNIT=bloli-nearby-refresh.service _SYSTEMD_UNIT=bloli-nearby-backup.service"
+  max_age        = "12h"
+  relabel_rules  = loki.relabel.journal.rules
+  forward_to     = [loki.process.privacy.receiver]
+}
+
+loki.source.journal "deploy" {
+  matches        = "SYSLOG_IDENTIFIER=bloli-nearby-deploy"
+  max_age        = "12h"
+  relabel_rules  = loki.relabel.journal.rules
+  forward_to     = [loki.process.privacy.receiver]
+}
+
+// Last line of defense before anything leaves the host. The application already
+// sanitizes its own events; these masks cover database, gateway and tool output.
+loki.process "privacy" {
+  forward_to = [loki.write.cloud.receiver]
+
+  // Bound volume: 50 lines/s sustained stays under the free 50 GB/month even at
+  // 300-byte lines all month. Excess lines are dropped and counted, never queued.
+  stage.limit {
+    rate  = 50
+    burst = 500
+    drop  = true
+  }
+
+  stage.drop {
+    longer_than         = "16KiB"
+    drop_counter_reason = "line_too_long"
+  }
+
+  stage.replace {
+    expression = "(?i)(?:authorization|password|passwd|secret|token|api[_-]?key)[\"']?\\s*[:=]\\s*[\"']?(?:bearer\\s+)?([^\\s\"',;&]+)"
+    replace    = "[redacted]"
+  }
+
+  stage.replace {
+    expression = "(?i)bearer\\s+([^\\s\"',;]+)"
+    replace    = "[redacted]"
+  }
+
+  stage.replace {
+    expression = "\\b((?:glc|glsa|gh[pousr])_[A-Za-z0-9_=+/-]+)"
+    replace    = "[redacted]"
+  }
+
+  stage.replace {
+    expression = "(?i)\\b[a-z][a-z0-9+.-]*://([^\\s/@'\"]+)@"
+    replace    = "[redacted]"
+  }
+
+  stage.replace {
+    expression = "\\?([^\\s'\"]+)"
+    replace    = "[redacted]"
+  }
+
+  stage.replace {
+    expression = "\\b((?:\\d{1,3}\\.){3}\\d{1,3})\\b"
+    replace    = "[ip]"
+  }
+
+  stage.replace {
+    expression = "(?i)(?:^|[^\\w:])((?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}|(?:[0-9a-f]{1,4}:)+:(?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4})*)?|::[0-9a-f]{1,4}(?::[0-9a-f]{1,4})*)(?:$|[^\\w:])"
+    replace    = "[ip]"
+  }
+
+  stage.replace {
+    expression = "(-?\\b\\d{1,3}\\.\\d{4,})\\b"
+    replace    = "[coord]"
+  }
+}
+
+local.file "token" {
+  filename  = "/run/secrets/grafana_logs_token"
+  is_secret = true
+}
+
+loki.write "cloud" {
+  endpoint {
+    url = sys.env("LOKI_URL")
+
+    basic_auth {
+      username = sys.env("LOKI_USERNAME")
+      password = local.file.token.content
+    }
+
+    batch_size          = "256KiB"
+    batch_wait          = "5s"
+    min_backoff_period  = "1s"
+    max_backoff_period  = "2m"
+    max_backoff_retries = 10
+    retry_on_http_429   = true
+  }
+
+  external_labels = {
+    app = "bloli-nearby",
+    env = sys.env("LOG_ENV"),
+  }
+}

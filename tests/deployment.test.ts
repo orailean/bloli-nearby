@@ -46,6 +46,11 @@ else if(a[0]==='compose' && a.includes('config')) {
 else if(a[0]==='compose' && a.includes('up') && env.FAIL_UP==='1') process.exit(1);
 `, { mode: 0o755 });
   installFlockShim(bin);
+  // Capture deployment journal events instead of writing to the host log.
+  writeFileSync(join(bin, "logger"), `#!/bin/sh
+[ "$1" = -t ] && [ "$2" = bloli-nearby-deploy ] && [ "$3" = -- ] || exit 64
+printf '%s\\n' "$4" >> "$DEPLOY_EVENTS"
+`, { mode: 0o755 });
   writeFileSync(join(bin, "curl"), `#!/bin/sh
 [ "\$FAIL_HEALTH" != 1 ] || exit 22
 case "\$*" in
@@ -53,10 +58,11 @@ case "\$*" in
  *) printf '{"ready":true,"countries":[{"code":"de","status":"active","ready":true},{"code":"ro","status":"active","ready":true},{"code":"at","status":"active","ready":true},{"code":"hu","status":"active","ready":true}]}' ;;
 esac
 `, { mode: 0o755 });
-  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, BLOLI_DEPLOY_ROOT: app, BLOLI_LOCK_WAIT_SECONDS: "0", TEST_SHA: sha, TEST_LOG: join(dir, "docker.log") };
+  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, BLOLI_DEPLOY_ROOT: app, BLOLI_LOCK_WAIT_SECONDS: "0", TEST_SHA: sha, TEST_LOG: join(dir, "docker.log"), DEPLOY_EVENTS: join(dir, "events") };
   const run = (args = ["deploy", sha, digest, digest, digest], extra: Record<string,string> = {}, input?: string) => spawnSync("bash", [join(root, "scripts/deploy-production.sh"), ...args], { cwd: app, encoding: "utf8", env: { ...env, ...extra }, input });
   const calls = () => existsSync(env.TEST_LOG) ? readFileSync(env.TEST_LOG, "utf8").trim().split("\n").filter(Boolean).map(s=>JSON.parse(s)) : [];
-  return { dir, app, sha, before, git, run, calls, env, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
+  const events = () => existsSync(env.DEPLOY_EVENTS) ? readFileSync(env.DEPLOY_EVENTS, "utf8").trim().split("\n") : [];
+  return { dir, app, sha, before, git, run, calls, events, env, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
 test("deployment rejects shell syntax and malformed image digests before side effects", () => {
@@ -180,5 +186,28 @@ for(const failure of ["FAIL_UP","FAIL_HEALTH"]) test(`${failure} retains pending
     assert.equal(f.run(["finalize",f.sha,"success"]).status,0);
     const retry=JSON.parse(readFileSync(join(f.app,`.deploy/releases/${f.sha}/release.json`),"utf8"));
     assert.equal(retry.previous.source,f.before,"a failed release is never promoted to rollback baseline");
+  } finally { f.cleanup(); }
+});
+
+test("deployment outcomes are recorded as journal events without secrets", () => {
+  const f=fixture(); try {
+    assert.equal(f.run(["registry-login"],{},"synthetic-read-only-token").status,0);
+    assert.equal(f.run().status,0);
+    assert.equal(f.run(["finalize",f.sha,"success"]).status,0);
+    assert.notEqual(f.run(["finalize",f.sha,"success"]).status,0);
+    const events=f.events();
+    assert.match(events[0],new RegExp(`^\\[deploy\\] command=deploy sha=${f.sha} result=started$`));
+    assert.match(events[1],new RegExp(`^\\[deploy\\] command=deploy sha=${f.sha} result=host_verified duration_s=\\d+ backup=backups/test.dump$`));
+    assert.match(events[2],new RegExp(`^\\[deploy\\] command=finalize sha=${f.sha} result=success$`));
+    assert.match(events[3],new RegExp(`^\\[deploy\\] command=finalize sha=${f.sha} result=failed exit=1 reason=NO_PENDING_RELEASE$`));
+    assert.equal(events.length,4,"registry login is not an event");
+    assert.ok(!events.join("\n").includes("synthetic-read-only-token"));
+  } finally { f.cleanup(); }
+});
+
+test("an unexpected deployment failure is recorded with its exit status", () => {
+  const f=fixture(); try {
+    assert.notEqual(f.run(undefined,{FAIL_HEALTH:"1"}).status,0);
+    assert.match(f.events().at(-1)!,new RegExp(`^\\[deploy\\] command=deploy sha=${f.sha} result=failed exit=\\d+ reason=unexpected$`));
   } finally { f.cleanup(); }
 });

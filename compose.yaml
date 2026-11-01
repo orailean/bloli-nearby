@@ -1,4 +1,9 @@
 name: bloli-nearby
+# Bounded container logs (the host has no daemon-wide rotation). Not on db: a
+# changed db definition would recreate the database on the next importer run.
+x-logging: &logging
+  driver: json-file
+  options: {max-size: 10m, max-file: '3'}
 services:
   db:
     image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
@@ -46,6 +51,7 @@ services:
     restart: unless-stopped
     cpus: '0.75'
     mem_limit: 384m
+    logging: *logging
   web:
     build:
       context: .
@@ -61,6 +67,7 @@ services:
     restart: unless-stopped
     cpus: '0.5'
     mem_limit: 128m
+    logging: *logging
   importer:
     profiles: [tools]
     build:
@@ -128,6 +135,7 @@ services:
     cpus: '2'
     mem_limit: 4g
     restart: 'no'
+    logging: *logging
 secrets:
   db_password:
     file: ${DB_PASSWORD_FILE:-./.secrets/db_password}

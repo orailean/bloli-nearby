@@ -51,8 +51,17 @@ esac
           readFileSync(join(directory, "backups", dumps[0]), "utf8"),
           "archive-data",
         );
+        assert.match(result.stdout, /^backups\/bloli-nearby-\d{8}T\d{6}Z\.dump\n$/);
+        assert.match(
+          result.stderr,
+          /\[backup\] result=success bytes=12 duration_s=\d+\n/,
+        );
       } else {
         assert.notEqual(result.status, 0);
+        assert.match(
+          result.stderr,
+          /\[backup\] result=failed stage=verify exit=1\n/,
+        );
         assert.equal(
           readFileSync(join(directory, "backups", old), "utf8"),
           "old-known-backup",

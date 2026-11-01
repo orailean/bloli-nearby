@@ -44,8 +44,9 @@ test("scheduled country refresh runs sequentially, continues after failure, and 
     assert.ok(runCalls[1].includes("COUNTRY_CODE=ro"));
     assert.ok(runCalls[2].includes("COUNTRY_CODE=at"));
     assert.ok(runCalls[3].includes("COUNTRY_CODE=hu"));
-    assert.match(result.stderr, /country=ro result=failed exit=23/);
-    assert.match(result.stdout, /country=hu result=success/);
+    assert.match(result.stderr, /country=ro result=failed exit=23 duration_s=\d+/);
+    assert.match(result.stdout, /country=hu result=success duration_s=\d+/);
+    assert.match(result.stderr, /\[refresh\] result=failed countries=de,ro,at,hu failed=ro duration_s=\d+\n$/);
   } finally {
     rmSync(h.root, { recursive: true, force: true });
   }
