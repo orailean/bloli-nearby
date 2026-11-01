@@ -172,7 +172,13 @@ jobs:
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         run: |
           test -n "$GHCR_READ_TOKEN"
-          printf '%s' "$GHCR_READ_TOKEN" | ssh contabo-deploy registry-login
+          # sshd drops new connections while brute-force attempts fill MaxStartups.
+          for attempt in 1 2 3 4 5; do
+            printf '%s' "$GHCR_READ_TOKEN" | ssh contabo-deploy registry-login && exit 0
+            status=$?
+            [ "$status" -eq 255 ] && [ "$attempt" -lt 5 ] || exit "$status"
+            sleep $((attempt * 10))
+          done
       - name: Deploy three immutable images
         id: remote
         run: |
@@ -181,12 +187,19 @@ jobs:
             [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           done
           ssh contabo-deploy "deploy $SOURCE_SHA $API_DIGEST $WEB_DIGEST $IMPORTER_DIGEST"
-      - name: Verify all ten public sites
+      - name: Verify all eleven public sites
         id: browser
         run: node scripts/check-multi-site-production.mjs
       - name: Finalize successful release
         if: success()
-        run: ssh contabo-deploy "finalize $SOURCE_SHA success"
+        run: |
+          # Retry dropped connections (exit 255) like registry-login; deploy is not repeated.
+          for attempt in 1 2 3 4 5; do
+            ssh contabo-deploy "finalize $SOURCE_SHA success" && exit 0
+            status=$?
+            [ "$status" -eq 255 ] && [ "$attempt" -lt 5 ] || exit "$status"
+            sleep $((attempt * 10))
+          done
       - name: Record failed attempt
         if: failure() && steps.remote.outcome != 'skipped' && steps.remote.outcome != ''
         run: |
