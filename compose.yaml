@@ -41,6 +41,8 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+      # A changed schema migrates before listening (80s on 2026-11-01); stay within the deploy's 180s wait.
+      start_period: 150s
     restart: unless-stopped
     cpus: '0.75'
     mem_limit: 384m
