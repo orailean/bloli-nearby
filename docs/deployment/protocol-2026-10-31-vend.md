@@ -1,6 +1,6 @@
 # Vend rollout — 2026-10-31
 
-Status: application and data rollout complete; eleven-site release gate pending. The user requested Vend using the existing site pattern and created its subdomain. Existing authorization covers main-only GitHub/GHCR releases, Contabo deployment, TLS and new-site database imports.
+Status: complete. Vend is live in all four countries and part of the eleven-site release gate. The user requested Vend using the existing site pattern and created its subdomain. Existing authorization covers main-only GitHub/GHCR releases, Contabo deployment, TLS and new-site database imports.
 
 ## Implementation and verification
 
@@ -51,4 +51,4 @@ Floors are stored in the private production `.env`. The refresh timer was restor
 
 Vend joins the host readiness loop in `scripts/deploy-production.sh` and the default `SITES` of `scripts/check-multi-site-production.mjs`. The installed `.deploy/bin/deploy-production.sh` differed from the repository only by that line before installation. 116 unit checks passed.
 
-The initial releases (`baa8189`, `cc6017e`) retained the ten-site gate until all Vend snapshots were ready. Pending: install the updated helper, release the gate change through main, verify the post-import backup and record the gate release run.
+The initial releases (`baa8189`, `cc6017e`) retained the ten-site gate until all Vend snapshots were ready. The updated helper was installed under `.deploy/bin` (SHA-256 `cb3def43…2616`, identical to the repository) before release `6110f59` was pushed. That release host-verified all eleven sites, passed the public browser checks and finalized successfully on 2026-11-01. Its pre-deploy backup `backups/bloli-nearby-20261101T101142Z.dump` (365 MB, after the Vend import) lists all 19 table data entries through `pg_restore --list`; the pipeline already retains only this latest dump.

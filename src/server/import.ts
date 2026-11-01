@@ -322,7 +322,7 @@ export async function importDataset(
        JOIN location_categories c ON c.category=s.category AND c.location_id=s.id
        JOIN locations l ON l.id=s.id
        WHERE s.source_version>0 AND s.source_version=c.source_version
-         AND (s.data->'tags'<>l.tags OR ST_AsEWKB(s.location::geometry)<>ST_AsEWKB(l.location::geometry))
+         AND (s.data->'tags'<>l.tags OR (s.id LIKE 'node/%' AND ST_AsEWKB(s.location::geometry)<>ST_AsEWKB(l.location::geometry)))
        LIMIT 1`,
     );
     if (conflicts.rowCount) throw new AppError("OSM_VERSION_CONFLICT");

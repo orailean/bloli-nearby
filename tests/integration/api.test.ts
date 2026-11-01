@@ -1448,6 +1448,13 @@ test(
         assert.equal(borderSearch.body.items.filter((x: any) => x.id === "node/81001").length, 1);
         const conflicting = roRows.map((row: any) => row.sourceId === "81001" ? { ...row, tags: { ...row.tags, name: "Conflicting same-version edit" } } : row);
         await assert.rejects(publishAt(conflicting), /OSM_VERSION_CONFLICT/);
+        // OSM keeps a way's version when its member nodes move; only node coordinates are versioned.
+        const hotelWay: any = { kind: "accommodation", sourceType: "way", sourceId: "81200", lat: 44.4302, lon: 26.1, tags: { tourism: "hotel" }, version: 3 };
+        await publishAt([...roRows, hotelWay]);
+        await publishAt([...roRows, { ...hotelWay, lat: 44.4303 }]);
+        assert.equal((await pool.query("SELECT ST_Y(location::geometry) AS y FROM locations WHERE id='way/81200'")).rows[0].y, 44.4303);
+        const movedNode = roRows.map((row: any) => row.sourceId === "81001" ? { ...row, lat: 44.4302 } : row);
+        await assert.rejects(publishAt(movedNode), /OSM_VERSION_CONFLICT/);
         assert.equal((await pool.query("SELECT source FROM country_datasets WHERE country_code='at' AND category='toilets'")).rows[0].source, "austria-test");
         const replacement = roRows.filter((row: any) => !["81008","81009"].includes(row.sourceId)).map((row: any, index: number) => ({ ...row, sourceId: String(82001 + index) }));
         await publishAt(replacement, { ...atOptions, source: "austria-test-2", datasetAt: "2026-10-26T00:00:00Z" });

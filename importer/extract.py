@@ -291,7 +291,9 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
                         if key in member_points
                     ])
                 if point is None:
-                    raise
+                    # Leave it uncompleted: category completeness checks abort, settlements are skipped.
+                    print(f'[geometry] Invalid {source_type}/{obj.orig_id()} polygon without fallback geometry', file=sys.stderr)
+                    return
                 print(f'[geometry] Invalid {source_type}/{obj.orig_id()} polygon; using its mapped line geometry', file=sys.stderr)
             if member_key in member_keys:
                 member_points[member_key] = point

@@ -99,6 +99,16 @@ class ExtractTests(unittest.TestCase):
    self.assertTrue(53.07<=site['lat']<=53.071)
    self.assertFalse(any(r.get('sourceId')=='91' for r in rows))
    self.assertEqual(rows[-1]['kind'],'complete')
+ def test_invalid_postal_boundary_without_fallback_is_a_skipped_settlement(self):
+  # Unclosed outer ring: osmium emits an area that cannot become a multipolygon.
+  xml='''<osm version="0.6"><node id="1" lat="48.1" lon="11.1"/><node id="2" lat="48.11" lon="11.1"/><node id="3" lat="48.11" lon="11.11"/>
+  <way id="10"><nd ref="1"/><nd ref="2"/><nd ref="3"/></way>
+  <relation id="30"><member type="way" ref="10" role="outer"/><tag k="type" v="boundary"/><tag k="boundary" v="postal_code"/><tag k="postal_code" v="63457"/></relation></osm>'''
+  with tempfile.TemporaryDirectory() as directory:
+   source=Path(directory)/'sample.osm';source.write_text(xml);out=io.StringIO()
+   extract(str(source),{},out,'fixture','2026-10-30T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+  self.assertEqual(rows[-1],{'kind':'complete','records':0,'skippedSettlementGeometries':1})
  def test_poly_parser_preserves_exterior_and_holes(self):
   poly='germany\n1\n 5 47\n 16 47\n 16 56\n 5 56\n 5 47\nEND\n!1\n 6 48\n 7 48\n 7 49\n 6 48\nEND\nEND\n'
   self.assertEqual(len(poly_geojson(poly)['coordinates'][0]),2)
