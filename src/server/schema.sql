@@ -208,3 +208,10 @@ ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS view_count integer;
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS sights_count integer;
 
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS vending_count integer;
+
+-- Applied schema version; unchanged starts skip this script's exclusive-lock DDL.
+CREATE TABLE IF NOT EXISTS schema_state (
+  singleton boolean PRIMARY KEY DEFAULT true CHECK (singleton),
+  checksum text NOT NULL,
+  applied_at timestamptz NOT NULL DEFAULT now()
+);

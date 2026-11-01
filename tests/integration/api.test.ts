@@ -1269,7 +1269,8 @@ test(
       await t.test("schema migration backfills German memberships without changing live identities", async () => {
         const before = await pool.query("SELECT id FROM locations ORDER BY id");
         const categoryCounts = await pool.query("SELECT category,location_count,settlement_count FROM category_datasets ORDER BY category");
-        await pool.query("DELETE FROM country_location_memberships; DELETE FROM country_settlement_memberships; DELETE FROM country_datasets");
+        // Simulate an installation upgraded from the pre-country schema.
+        await pool.query("DELETE FROM country_location_memberships; DELETE FROM country_settlement_memberships; DELETE FROM country_datasets; DELETE FROM schema_state");
         await migrate(pool);
         assert.deepEqual((await pool.query("SELECT id FROM locations ORDER BY id")).rows, before.rows);
         assert.deepEqual((await pool.query("SELECT category,location_count,settlement_count FROM country_datasets WHERE country_code='de' ORDER BY category")).rows, categoryCounts.rows);
