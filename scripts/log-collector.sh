@@ -10,6 +10,10 @@ case "${1:-}" in
   up)
     [ -s "$token" ] || { echo "MISSING_LOGS_TOKEN: $token" >&2; exit 1; }
     [ "$(ls -l "$token" | cut -c5-10)" = '------' ] || { echo "INSECURE_LOGS_TOKEN: chmod 600 $token" >&2; exit 1; }
+    # Alloy sends the file verbatim; a pasted trailing newline invalidates the token.
+    if LC_ALL=C grep -q '[[:space:]]' "$token" || [ "$(tail -c 1 "$token" | od -An -c | tr -d ' ')" = '\n' ]; then
+      (umask 077; tr -d '[:space:]' < "$token" > "$token.part") && mv "$token.part" "$token"
+    fi
     collector up -d --wait --wait-timeout 60 alloy
     ;;
   down)
