@@ -29,8 +29,10 @@ services:
       - /var/log/journal:/var/log/journal:ro
       - /run/log/journal:/run/log/journal:ro
       - /etc/machine-id:/etc/machine-id:ro
-    # Root without capabilities: reads only files it owns (socket, journal, state).
+    # Root with one read-only capability: the token file belongs to the deploy
+    # user (mode 600). It can read the mounts above but not write other owners' files.
     cap_drop: [ALL]
+    cap_add: [DAC_READ_SEARCH]
     security_opt: [no-new-privileges:true]
     read_only: true
     tmpfs: [/tmp]

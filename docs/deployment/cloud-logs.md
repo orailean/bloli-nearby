@@ -94,7 +94,7 @@ No notification channel is configured, by decision of 2026-11-01. To enable aler
 
 ## Permissions
 
-The collector runs as root inside its container, with all Linux capabilities dropped, `no-new-privileges`, a read-only root filesystem and no published ports except loopback metrics (`127.0.0.1:12345`). It mounts the Docker socket read-only. The read-only mount only stops the socket file being replaced; it does not limit what the Docker API allows. Socket access is equivalent to root on the host, and the source restriction is configuration, not an authorization boundary. Journal files and `/etc/machine-id` are mounted read-only. Without `DAC_OVERRIDE`, it can only read files owned by root: the socket and the journal.
+The collector runs as root inside its container, with every Linux capability dropped except `DAC_READ_SEARCH`, plus `no-new-privileges`, a read-only root filesystem and no published ports except loopback metrics (`127.0.0.1:12345`). It mounts the Docker socket read-only. The read-only mount only stops the socket file being replaced; it does not limit what the Docker API allows. Socket access is equivalent to root on the host, and the source restriction is configuration, not an authorization boundary. Journal files and `/etc/machine-id` are mounted read-only. `DAC_READ_SEARCH` is needed to read the token file, which is owned by `oliver` with mode 600. It allows reading regardless of file permissions but never writing, and only within the paths mounted into the container. The only writable path is the collector's own state volume.
 
 ## Rotation and removal
 
