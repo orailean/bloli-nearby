@@ -129,7 +129,7 @@ umask 077
 printf 'BLOLI_API_IMAGE=%s\nBLOLI_WEB_IMAGE=%s\nBLOLI_IMPORTER_IMAGE=%s\n' "${refs[@]}" > .deploy/release.env.part
 mv .deploy/release.env.part .deploy/release.env
 ./scripts/compose.sh up -d --no-build --no-deps --wait --wait-timeout 180 api web
-for site in loo kippe kebab water transit charge atm stay view sights; do
+for site in loo kippe kebab water transit charge atm stay view sights vend; do
   base="https://$site.bloli.com"
   curl --fail --silent --show-error --connect-timeout 10 --max-time 30 "$base/api/site" | jq -e --arg id "$site" '.id == $id' >/dev/null
   curl --fail --silent --show-error --connect-timeout 10 --max-time 30 "$base/api/ready" |

@@ -13,7 +13,7 @@ const countryLabels = {
 const browser = await chromium.launch();
 try {
   for (const id of (
-    process.env.SITES || "loo,kippe,kebab,water,transit,charge,atm,stay,view,sights"
+    process.env.SITES || "loo,kippe,kebab,water,transit,charge,atm,stay,view,sights,vend"
   ).split(",")) {
     const base = `https://${id}.bloli.com`;
     const htmlResponse = await request(base);

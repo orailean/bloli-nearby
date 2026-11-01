@@ -2,7 +2,7 @@
 
 The workflow is `.github/workflows/deploy.yml`. Pull requests to `main` run checks. Pushes/manual runs on `main` publish and deploy only after checks pass and the repository variable `CONTABO_DEPLOY_ENABLED` equals `true`. Other branches never publish or deploy. Deployment is disabled by default.
 
-Checks run unit tests, the production frontend build, integration tests against disposable PostGIS, Python extractor tests, and Playwright against a separately seeded browser database. The three amd64 images use the source commit tag and OCI revision/source labels. Contabo pulls their exact digests, backs up the database, fast-forwards clean source, recreates only API/web, and checks all ten sites. The importer digest is persisted for scheduled refreshes. The runner's public browser checks must pass before successful finalization and app-only image cleanup.
+Checks run unit tests, the production frontend build, integration tests against disposable PostGIS, Python extractor tests, and Playwright against a separately seeded browser database. The three amd64 images use the source commit tag and OCI revision/source labels. Contabo pulls their exact digests, backs up the database, fast-forwards clean source, recreates only API/web, and checks all eleven sites. The importer digest is persisted for scheduled refreshes. The runner's public browser checks must pass before successful finalization and app-only image cleanup.
 
 ## Free usage and package visibility
 
@@ -114,7 +114,7 @@ jq -r '"services:\n  api:\n    image: " + .imageIds[0] + "\n  web:\n    image: "
 git switch --detach "$previous"
 COMPOSE_FILE=compose.yaml:compose.production.yaml:.deploy/rollback.yaml scripts/compose.sh up -d --no-build --no-deps --wait --wait-timeout 180 api web
 curl --fail --max-time 30 https://loo.bloli.com/api/ready
-# Check all ten sites and category/country readiness before considering rollback verified.
+# Check all eleven sites and category/country readiness before considering rollback verified.
 flock -u 9
 ```
 
