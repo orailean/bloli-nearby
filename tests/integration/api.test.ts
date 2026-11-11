@@ -1379,7 +1379,6 @@ test(
         assert.equal((await park('openNow=true')).body.items.length,1);
         assert.equal((await park('parkingType=surface&parkingType=unknown')).status,400);
         assert.equal((await get('/api/locations?site=loo&lat=44.43&lon=26.1&parkRide=yes')).status,400);
-        await assert.rejects(importDataset(pool,(async function*(){yield* roRows.filter(row=>row.kind!=='parking');})(),{...countryOptions,categories:countryOptions.categories.filter(category=>category!=='parking')}),/PARTIAL_CATEGORY_IMPORT/);
         const vend = (suffix:string) => get('/api/locations?site=vend&lat=44.43&lon=26.1&'+suffix);
         assert.equal((await vend('product=drinks&payment=card&vendAccess=public&limit=1')).body.items[0].id,'node/81101');
         assert.equal((await vend('product=drinks&payment=cash')).body.items[0].id,'node/81102');
@@ -1404,6 +1403,7 @@ test(
         assert.equal((await get('/api/locations?site=view&lat=44.43&lon=26.1&sightType=museum')).status,400);
         const viewStatus = await get('/api/status?site=view');assert.equal(viewStatus.body.ready,true);
         assert.equal(viewStatus.body.countries.find((country:any)=>country.code==='ro').latestRefresh.counts.view,2);
+        await assert.rejects(importDataset(pool,(async function*(){yield* roRows.filter(row=>row.kind!=='parking');})(),{...countryOptions,categories:countryOptions.categories.filter(category=>category!=='parking')}),/PARTIAL_CATEGORY_IMPORT/);
         await assert.rejects(importDataset(pool,(async function*(){yield* roRows.filter(row=>row.kind!=="view");})(),{...countryOptions,categories:countryOptions.categories.filter(category=>category!=="view")}),/PARTIAL_CATEGORY_IMPORT/);
         await assert.rejects(importDataset(pool,(async function*(){yield* roRows;})(),{...countryOptions,minimumViews:3}),/SUSPICIOUS_IMPORT/);
         assert.equal((await get('/api/locations?site=view&lat=44.43&lon=26.1')).body.items.length,2);
