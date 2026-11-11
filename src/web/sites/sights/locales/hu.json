@@ -1,7 +1,7 @@
 {
   "find": "Keress látnivalókat",
   "hero": "A sarkon túl.\nEgy új történet.",
-  "intro": "Fedezd fel a feltérképezett múzeumokat, várakat, romokat és látnivalókat: {countries}. Válaszd ki a következő megállót.",
+  "intro": "Fedezd fel a feltérképezett múzeumokat, várakat, romokat és látnivalókat a közelben. Válaszd ki a következő megállót.",
   "sticker": "Kövesd a kíváncsiságod.",
   "locate": "Látnivalók a közelemben",
   "all": "Minden látnivaló",
@@ -12,7 +12,7 @@
   "details": "A látnivaló adatai",
   "tileError": "A térkép nem érhető el. A lista továbbra is működik.",
   "footerTitle": "Indulj el.\nFedezz fel egy történetet.",
-  "footerText": "Látnivalók, múzeumok és történelmi helyek: {countries}. Az OpenStreetMap közössége által feltérképezve.",
+  "footerText": "Látnivalók, múzeumok és történelmi helyek a közelben. Az OpenStreetMap közössége által feltérképezve.",
   "howTitle": "Egy kis kíváncsiság messzire visz.",
   "how2": "Válassz típust",
   "how2Text": "Böngéssz a múzeumok, várak, romok, emlékművek és más feltérképezett látnivalók között. Szűrj típus és belépődíj szerint.",

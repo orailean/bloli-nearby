@@ -1,7 +1,7 @@
 {
   "find": "Find a view",
   "hero": "A little further.\nA whole new view.",
-  "intro": "Find mapped viewpoints and observation towers across {countries}. Choose a place to pause and take it in.",
+  "intro": "Find mapped viewpoints and observation towers nearby. Choose a place to pause and take it in.",
   "sticker": "Make room for the horizon.",
   "locate": "Find views near me",
   "all": "All views",
@@ -12,7 +12,7 @@
   "details": "Viewpoint details",
   "tileError": "The map is unavailable. The viewpoint list still works.",
   "footerTitle": "Look up.\nTake it in.",
-  "footerText": "Viewpoints and observation towers across {countries}, mapped by the OpenStreetMap community.",
+  "footerText": "Viewpoints and observation towers nearby, mapped by the OpenStreetMap community.",
   "howTitle": "Find a new perspective.",
   "how2": "Choose your view",
   "how2Text": "Browse viewpoints and observation towers. Check mapped access, fees and elevation.",

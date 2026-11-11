@@ -120,7 +120,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             output.write(json.dumps(record, ensure_ascii=False) + '\n')
     if bool(boundary_source) != bool(boundary_checksum) or (boundary_checksum and not re.fullmatch(r'[0-9a-fA-F]{64}', boundary_checksum)):
         raise ValueError('Invalid coverage boundary provenance')
-    if country_code and country_code not in ('de', 'ro', 'at', 'hu'):
+    if country_code and country_code not in ('de', 'ro', 'at', 'hu', 'it'):
         raise ValueError('Unsupported country code')
     if source_checksum and not re.fullmatch(r'[0-9a-fA-F]{32}', source_checksum):
         raise ValueError('Invalid source checksum')
@@ -421,7 +421,7 @@ if __name__ == '__main__':
     parser.add_argument('--context-fingerprint')
     parser.add_argument('--boundary-source')
     parser.add_argument('--boundary-checksum')
-    parser.add_argument('--country-code', choices=('de', 'ro', 'at', 'hu'))
+    parser.add_argument('--country-code', choices=('de', 'ro', 'at', 'hu', 'it'))
     parser.add_argument('--source-checksum')
     parser.add_argument('--geometry-only', action='store_true')
     args = parser.parse_args()

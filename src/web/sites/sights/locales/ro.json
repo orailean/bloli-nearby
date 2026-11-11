@@ -1,7 +1,7 @@
 {
   "find": "Găsește obiective",
   "hero": "După colț.\nO poveste de descoperit.",
-  "intro": "Găsește muzee, castele, ruine și atracții cartografiate în {countries}. Descoperă următoarea oprire.",
+  "intro": "Găsește muzee, castele, ruine și atracții cartografiate în apropiere. Descoperă următoarea oprire.",
   "sticker": "Urmează-ți curiozitatea.",
   "locate": "Obiective lângă mine",
   "all": "Toate obiectivele",
@@ -12,7 +12,7 @@
   "details": "Detalii despre obiectiv",
   "tileError": "Harta nu este disponibilă. Lista funcționează în continuare.",
   "footerTitle": "Ieși la plimbare.\nDescoperă o poveste.",
-  "footerText": "Obiective, muzee și locuri istorice din {countries}, cartografiate de comunitatea OpenStreetMap.",
+  "footerText": "Obiective, muzee și locuri istorice din apropiere, cartografiate de comunitatea OpenStreetMap.",
   "howTitle": "Puțină curiozitate te duce departe.",
   "how2": "Alege un tip de obiectiv",
   "how2Text": "Explorează muzee, castele, ruine, monumente și alte atracții cartografiate. Filtrează după tip și taxa de intrare.",

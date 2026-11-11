@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 target=${1:-}
 if [ "$#" -gt 1 ]; then
-  echo "Usage: $0 [de|ro|at|hu]" >&2
+  echo "Usage: $0 [de|ro|at|hu|it]" >&2
   exit 2
 fi
 
@@ -16,6 +16,7 @@ run_country() {
     ro) name=romania ;;
     at) name=austria ;;
     hu) name=hungary ;;
+    it) name=italy ;;
     *) echo "UNSUPPORTED_COUNTRY: $code" >&2; return 2 ;;
   esac
   echo "[refresh] country=$code source=$name"

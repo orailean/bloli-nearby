@@ -1,7 +1,7 @@
 {
   "find": "Găsește o priveliște",
   "hero": "Încă puțin.\nO nouă perspectivă.",
-  "intro": "Găsește puncte de belvedere și turnuri de observație cartografiate în {countries}. Alege un loc pentru o pauză.",
+  "intro": "Găsește puncte de belvedere și turnuri de observație cartografiate în apropiere. Alege un loc pentru o pauză.",
   "sticker": "Fă loc orizontului.",
   "locate": "Priveliști lângă mine",
   "all": "Toate priveliștile",
@@ -12,7 +12,7 @@
   "details": "Detalii despre punctul de belvedere",
   "tileError": "Harta nu este disponibilă. Lista funcționează în continuare.",
   "footerTitle": "Privește în sus.\nBucură-te de priveliște.",
-  "footerText": "Puncte de belvedere și turnuri de observație din {countries}, cartografiate de comunitatea OpenStreetMap.",
+  "footerText": "Puncte de belvedere și turnuri de observație din apropiere, cartografiate de comunitatea OpenStreetMap.",
   "howTitle": "Descoperă o nouă perspectivă.",
   "how2": "Alege priveliștea",
   "how2Text": "Explorează punctele de belvedere și turnurile. Verifică accesul, taxele și altitudinea cartografiate.",

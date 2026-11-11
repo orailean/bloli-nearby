@@ -16,7 +16,7 @@ for (const group of [
   "sites/park/locales",
 ]) {
   test(`${group} has matching translated keys`, () => {
-    const dictionaries = ["de", "en", "ro", "hu"].map((locale) =>
+    const dictionaries = ["de", "en", "ro", "hu", "it"].map((locale) =>
       JSON.parse(
         readFileSync(
           new URL(`../src/web/${group}/${locale}.json`, import.meta.url),
@@ -87,7 +87,7 @@ test("Charge has independent mapped-only content and translated connector contro
 });
 
 test("Parking has translated restrictions and explicitly mapped capacity in every locale", () => {
-  for (const locale of ["en", "de", "ro", "hu"] as const) {
+  for (const locale of ["en", "de", "ro", "hu", "it"] as const) {
     const t = siteDictionaries.park[locale];
     assert.equal(t.brandName, "park");
     for (const key of ["parkCapacity", "parkNote", "parkMaxheight", "parkMaxstay", "parkEntrance", "parkEntranceMaxheight", "parkPoint", "tileError"] as const) assert.ok(t[key]);

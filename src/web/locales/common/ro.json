@@ -1,7 +1,7 @@
 {
   "language": "Limbă",
   "skip": "Mergi la căutare",
-  "germany": "În toată Germania",
+  "germany": "Descoperă în apropiere",
   "coverageFrom": "Disponibil în",
   "countryDE": "Germania",
   "countryRO": "România",
@@ -76,7 +76,7 @@
   "METHOD_NOT_ALLOWED": "Această cerere nu este acceptată.",
   "statusError": "Starea datelor nu a putut fi verificată. Încearcă din nou.",
   "searchLocation": "Locul căutării",
-  "countryOnly": "Germania și țările active",
+  "countryOnly": "Acoperire disponibilă",
   "locationName": "Locația ta",
   "mapLocation": "Loc ales pe hartă",
   "priceInfo": "Detalii originale despre taxă",
@@ -106,5 +106,6 @@
   "customers": "Doar pentru clienți",
   "machineHoursAssumed": "Presupus non-stop pentru acest automat; accesul poate varia.",
   "tobaccoSalesMapped": "Vânzarea de tutun înregistrată",
-  "tobaccoAvailability": "Disponibilitatea tutunului"
+  "tobaccoAvailability": "Disponibilitatea tutunului",
+  "countryIT": "Italia"
 }

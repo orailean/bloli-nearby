@@ -14,6 +14,7 @@ test("country registry orders rollout and keeps new countries pending", () => {
       ["ro", "Europe/Bucharest", "pending"],
       ["at", "Europe/Vienna", "pending"],
       ["hu", "Europe/Budapest", "pending"],
+      ["it", "Europe/Rome", "pending"],
     ],
   );
   for (const country of COUNTRIES) {
@@ -33,3 +34,8 @@ test("country-specific import floors are configured independently", () => {
     undefined,
   );
 });
+
+ test("Italy floors remain unset until measured", () => {
+ assert.equal(minimumForCountry("it", "parking", {}), undefined);
+ assert.equal(minimumForCountry("it", "parking", { MIN_IT_PARKING: "12" }), 12);
+ });

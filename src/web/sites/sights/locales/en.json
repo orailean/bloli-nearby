@@ -1,7 +1,7 @@
 {
   "find": "Find sights",
   "hero": "Around the corner.\nA story to discover.",
-  "intro": "Find mapped museums, castles, ruins and attractions across {countries}. Make your next stop worth a look.",
+  "intro": "Find mapped museums, castles, ruins and attractions nearby. Make your next stop worth a look.",
   "sticker": "Take the curious route.",
   "locate": "Find sights near me",
   "all": "All sights",
@@ -12,7 +12,7 @@
   "details": "Sight details",
   "tileError": "The map is unavailable. The sights list still works.",
   "footerTitle": "Step outside.\nFind a story.",
-  "footerText": "Sights, museums and historic places across {countries}, mapped by the OpenStreetMap community.",
+  "footerText": "Sights, museums and historic places nearby, mapped by the OpenStreetMap community.",
   "howTitle": "A little curiosity goes a long way.",
   "how2": "Choose a kind of sight",
   "how2Text": "Browse museums, castles, ruins, monuments and other mapped attractions. Filter by type and entry fee.",

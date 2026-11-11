@@ -1,7 +1,7 @@
 {
   "language": "Nyelv",
   "skip": "Ugrás a keresőhöz",
-  "germany": "Németország-szerte",
+  "germany": "Fedezd fel a közelben",
   "coverageFrom": "Elérhető itt:",
   "countryDE": "Németország",
   "countryRO": "Románia",
@@ -76,7 +76,7 @@
   "METHOD_NOT_ALLOWED": "Ez a kérés nem támogatott.",
   "statusError": "Nem sikerült ellenőrizni az adatok állapotát. Próbáld újra.",
   "searchLocation": "A keresés helye",
-  "countryOnly": "Németország és az aktív országok",
+  "countryOnly": "Elérhető lefedettség",
   "locationName": "A helyzeted",
   "mapLocation": "Térképen kiválasztott hely",
   "priceInfo": "Díjadatok a forrásban",
@@ -106,5 +106,6 @@
   "customers": "Csak ügyfeleknek",
   "machineHoursAssumed": "Ennél az automatánál folyamatos elérhetőséget feltételezünk; a tényleges hozzáférés eltérhet.",
   "tobaccoSalesMapped": "Dohányárusítás rögzítve",
-  "tobaccoAvailability": "Dohánytermékek elérhetősége"
+  "tobaccoAvailability": "Dohánytermékek elérhetősége",
+  "countryIT": "Olaszország"
 }

@@ -1,6 +1,6 @@
 import type { Category } from "./sites.js";
 
-export type CountryCode = "de" | "ro" | "at" | "hu";
+export type CountryCode = "de" | "ro" | "at" | "hu" | "it";
 export type CountryStatus = "active" | "pending";
 
 export interface CountryProfile {
@@ -55,6 +55,16 @@ export const COUNTRIES: readonly CountryProfile[] = [
     boundaryUrl: `${geofabrik}/hungary.poly`,
     storagePath: "/data/countries/hu",
     rolloutOrder: 3,
+    initialStatus: "pending",
+  },
+  {
+    code: "it",
+    name: "Italy",
+    timezone: "Europe/Rome",
+    sourceUrl: `${geofabrik}/italy-latest.osm.pbf`,
+    boundaryUrl: `${geofabrik}/italy.poly`,
+    storagePath: "/data/countries/it",
+    rolloutOrder: 4,
     initialStatus: "pending",
   },
 ];

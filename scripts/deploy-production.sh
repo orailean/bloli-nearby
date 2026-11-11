@@ -141,7 +141,7 @@ for site in loo kippe kebab water transit charge atm stay view sights vend; do
   base="https://$site.bloli.com"
   curl --fail --silent --show-error --connect-timeout 10 --max-time 30 "$base/api/site" | jq -e --arg id "$site" '.id == $id' >/dev/null
   curl --fail --silent --show-error --connect-timeout 10 --max-time 30 "$base/api/ready" |
-    jq -e '.ready == true and ([.countries[] | select(.status == "active" and .ready == true) | .code] | sort == ["at","de","hu","ro"])' >/dev/null
+    jq -e '.ready == true and ([.countries[] | select(.status == "active" and .ready == true) | .code] | sort | . == ["at","de","hu","ro"] or . == ["at","de","hu","it","ro"])' >/dev/null
 done
 jq '.hostVerified = true' .deploy/pending.json | atomic_json .deploy/pending.json
 event "command=deploy sha=$sha result=host_verified duration_s=$SECONDS backup=$backup"

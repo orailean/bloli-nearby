@@ -444,6 +444,7 @@ export default function App() {
               <option value="de">Deutsch</option>
               <option value="ro">Română</option>
               <option value="hu">Magyar</option>
+              <option value="it">Italiano</option>
             </select>
             <ChevronDown size={14} aria-hidden="true" />
           </div>

@@ -1,7 +1,7 @@
 {
   "find": "Aussicht finden",
   "hero": "Noch ein Stück.\nEine neue Perspektive.",
-  "intro": "Finde erfasste Aussichtspunkte und Aussichtstürme in {countries}. Entdecke deinen nächsten Platz zum Durchatmen.",
+  "intro": "Finde erfasste Aussichtspunkte und Aussichtstürme in deiner Nähe. Entdecke deinen nächsten Platz zum Durchatmen.",
   "sticker": "Zeit für den Horizont.",
   "locate": "Aussichten in meiner Nähe",
   "all": "Alle Aussichten",
@@ -12,7 +12,7 @@
   "details": "Details zum Aussichtspunkt",
   "tileError": "Die Karte ist nicht verfügbar. Die Liste funktioniert weiterhin.",
   "footerTitle": "Hochschauen.\nDurchatmen.",
-  "footerText": "Aussichtspunkte und Aussichtstürme in {countries}, erfasst von der OpenStreetMap-Community.",
+  "footerText": "Aussichtspunkte und Aussichtstürme in deiner Nähe, erfasst von der OpenStreetMap-Community.",
   "howTitle": "Eine neue Perspektive finden.",
   "how2": "Wähle deinen Ausblick",
   "how2Text": "Entdecke Aussichtspunkte und Aussichtstürme. Prüfe erfassten Zugang, Gebühren und Höhe.",

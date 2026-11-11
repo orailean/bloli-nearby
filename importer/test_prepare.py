@@ -21,6 +21,9 @@ class PrepareTests(unittest.TestCase):
     def test_retained_country_source_never_downloads_or_uses_germany_provenance(self):
         self.check_preparation(retained=True, country='ro')
 
+    def test_italy_retained_source_uses_its_own_storage(self):
+        self.check_preparation(retained=True, country='it')
+
     def check_preparation(self, retained=False, country='de'):
         script = Path(__file__).with_name('prepare.sh').read_text()
         old_expressions = 'nwr/amenity=toilets nwr/amenity=fuel nwr/toilets=yes nwr/place r/boundary=postal_code nwr/vending nwr/shop=tobacco,lottery,kiosk,convenience,supermarket,newsagent nwr/lottery=yes nwr/tobacco nwr/sells:tobacco'
@@ -80,7 +83,7 @@ elif name == 'osmium':
                 extract_calls=[args for name,args in calls if name=='python3' and args[0].endswith('extract.py')]
                 self.assertEqual(len(extract_calls),2)
                 for args in extract_calls:
-                    self.assertEqual(args[args.index('--boundary-source')+1],'https://download.geofabrik.de/europe/romania.poly')
+                    self.assertEqual(args[args.index('--boundary-source')+1],f"https://download.geofabrik.de/europe/{'italy' if country == 'it' else 'romania'}.poly")
             self.assertTrue(all(expression in filters[0] for expression in old_expressions.split()))
             self.assertFalse(any(name == 'curl' and args[-1] == source_url for name, args in calls))
             self.assertEqual(source.read_bytes(), b'verified retained snapshot')

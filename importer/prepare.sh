@@ -7,6 +7,7 @@ case "$COUNTRY_CODE" in
   ro) default_name=romania; DATA_DIR=$DATA_ROOT/countries/ro ;;
   at) default_name=austria; DATA_DIR=$DATA_ROOT/countries/at ;;
   hu) default_name=hungary; DATA_DIR=$DATA_ROOT/countries/hu ;;
+  it) default_name=italy; DATA_DIR=$DATA_ROOT/countries/it ;;
   *) echo 'UNSUPPORTED_COUNTRY' >&2; exit 1 ;;
 esac
 mkdir -p "$DATA_DIR"

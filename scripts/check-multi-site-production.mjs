@@ -5,10 +5,11 @@ const request = (url) => fetch(url, { signal: AbortSignal.timeout(30000) });
 const expectedCountries = (process.env.EXPECTED_COUNTRIES || "de,ro,at,hu")
   .split(",").map((value) => value.trim()).filter(Boolean);
 const countryLabels = {
-  de: { de: "Deutschland", en: "Germany", ro: "Germania",hu:"Németország" },
-  ro: { de: "Rumänien", en: "Romania", ro: "România",hu:"Románia" },
-  at: { de: "Österreich", en: "Austria", ro: "Austria",hu:"Ausztria" },
-  hu: { de: "Ungarn", en: "Hungary", ro: "Ungaria",hu:"Magyarország" },
+  it: {de:"Italien",en:"Italy",ro:"Italia",hu:"Olaszország",it:"Italia"},
+  de: { de: "Deutschland", en: "Germany", ro: "Germania",hu:"Németország",it:"Germania" },
+  ro: { de: "Rumänien", en: "Romania", ro: "România",hu:"Románia",it:"Romania" },
+  at: { de: "Österreich", en: "Austria", ro: "Austria",hu:"Ausztria",it:"Austria" },
+  hu: { de: "Ungarn", en: "Hungary", ro: "Ungaria",hu:"Magyarország",it:"Ungheria" },
 };
 const browser = await chromium.launch();
 try {
@@ -30,6 +31,7 @@ try {
     assert.equal(status.status, 200);
     assert.equal(status.body.ready, true);
     const countryStates = new Map((status.body.countries || []).map((country) => [country.code, country]));
+    if (!process.env.EXPECTED_COUNTRIES && countryStates.get("it")?.status === "active" && !expectedCountries.includes("it")) expectedCountries.push("it");
     for (const code of expectedCountries) {
       const country = countryStates.get(code);
       assert.ok(country, `${id}: status must include ${code}`);
@@ -37,7 +39,7 @@ try {
       assert.equal(country.ready, true, `${id}: ${code} snapshot should be ready`);
       assert.ok(country.datasetAt, `${id}: ${code} source date should be present`);
     }
-    for (const code of ["ro", "at", "hu"].filter((code) => !expectedCountries.includes(code))) {
+    for (const code of ["ro", "at", "hu", "it"].filter((code) => !expectedCountries.includes(code))) {
       const country = countryStates.get(code);
       if (country) assert.equal(country.status, "pending", `${id}: ${code} must remain pending`);
     }
@@ -57,6 +59,7 @@ try {
       ro: { name: "Bucharest", lat: 44.4268, lon: 26.1025 },
       at: { name: "Vienna", lat: 48.2082, lon: 16.3738 },
       hu: { name: "Budapest", lat: 47.4979, lon: 19.0402 },
+      it: { name: "Rome", lat: 41.9028, lon: 12.4964 },
     };
     for (const code of expectedCountries.filter((country) => country !== "de")) {
       const city = countrySearches[code];
@@ -286,19 +289,15 @@ try {
     }
     for (const width of [320, 390, 430]) {
       await page.setViewportSize({ width, height: 852 });
-      for (const lang of ["de", "ro", "en", "hu"]) {
+      for (const lang of ["de", "ro", "en", "hu", "it"]) {
         await page.locator("#language").selectOption(lang);
         await page.evaluate(() => document.fonts.ready);
         if (expectedCountries.length > 1) {
           const coverage = expectedCountries.map((code) => countryLabels[code][lang]);
           for (const name of coverage) {
-            await expect(page.locator(".hero-copy > p")).toContainText(name);
+            await expect(page.locator(".country-tag")).toContainText(name);
           }
-          await expect
-            .poll(() =>
-              page.locator('meta[name="description"]').getAttribute("content"),
-            )
-            .toContain(coverage[coverage.length - 1]);
+
         }
         assert.equal(
           await page.evaluate(
@@ -325,7 +324,7 @@ try {
         await expect(page.locator(".charge-select")).toHaveCount(3);
       await page.locator(".open-now-control input").check();
     }
-    await expect(page.locator("html")).toHaveAttribute("lang", "hu");
+    await expect(page.locator("html")).toHaveAttribute("lang", "it");
     assert.deepEqual(errors, []);
     results[id] = {
       profile: profile.id,

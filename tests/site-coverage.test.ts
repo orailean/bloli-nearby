@@ -29,26 +29,14 @@ test("site copy replaces the coverage token in intros and footers", () => {
   );
 });
 
-test("every site's localized intro and footer reflect the active country set", () => {
-  for (const dictionaries of Object.values(siteDictionaries)) {
-    for (const locale of ["de", "en", "ro", "hu"] as const) {
-      const copy = dictionaries[locale];
-      const countries =
-        locale === "de"
-          ? ["Deutschland", "Rumänien"]
-          : locale === "ro"
-            ? ["Germania", "România"]
-            : locale === "hu"
-              ? ["Németország", "Románia"]
-              : ["Germany", "Romania"];
-      assert.ok(copy.intro.includes("{countries}"));
-      assert.ok(copy.footerText.includes("{countries}"));
-      for (const text of [copy.intro, copy.footerText]) {
-        const rendered = fillCountryCoverage(text, countries, locale);
-        assert.ok(!rendered.includes("{countries}"));
-        if (text.includes("{countries}"))
-          for (const name of countries) assert.ok(rendered.includes(name));
-      }
-    }
+test("every site's introductions and footers stay country-neutral", () => {
+ for (const dictionaries of Object.values(siteDictionaries)) {
+  for (const locale of ["de","en","ro","hu","it"] as const) {
+   const copy=dictionaries[locale];
+   for (const text of [copy.intro,copy.footerText]) {
+    assert.doesNotMatch(text,/\{countries\}|Germany|Deutschland|Germania|Németország/);
+    assert.equal(fillCountryCoverage(text,["Italy"],locale),text);
+   }
   }
+ }
 });

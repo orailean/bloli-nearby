@@ -6,6 +6,7 @@ const countryDefaults = {
   ro: "Europe/Bucharest",
   at: "Europe/Vienna",
   hu: "Europe/Budapest",
+  it: "Europe/Rome",
 } as const;
 
 function localCalendarDate(at: Date, timezone: string): Date {

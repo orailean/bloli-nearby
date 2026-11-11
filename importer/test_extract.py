@@ -13,6 +13,14 @@ XML='''<osm version="0.6" generator="test">
 <way id="11" version="1"><nd ref="2"/><nd ref="3"/><nd ref="4"/><nd ref="5"/><nd ref="2"/></way>
 <relation id="20" version="1"><member type="way" ref="11" role="outer"/><tag k="type" v="multipolygon"/><tag k="amenity" v="toilets"/></relation></osm>'''
 class ExtractTests(unittest.TestCase):
+ def test_italy_extract_preserves_italian_names_and_country(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=Path(d)/'fixture.osm';p.write_text(XML.replace('<tag k="fee" v="no"/>','<tag k="fee" v="no"/><tag k="name:it" v="Bagno pubblico"/>'))
+   out=io.StringIO();extract(str(p),{},out,'italy-test','2026-10-25T00:00:00Z',country_code='it')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   self.assertEqual(rows[0]['countryCode'],'it')
+   self.assertEqual(next(r for r in rows if r.get('sourceId')=='1')['tags']['name:it'],'Bagno pubblico')
+
  def test_nodes_ways_relations_and_settlements_have_source_identity_and_points(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'fixture.osm';p.write_text(XML)

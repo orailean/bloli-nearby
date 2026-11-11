@@ -99,7 +99,7 @@ ALTER TABLE location_categories ADD COLUMN IF NOT EXISTS source_version integer 
 ALTER TABLE locations ADD COLUMN IF NOT EXISTS source_version integer NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS countries (
- code text PRIMARY KEY CHECK(code IN ('de','ro','at','hu')),
+ code text PRIMARY KEY CHECK(code IN ('de','ro','at','hu','it')),
  name text NOT NULL,
  timezone text NOT NULL,
  status text NOT NULL CHECK(status IN ('active','pending')),
@@ -107,11 +107,15 @@ CREATE TABLE IF NOT EXISTS countries (
  boundary_source text,
  boundary_checksum text CHECK(boundary_checksum IS NULL OR boundary_checksum ~ '^[0-9a-fA-F]{64}$')
 );
+-- Expand the existing installation's constraint before inserting new countries.
+ALTER TABLE countries DROP CONSTRAINT IF EXISTS countries_code_check;
+ALTER TABLE countries ADD CONSTRAINT countries_code_check CHECK(code IN ('de','ro','at','hu','it'));
 INSERT INTO countries(code,name,timezone,status,rollout_order) VALUES
  ('de','Germany','Europe/Berlin','active',0),
  ('ro','Romania','Europe/Bucharest','pending',1),
  ('at','Austria','Europe/Vienna','pending',2),
- ('hu','Hungary','Europe/Budapest','pending',3)
+ ('hu','Hungary','Europe/Budapest','pending',3),
+ ('it','Italy','Europe/Rome','pending',4)
 ON CONFLICT(code) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS country_datasets (

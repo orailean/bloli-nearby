@@ -1,7 +1,7 @@
 {
   "language": "Language",
   "skip": "Skip to finder",
-  "germany": "Across Germany",
+  "germany": "Explore nearby",
   "coverageFrom": "Available in",
   "countryDE": "Germany",
   "countryRO": "Romania",
@@ -76,7 +76,7 @@
   "METHOD_NOT_ALLOWED": "This request is not supported.",
   "statusError": "Could not check the data status. Try again.",
   "searchLocation": "Search location",
-  "countryOnly": "Germany and active countries",
+  "countryOnly": "Available coverage",
   "locationName": "Your location",
   "mapLocation": "Map selection",
   "priceInfo": "Source fee details",
@@ -106,5 +106,6 @@
   "customers": "Customers only",
   "machineHoursAssumed": "24/7 assumed for this machine; access may vary.",
   "tobaccoSalesMapped": "Tobacco sales mapped",
-  "tobaccoAvailability": "Tobacco availability"
+  "tobaccoAvailability": "Tobacco availability",
+  "countryIT": "Italy"
 }

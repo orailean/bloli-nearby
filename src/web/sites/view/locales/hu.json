@@ -1,7 +1,7 @@
 {
   "find": "Keress kilátóhelyet",
   "hero": "Még egy kicsit.\nÚj távlatok.",
-  "intro": "Fedezd fel a feltérképezett kilátóhelyeket és kilátótornyokat: {countries}. Válassz egy helyet a pihenéshez.",
+  "intro": "Fedezd fel a feltérképezett kilátóhelyeket és kilátótornyokat a közelben. Válassz egy helyet a pihenéshez.",
   "sticker": "Adj teret a látóhatárnak.",
   "locate": "Kilátóhelyek a közelemben",
   "all": "Minden kilátóhely",
@@ -12,7 +12,7 @@
   "details": "A kilátóhely adatai",
   "tileError": "A térkép nem érhető el. A lista továbbra is működik.",
   "footerTitle": "Nézz fel.\nÉlvezd a látványt.",
-  "footerText": "Kilátóhelyek és kilátótornyok: {countries}. Az OpenStreetMap közössége által feltérképezve.",
+  "footerText": "Kilátóhelyek és kilátótornyok a közelben. Az OpenStreetMap közössége által feltérképezve.",
   "howTitle": "Fedezz fel új távlatokat.",
   "how2": "Válassz kilátóhelyet",
   "how2Text": "Böngéssz a kilátóhelyek és tornyok között. Ellenőrizd a feltérképezett hozzáférést, díjakat és magasságot.",

@@ -45,7 +45,7 @@ export function basePlace(r: SourceRecord): Facility | null {
     lon: r.lon,
     name: t.name || null,
     names: Object.fromEntries(
-      ["en", "de", "ro", "hu"]
+      ["en", "de", "ro", "hu", "it"]
         .filter((l) => t[`name:${l}`])
         .map((l) => [l, t[`name:${l}`]]),
     ),

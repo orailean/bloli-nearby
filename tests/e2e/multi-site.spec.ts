@@ -544,7 +544,7 @@ for (const id of [
         await page.locator(".open-now-control input").check();
         await expect(page.locator(".result-row")).toHaveCount(1);
       }
-      for (const locale of ["de", "ro", "en", "hu"]) {
+      for (const locale of ["de", "ro", "en", "hu", "it"]) {
         await page.locator("#language").selectOption(locale);
         await page.evaluate(() => document.fonts.ready);
         await expect(page.locator("html")).toHaveAttribute("lang", locale);

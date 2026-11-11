@@ -54,7 +54,7 @@ const profiles = {
     analyticsToken: "f7546bb7f5844f3a8e881c5860103442",
     title: "Transit · Der nächste Halt. Dein nächster Schritt.",
     description:
-      "Finde Bahnhöfe, U-Bahn, S-Bahn, Tram, Bus, Taxi, Fähren und Seilbahnen in Deutschland und den freigeschalteten Ländern. Erfasste Haltestellen und Zugänge aus OpenStreetMap.",
+      "Finde Bahnhöfe, U-Bahn, S-Bahn, Tram, Bus, Taxi, Fähren und Seilbahnen in deiner Nähe. Erfasste Haltestellen und Zugänge aus OpenStreetMap.",
     color: "#007b7f",
   },
   water: {
@@ -62,7 +62,7 @@ const profiles = {
     analyticsToken: "a851083a4af84e56a8a4ddbf1952ffaf",
     title: "Water · Kurz auffüllen. Weiter geht’s.",
     description:
-      "Finde erfasste Trinkwasserstellen und Refill-Partner in Deutschland und den freigeschalteten Ländern. Mit Gebühren, saisonalen Angaben und Öffnungszeiten aus OpenStreetMap.",
+      "Finde erfasste Trinkwasserstellen und Refill-Partner in deiner Nähe. Mit Gebühren, saisonalen Angaben und Öffnungszeiten aus OpenStreetMap.",
     color: "#1459d9",
   },
   loo: {
@@ -70,7 +70,7 @@ const profiles = {
     analyticsToken: "e801fcd3a63d4dab89cdf795c0c065df",
     title: "Find a Loo · A little relief, nearby.",
     description:
-      "Find public toilets in Germany and other active countries. Search nearby, filter free and paid toilets, and check mapped opening hours.",
+      "Find public toilets nearby. Search nearby, filter free and paid toilets, and check mapped opening hours.",
     color: "#123f3b",
   },
   kebab: {
@@ -78,7 +78,7 @@ const profiles = {
     analyticsToken: "8c9c02f97f134755a37d8e278a57fa17",
     title: "Kebab · Mit allem. Ganz in deiner Nähe.",
     description:
-      "Finde Döner- und Kebab-Läden in Deutschland und den freigeschalteten Ländern. Mit erfassten Öffnungszeiten, Mitnahme, Lieferung und Menülinks aus OpenStreetMap.",
+      "Finde Döner- und Kebab-Läden in deiner Nähe. Mit erfassten Öffnungszeiten, Mitnahme, Lieferung und Menülinks aus OpenStreetMap.",
     color: "#402b52",
   },
   kippe: {
@@ -86,7 +86,7 @@ const profiles = {
     analyticsToken: "a88104d9b5474836b0b83c7c3040667a",
     title: "Kippe · Tobacco sellers around the corner.",
     description:
-      "Find cigarette machines, tobacco shops and mapped tobacco sellers in Germany and other active countries. Check seller types, mapped hours and payment details.",
+      "Find cigarette machines, tobacco shops and mapped tobacco sellers nearby. Check seller types, mapped hours and payment details.",
     color: "#b52d3b",
   },
   charge: {
@@ -94,7 +94,7 @@ const profiles = {
     analyticsToken: "6d0915767d0c4e79ade418897dcc12ff",
     title: "Charge · Find your next plug stop.",
     description:
-      "Find mapped car charging stations in Germany and other active countries. Filter by connector, power, access and mapped charging fees.",
+      "Find mapped car charging stations nearby. Filter by connector, power, access and mapped charging fees.",
     color: "#2448d8",
   },
 };

@@ -1,6 +1,9 @@
 import unittest
 from source import snapshot_from_page
 class SourceTests(unittest.TestCase):
+ def test_italy_resolves_its_verified_snapshot(self):
+  self.assertEqual(snapshot_from_page('https://download.geofabrik.de/europe/italy-latest.osm.pbf','<a href="italy-261025.osm.pbf.md5">ok</a>'),'https://download.geofabrik.de/europe/italy-261025.osm.pbf')
+
  def test_latest_resolves_to_newest_snapshot_with_a_checksum(self):
   html='<a href="germany-261024.osm.pbf.md5">checksum</a><a href="germany-261025.osm.pbf.md5">checksum</a><a href="germany-261026.osm.pbf">not ready</a>'
   self.assertEqual(snapshot_from_page('https://download.geofabrik.de/europe/germany-latest.osm.pbf',html),'https://download.geofabrik.de/europe/germany-261025.osm.pbf')

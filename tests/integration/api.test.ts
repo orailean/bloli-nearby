@@ -1336,6 +1336,44 @@ test(
         ].map((tags,i)=>({kind:'parking',sourceType:'node',sourceId:String(81200+i),lat:44.43+i*0.0001,lon:26.1,tags:{amenity:'parking',...tags},version:1})));
         countryOptions.categories.push('parking');
         Object.assign(countryOptions,{minimumParking:1});
+        // Simulate upgrading an installation with the original four-country constraint.
+        const countriesBeforeUpgrade = (await pool.query("SELECT * FROM countries WHERE code <> 'it' ORDER BY code")).rows;
+        await pool.query("DELETE FROM countries WHERE code='it'");
+        await pool.query("ALTER TABLE countries DROP CONSTRAINT countries_code_check");
+        await pool.query("ALTER TABLE countries ADD CONSTRAINT countries_code_check CHECK(code IN ('de','ro','at','hu'))");
+        await pool.query("DELETE FROM schema_state");
+        await migrate(pool);
+        assert.deepEqual((await pool.query("SELECT * FROM countries WHERE code <> 'it' ORDER BY code")).rows,countriesBeforeUpgrade);
+        assert.equal((await pool.query("SELECT status FROM countries WHERE code='it'")).rows[0].status,"pending");
+        // Italy can be imported and activated while the legacy rollout is pending.
+        const existingCountries = (await pool.query("SELECT * FROM countries WHERE code <> 'it' ORDER BY code")).rows;
+        const existingDatasets = (await pool.query("SELECT * FROM country_datasets WHERE country_code <> 'it' ORDER BY country_code,category")).rows;
+        const existingMemberships = (await pool.query("SELECT * FROM country_location_memberships WHERE country_code <> 'it' ORDER BY country_code,category,location_id")).rows;
+        const italyRows = roRows.filter(row => !["81008", "81009"].includes(row.sourceId)).map(row => ({
+          ...row, sourceId: String(940000 + Number(row.sourceId)), lat: 41.9, lon: 12.5,
+          tags: {...row.tags, "name:it": "Nome italiano", ...(row.kind === "settlement" ? {name:"Roma"} : {})},
+        }));
+        const italyOptions = {...countryOptions, countryCode:"it" as const, source:"italy-test",
+          boundarySource:"https://download.geofabrik.de/europe/italy.poly",
+          coverage:{type:"MultiPolygon",coordinates:[[[[12,41],[13,41],[13,43],[12,43],[12,41]]]]}};
+        await assert.rejects(activateCountry(pool,"it"), /COUNTRY_SNAPSHOT_INCOMPLETE_OR_UNVERIFIED/);
+        await importDataset(pool,(async function*(){yield* italyRows;})(),italyOptions);
+        await pool.query("UPDATE country_datasets SET source_checksum=NULL WHERE country_code='it' AND category='parking'");
+        await assert.rejects(activateCountry(pool,"it"), /COUNTRY_SNAPSHOT_INCOMPLETE_OR_UNVERIFIED/);
+        await pool.query("UPDATE country_datasets SET source_checksum=$1 WHERE country_code='it' AND category='parking'",[italyOptions.sourceChecksum]);
+        await activateCountry(pool,"it");
+        await migrate(pool);
+        assert.equal((await pool.query("SELECT status FROM countries WHERE code='it'")).rows[0].status,"active");
+        const italySearch = await get("/api/locations?site=atm&lat=41.9&lon=12.5&radius=500");
+        assert.equal(italySearch.body.items[0].countryCode,"it");
+        assert.equal(italySearch.body.items[0].timezone,"Europe/Rome");
+        assert.equal(italySearch.body.items[0].names.it,"Nome italiano");
+        const italySettlement = await get("/api/settlements?q=roma&country=it");
+        assert.equal(italySettlement.body.items[0].names.it,"Nome italiano");
+        await deactivateCountry(pool,"it");
+        assert.deepEqual((await pool.query("SELECT * FROM countries WHERE code <> 'it' ORDER BY code")).rows,existingCountries);
+        assert.deepEqual((await pool.query("SELECT * FROM country_datasets WHERE country_code <> 'it' ORDER BY country_code,category")).rows,existingDatasets);
+        assert.deepEqual((await pool.query("SELECT * FROM country_location_memberships WHERE country_code <> 'it' ORDER BY country_code,category,location_id")).rows,existingMemberships);
         const beforeMeasure=(await pool.query("SELECT category,location_count,imported_at FROM country_datasets ORDER BY country_code,category")).rows;
         const jobsBeforeMeasure=(await pool.query('SELECT count(*)::int n FROM import_jobs')).rows[0].n;
         const measured=await importDataset(pool,(async function*(){yield* roRows;})(),{...countryOptions,measureOnly:true,minimumAtms:undefined,minimumAccommodations:undefined});

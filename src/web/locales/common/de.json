@@ -1,7 +1,7 @@
 {
   "language": "Sprache",
   "skip": "Zur WC-Suche",
-  "germany": "In ganz Deutschland",
+  "germany": "In deiner Nähe",
   "coverageFrom": "Aktiv in",
   "countryDE": "Deutschland",
   "countryRO": "Rumänien",
@@ -76,7 +76,7 @@
   "METHOD_NOT_ALLOWED": "Diese Anfrage wird nicht unterstützt.",
   "statusError": "Datenstatus konnte nicht geprüft werden. Versuche es erneut.",
   "searchLocation": "Suchstandort",
-  "countryOnly": "Deutschland und freigeschaltete Länder",
+  "countryOnly": "Verfügbare Abdeckung",
   "locationName": "Dein Standort",
   "mapLocation": "Kartenauswahl",
   "priceInfo": "Gebührenangaben der Quelle",
@@ -106,5 +106,6 @@
   "customers": "Nur für Kunden",
   "machineHoursAssumed": "Für diesen Automaten wird 24/7 angenommen; der Zugang kann abweichen.",
   "tobaccoSalesMapped": "Tabakverkauf erfasst",
-  "tobaccoAvailability": "Tabakverfügbarkeit"
+  "tobaccoAvailability": "Tabakverfügbarkeit",
+  "countryIT": "Italien"
 }

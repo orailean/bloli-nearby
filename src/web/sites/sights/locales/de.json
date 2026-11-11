@@ -1,7 +1,7 @@
 {
   "find": "Sehenswürdigkeiten finden",
   "hero": "Gleich um die Ecke.\nEine neue Geschichte.",
-  "intro": "Finde erfasste Museen, Burgen, Ruinen und Sehenswürdigkeiten in {countries}. Entdecke deinen nächsten Zwischenstopp.",
+  "intro": "Finde erfasste Museen, Burgen, Ruinen und Sehenswürdigkeiten in deiner Nähe. Entdecke deinen nächsten Zwischenstopp.",
   "sticker": "Folge deiner Neugier.",
   "locate": "Sehenswürdigkeiten in meiner Nähe",
   "all": "Alle Sehenswürdigkeiten",
@@ -12,7 +12,7 @@
   "details": "Details zur Sehenswürdigkeit",
   "tileError": "Die Karte ist nicht verfügbar. Die Liste funktioniert weiterhin.",
   "footerTitle": "Geh hinaus.\nEntdecke Geschichten.",
-  "footerText": "Sehenswürdigkeiten, Museen und historische Orte in {countries}, erfasst von der OpenStreetMap-Community.",
+  "footerText": "Sehenswürdigkeiten, Museen und historische Orte in deiner Nähe, erfasst von der OpenStreetMap-Community.",
   "howTitle": "Ein bisschen Neugier lohnt sich.",
   "how2": "Wähle eine Art",
   "how2Text": "Entdecke Museen, Burgen, Ruinen, Denkmäler und weitere erfasste Attraktionen. Filtere nach Art und Eintritt.",

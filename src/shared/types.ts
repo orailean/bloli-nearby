@@ -29,10 +29,11 @@ import type {
   ParkingFeature,
   ParkingEntrance,
 } from "./parking-types.js";
-export type Locale = "en" | "de" | "ro" | "hu";
+export type Locale = "en" | "de" | "ro" | "hu" | "it";
 export type Fee = "free" | "paid" | "unknown";
 export type FeeFilter = "all" | "free" | "paid" | "unknown";
 export interface SourceRecord {
+  countryCode?: CountryCode;
   sourceType: "node" | "way" | "relation";
   sourceId: string;
   version?: number | null;
@@ -47,7 +48,7 @@ export interface Facility {
   id: string;
   sourceType: SourceRecord["sourceType"];
   sourceId: string;
-  countryCode?: "de" | "ro" | "at" | "hu";
+  countryCode?: CountryCode;
   timezone?: string;
   lat: number;
   lon: number;

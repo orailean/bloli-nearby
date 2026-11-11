@@ -10,7 +10,7 @@ export function formatCountryList(
         ? "și"
         : locale === "hu"
           ? "és"
-          : "and";
+          : locale === "it" ? "e" : "and";
   if (countries.length === 2)
     return `${countries[0]} ${conjunction} ${countries[1]}`;
   return `${countries.slice(0, -1).join(", ")} ${conjunction} ${countries.at(-1)}`;

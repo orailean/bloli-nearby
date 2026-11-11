@@ -55,7 +55,7 @@ export function normalizeFacility(r: SourceRecord): Facility | null {
         : "unknown";
   const wheelchair = get("wheelchair") || t.wheelchair;
   const names: Facility["names"] = {};
-  for (const lang of ["en", "de", "ro", "hu"] as const)
+  for (const lang of ["en", "de", "ro", "hu", "it"] as const)
     if (t[`name:${lang}`]) names[lang] = t[`name:${lang}`];
   return {
     id: `${r.sourceType}/${r.sourceId}`,

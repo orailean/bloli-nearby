@@ -52,6 +52,19 @@ import parkEn from "./sites/park/locales/en.json";
 import parkDe from "./sites/park/locales/de.json";
 import parkRo from "./sites/park/locales/ro.json";
 import parkHu from "./sites/park/locales/hu.json";
+import commonIt from "./locales/common/it.json";
+import looIt from "./sites/loo/locales/it.json";
+import kippeIt from "./sites/kippe/locales/it.json";
+import kebabIt from "./sites/kebab/locales/it.json";
+import waterIt from "./sites/water/locales/it.json";
+import transitIt from "./sites/transit/locales/it.json";
+import chargeIt from "./sites/charge/locales/it.json";
+import atmIt from "./sites/atm/locales/it.json";
+import stayIt from "./sites/stay/locales/it.json";
+import viewIt from "./sites/view/locales/it.json";
+import sightsIt from "./sites/sights/locales/it.json";
+import vendIt from "./sites/vend/locales/it.json";
+import parkIt from "./sites/park/locales/it.json";
 type Dictionary = Record<
   | keyof typeof commonEn
   | keyof typeof looEn
@@ -68,20 +81,20 @@ type Dictionary = Record<
   | keyof typeof parkEn,
   string
 >;
-const common = { en: commonEn, de: commonDe, ro: commonRo, hu: commonHu };
+const common = { en: commonEn, de: commonDe, ro: commonRo, hu: commonHu, it: commonIt };
 const localized = {
-  park: { en: parkEn, de: parkDe, ro: parkRo, hu: parkHu },
-  vend: { en: vendEn, de: vendDe, ro: vendRo, hu: vendHu },
-  view: { en: viewEn, de: viewDe, ro: viewRo, hu: viewHu },
-  sights: { en: sightsEn, de: sightsDe, ro: sightsRo, hu: sightsHu },
-  loo: { en: looEn, de: looDe, ro: looRo, hu: looHu },
-  kippe: { en: kippeEn, de: kippeDe, ro: kippeRo, hu: kippeHu },
-  kebab: { en: kebabEn, de: kebabDe, ro: kebabRo, hu: kebabHu },
-  water: { en: waterEn, de: waterDe, ro: waterRo, hu: waterHu },
-  transit: { en: transitEn, de: transitDe, ro: transitRo, hu: transitHu },
-  charge: { en: chargeEn, de: chargeDe, ro: chargeRo, hu: chargeHu },
-  atm: { en: atmEn, de: atmDe, ro: atmRo, hu: atmHu },
-  stay: { en: stayEn, de: stayDe, ro: stayRo, hu: stayHu },
+  park: { en: parkEn, de: parkDe, ro: parkRo, hu: parkHu, it: parkIt },
+  vend: { en: vendEn, de: vendDe, ro: vendRo, hu: vendHu, it: vendIt },
+  view: { en: viewEn, de: viewDe, ro: viewRo, hu: viewHu, it: viewIt },
+  sights: { en: sightsEn, de: sightsDe, ro: sightsRo, hu: sightsHu, it: sightsIt },
+  loo: { en: looEn, de: looDe, ro: looRo, hu: looHu, it: looIt },
+  kippe: { en: kippeEn, de: kippeDe, ro: kippeRo, hu: kippeHu, it: kippeIt },
+  kebab: { en: kebabEn, de: kebabDe, ro: kebabRo, hu: kebabHu, it: kebabIt },
+  water: { en: waterEn, de: waterDe, ro: waterRo, hu: waterHu, it: waterIt },
+  transit: { en: transitEn, de: transitDe, ro: transitRo, hu: transitHu, it: transitIt },
+  charge: { en: chargeEn, de: chargeDe, ro: chargeRo, hu: chargeHu, it: chargeIt },
+  atm: { en: atmEn, de: atmDe, ro: atmRo, hu: atmHu, it: atmIt },
+  stay: { en: stayEn, de: stayDe, ro: stayRo, hu: stayHu, it: stayIt },
 };
 const fallback = Object.assign(
   {},
@@ -102,7 +115,7 @@ export const siteDictionaries = Object.fromEntries(
   Object.entries(localized).map(([id, content]) => [
     id,
     Object.fromEntries(
-      (["en", "de", "ro", "hu"] as const).map((locale) => [
+      (["en", "de", "ro", "hu", "it"] as const).map((locale) => [
         locale,
         {
           ...fallback,

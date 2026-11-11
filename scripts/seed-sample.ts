@@ -22,7 +22,7 @@ try {
   const categoryFloors = [
     "TOILETS", "SELLERS", "KEBABS", "WATER_POINTS", "TRANSIT_STOPS", "CHARGE_STATIONS", "ATMS", "ACCOMMODATIONS", "VIEWPOINTS", "SIGHTS", "VENDING_MACHINES", "PARKING", "SETTLEMENTS",
   ];
-  for (const code of ["de", "ro", "at", "hu"] as const)
+  for (const code of ["de", "ro", "at", "hu", "it"] as const)
     for (const suffix of categoryFloors)
       process.env[`MIN_${code.toUpperCase()}_${suffix}`] = "1";
 
@@ -34,13 +34,14 @@ try {
     ro: { lat: 44.4268, lon: 26.1025, name: "București" },
     at: { lat: 48.2082, lon: 16.3738, name: "Wien" },
     hu: { lat: 47.4979, lon: 19.0402, name: "Budapest" },
+    it: { lat: 41.9028, lon: 12.4964, name: "Roma" },
   };
   const results = {};
   try {
-    for (const code of ["de", "ro", "at", "hu"] as const) {
+    for (const code of ["de", "ro", "at", "hu", "it"] as const) {
       const profile = COUNTRIES.find((country) => country.code === code)!;
       const city = cities[code];
-      const prefix = { de: "9", ro: "8", at: "7", hu: "6" }[code];
+      const prefix = { de: "9", ro: "8", at: "7", hu: "6", it: "5" }[code];
       const rows = source.map((row: Record<string, any>) => {
         if (row.kind === "metadata")
           return {
@@ -98,7 +99,7 @@ try {
       writeFileSync(file, `${rows.map((row) => JSON.stringify(row)).join("\n")}\n`);
       results[code] = await importFile(pool, file);
     }
-    await pool.query("UPDATE countries SET status='active' WHERE code IN ('de','ro','at','hu')");
+    await pool.query("UPDATE countries SET status='active' WHERE code IN ('de','ro','at','hu','it')");
     console.log(JSON.stringify({ synthetic: true, results }, null, 2));
   } finally {
     rmSync(staging, { recursive: true, force: true });

@@ -224,7 +224,7 @@ export async function importDataset(
             postcode,
             region: t["is_in:state"] || t["addr:state"] || t.is_in || null,
             names: Object.fromEntries(
-              ["en", "de", "ro", "hu"]
+              ["en", "de", "ro", "hu", "it"]
                 .filter((l) => t[`name:${l}`])
                 .map((l) => [l, t[`name:${l}`]]),
             ),
