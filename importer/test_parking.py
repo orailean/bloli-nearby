@@ -37,3 +37,11 @@ class ParkingTests(unittest.TestCase):
             rows=[json.loads(line) for line in out.getvalue().splitlines()]
             self.assertEqual({r['sourceId'] for r in rows if r.get('kind')=='parking'}, {'1908251','14252380'})
             self.assertEqual(rows[-1]['kind'],'complete')
+
+    def test_polygon_output_preserves_original_relation_type(self):
+        xml='''<osm version="0.6"><node id="1" lat="45" lon="11"/><node id="2" lat="45.01" lon="11.01"/><node id="3" lat="45" lon="11.02"/><way id="10"><nd ref="1"/><nd ref="2"/><nd ref="3"/><nd ref="1"/></way><relation id="20" version="11"><member type="way" ref="10" role="outer"/><tag k="type" v="multipolygon"/><tag k="amenity" v="parking"/></relation></osm>'''
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/'sample.osm';path.write_text(xml);out=io.StringIO()
+            extract(str(path),{},out,'sample','2026-11-08T00:00:00Z')
+            row=next(json.loads(line) for line in out.getvalue().splitlines() if json.loads(line).get('kind')=='parking')
+            self.assertEqual(row['tags']['type'],'multipolygon')

@@ -1356,7 +1356,14 @@ test(
         const italyOptions = {...countryOptions, countryCode:"it" as const, source:"italy-test",
           boundarySource:"https://download.geofabrik.de/europe/italy.poly",
           coverage:{type:"MultiPolygon",coordinates:[[[[12,41],[13,41],[13,43],[12,43],[12,41]]]]}};
+        italyRows.push({kind:"view",sourceType:"relation",sourceId:"994027803",version:11,lat:41.9,lon:12.5,tags:{tourism:"viewpoint",type:"multipolygon"}} as typeof italyRows[number]);
         await assert.rejects(activateCountry(pool,"it"), /COUNTRY_SNAPSHOT_INCOMPLETE_OR_UNVERIFIED/);
+        await importDataset(pool,(async function*(){yield* italyRows;})(),italyOptions);
+        // osmium polygon output historically omitted only the structural relation type.
+        const legacyItalyRows=italyRows.map(row=>row.sourceId==="994027803" ? {...row,tags:{tourism:"viewpoint"}} : row);
+        await importDataset(pool,(async function*(){yield* legacyItalyRows;})(),italyOptions);
+        const conflictingItalyRows=legacyItalyRows.map(row=>row.sourceId==="994027803" ? {...row,tags:{...row.tags,name:"Actual conflicting tag"}} : row);
+        await assert.rejects(importDataset(pool,(async function*(){yield* conflictingItalyRows;})(),italyOptions),/OSM_VERSION_CONFLICT/);
         await importDataset(pool,(async function*(){yield* italyRows;})(),italyOptions);
         await pool.query("UPDATE country_datasets SET source_checksum=NULL WHERE country_code='it' AND category='parking'");
         await assert.rejects(activateCountry(pool,"it"), /COUNTRY_SNAPSHOT_INCOMPLETE_OR_UNVERIFIED/);

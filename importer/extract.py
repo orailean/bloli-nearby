@@ -292,6 +292,8 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
         def area(self, obj):
             tags = dict(obj.tags)
             source_type = 'way' if obj.from_way() else 'relation'
+            if source_type == 'relation':
+                tags = area_relation_tags.get(obj.orig_id(), tags)
             member_key = ('w' if obj.from_way() else 'r', obj.orig_id())
             area_kinds = object_kinds(tags, source_type, obj.orig_id())
             if not area_kinds and member_key not in member_keys:

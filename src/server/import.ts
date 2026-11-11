@@ -335,12 +335,19 @@ export async function importDataset(
       )
         throw new AppError("SUSPICIOUS_IMPORT");
     }
+    // Older osmium area output omitted structural relation types. Accept only
+    // that known representation difference when every other tag is identical.
     const conflicts = await db.query(
       `SELECT s.category,s.id FROM stage_category_locations s
        JOIN location_categories c ON c.category=s.category AND c.location_id=s.id
        JOIN locations l ON l.id=s.id
        WHERE s.source_version>0 AND s.source_version=c.source_version
-         AND (s.data->'tags'<>l.tags OR (s.id LIKE 'node/%' AND ST_AsEWKB(s.location::geometry)<>ST_AsEWKB(l.location::geometry)))
+         AND ((s.data->'tags'<>l.tags AND NOT (
+           s.id LIKE 'relation/%' AND (s.data->'tags'-'type')=(l.tags-'type') AND (
+             (NOT (s.data->'tags' ? 'type') AND l.tags->>'type' IN ('multipolygon','boundary')) OR
+             (NOT (l.tags ? 'type') AND s.data->'tags'->>'type' IN ('multipolygon','boundary'))
+           )
+         )) OR (s.id LIKE 'node/%' AND ST_AsEWKB(s.location::geometry)<>ST_AsEWKB(l.location::geometry)))
        LIMIT 1`,
     );
     if (conflicts.rowCount) throw new AppError("OSM_VERSION_CONFLICT");
