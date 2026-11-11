@@ -70,16 +70,16 @@ ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS kebab_count integer;
 
 -- Expand existing checks for the fourth profile without rewriting active rows.
 ALTER TABLE location_categories DROP CONSTRAINT IF EXISTS location_categories_category_check;
-ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending'));
+ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending','parking'));
 ALTER TABLE category_datasets DROP CONSTRAINT IF EXISTS category_datasets_category_check;
-ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending'));
+ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending','parking'));
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS water_count integer;
 
 -- Fifth shared profile and its raw component/context projection.
 ALTER TABLE location_categories DROP CONSTRAINT IF EXISTS location_categories_category_check;
-ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending'));
+ALTER TABLE location_categories ADD CONSTRAINT location_categories_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending','parking'));
 ALTER TABLE category_datasets DROP CONSTRAINT IF EXISTS category_datasets_category_check;
-ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending'));
+ALTER TABLE category_datasets ADD CONSTRAINT category_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending','parking'));
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS transit_count integer;
 CREATE TABLE IF NOT EXISTS transit_components (
  location_id text PRIMARY KEY REFERENCES locations(id) ON DELETE CASCADE,
@@ -116,7 +116,7 @@ ON CONFLICT(code) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS country_datasets (
  country_code text NOT NULL REFERENCES countries(code),
- category text NOT NULL CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending')),
+ category text NOT NULL CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending','parking')),
  dataset_at timestamptz NOT NULL,
  imported_at timestamptz NOT NULL DEFAULT now(),
  source text NOT NULL,
@@ -200,7 +200,7 @@ END;
 $$;
 
 ALTER TABLE country_datasets DROP CONSTRAINT IF EXISTS country_datasets_category_check;
-ALTER TABLE country_datasets ADD CONSTRAINT country_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending'));
+ALTER TABLE country_datasets ADD CONSTRAINT country_datasets_category_check CHECK(category IN ('toilets','tobacco','kebab','water','transit','charge','atm','accommodation','view','sights','vending','parking'));
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS atm_count integer;
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS accommodation_count integer;
 
@@ -215,3 +215,5 @@ CREATE TABLE IF NOT EXISTS schema_state (
   checksum text NOT NULL,
   applied_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS parking_count integer;

@@ -15,7 +15,20 @@ import type {
   VendingPayment,
   VendingAccess,
 } from "../../shared/vending-types.js";
+import type {
+  ParkingType,
+  ParkingAccess,
+  ParkingFeature,
+} from "../../shared/parking-types.js";
 export interface FilterProps {
+  parkingType?: ParkingType | "all";
+  onParkingType?: (value: ParkingType | "all") => void;
+  parkingAccess?: ParkingAccess;
+  onParkingAccess?: (value: ParkingAccess) => void;
+  parkRide?: ParkingFeature;
+  onParkRide?: (value: ParkingFeature) => void;
+  hiking?: ParkingFeature;
+  onHiking?: (value: ParkingFeature) => void;
   product?: VendingProduct | "all";
   onProduct?: (value: VendingProduct | "all") => void;
   payment?: VendingPayment;

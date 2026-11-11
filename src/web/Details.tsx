@@ -89,8 +89,12 @@ export default function Details({
         <a
           className="walk-button"
           href={directionsUrl(
-            item.lat,
-            item.lon,
+            siteId === "park"
+              ? (item.parking?.entrance?.lat ?? item.lat)
+              : item.lat,
+            siteId === "park"
+              ? (item.parking?.entrance?.lon ?? item.lon)
+              : item.lon,
             sites[siteId].directionsMode ?? "walking",
           )}
           target="_blank"

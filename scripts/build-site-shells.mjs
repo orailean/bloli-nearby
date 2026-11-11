@@ -4,6 +4,11 @@ const template = await readFile(
   "utf8",
 );
 const profiles = {
+  park: {
+    domain: "park.bloli.com", title: "Park · Ankommen. Parken. Entdecken.",
+    description: "Finde erfasste Parkplätze und Parkhäuser mit Gebühren, Zugangsdetails und Öffnungszeiten aus OpenStreetMap. Keine Live-Belegung.",
+    color: "#244b74", analyticsToken: null,
+  },
   vend: {
     domain: "vend.bloli.com",
     title: "Vend · Kleine Pause. Frischer Schwung.",

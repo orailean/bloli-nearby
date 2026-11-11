@@ -1,3 +1,4 @@
+import { PARKING_TYPES } from "./parking-types.js";
 import { VENDING_PRODUCTS } from "./vending-types.js";
 import { VIEW_TYPES, SIGHT_TYPES } from "./tourism-types.js";
 import { ACCOMMODATION_TYPES } from "./nearby-types.js";
@@ -103,9 +104,15 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   if (
-    (!["toilets", "water", "charge", "atm", "view", "sights"].includes(
-      category,
-    ) &&
+    (![
+      "toilets",
+      "water",
+      "charge",
+      "atm",
+      "view",
+      "sights",
+      "parking",
+    ].includes(category) &&
       p.has("fee")) ||
     (category !== "tobacco" && p.has("sellerType"))
   )
@@ -168,6 +175,20 @@ export function parseSearch(
     !["all", "public"].includes(vendAccess)
   )
     throw new AppError("INVALID_QUERY");
+  const parkingKeys = ["parkingType", "parkingAccess", "parkRide", "hiking"];
+  const parkingType = p.get("parkingType") ?? "all",
+    parkingAccess = p.get("parkingAccess") ?? "all",
+    parkRide = p.get("parkRide") ?? "all",
+    hiking = p.get("hiking") ?? "all";
+  if (
+    (category !== "parking" && parkingKeys.some((k) => p.has(k))) ||
+    parkingKeys.some((k) => p.getAll(k).length > 1) ||
+    !["all", ...PARKING_TYPES].includes(parkingType) ||
+    !["all", "public", "customers", "unknown"].includes(parkingAccess) ||
+    !["all", "yes"].includes(parkRide) ||
+    !["all", "yes"].includes(hiking)
+  )
+    throw new AppError("INVALID_QUERY");
   const sellerType = p.get("sellerType") ?? "all";
   if (
     !["all", "machine", "shop", "fuel"].includes(sellerType) ||
@@ -183,7 +204,7 @@ export function parseSearch(
     limit < 1 ||
     limit > 100 ||
     !(
-      category === "atm"
+      ["atm", "parking"].includes(category)
         ? ["all", "free", "paid", "unknown"]
         : ["all", "free", "paid"]
     ).includes(fee) ||
@@ -193,6 +214,14 @@ export function parseSearch(
   )
     throw new AppError("INVALID_QUERY");
   return {
+    ...(category === "parking"
+      ? {
+          parkingType: parkingType as SearchQuery["parkingType"],
+          parkingAccess: parkingAccess as SearchQuery["parkingAccess"],
+          parkRide: parkRide as SearchQuery["parkRide"],
+          hiking: hiking as SearchQuery["hiking"],
+        }
+      : {}),
     ...(category === "vending"
       ? {
           product: product as SearchQuery["product"],

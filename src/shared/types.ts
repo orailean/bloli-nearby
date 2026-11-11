@@ -22,6 +22,13 @@ import type {
   VendingPayment,
   VendingAccess,
 } from "./vending-types.js";
+import type {
+  ParkingData,
+  ParkingType,
+  ParkingAccess,
+  ParkingFeature,
+  ParkingEntrance,
+} from "./parking-types.js";
 export type Locale = "en" | "de" | "ro" | "hu";
 export type Fee = "free" | "paid" | "unknown";
 export type FeeFilter = "all" | "free" | "paid" | "unknown";
@@ -31,6 +38,7 @@ export interface SourceRecord {
   version?: number | null;
   lat: number;
   lon: number;
+  parkingEntrance?: ParkingEntrance;
   transport?: TransitContext;
   tags: Record<string, string>;
 }
@@ -66,6 +74,7 @@ export interface Facility {
   atm?: AtmData;
   accommodation?: AccommodationData;
   tourist?: TouristData;
+  parking?: ParkingData;
   vending?: VendingData;
   waterType?: "point" | "refill";
   bottle?: string | null;
@@ -103,6 +112,10 @@ export interface SearchQuery {
   accommodationType?: AccommodationType | "all";
   viewType?: ViewType | "all";
   sightType?: SightType | "all";
+  parkingType?: ParkingType | "all";
+  parkingAccess?: ParkingAccess;
+  parkRide?: ParkingFeature;
+  hiking?: ParkingFeature;
   product?: VendingProduct | "all";
   payment?: VendingPayment;
   vendAccess?: VendingAccess;
@@ -155,6 +168,7 @@ export interface CountryCoverage {
         | "accommodation"
         | "view"
         | "sights"
+        | "parking"
         | "vending"
         | "settlements",
         number

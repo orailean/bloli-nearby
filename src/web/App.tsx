@@ -88,12 +88,21 @@ import type {
   VendingPayment,
   VendingAccess,
 } from "../shared/vending-types.js";
+import type {
+  ParkingType,
+  ParkingAccess,
+  ParkingFeature,
+} from "../shared/parking-types.js";
 export default function App() {
   const [locale, setLocale] = useState<Locale>(initialLocale),
     [config, setConfig] = useState<AppConfig | null>(null),
     [configError, setConfigError] = useState(false),
     [dataset, setDataset] = useState<Dataset | null>(null);
   const [origin, setOrigin] = useState<Origin | null>(null),
+    [parkingType, setParkingType] = useState<ParkingType | "all">("all"),
+    [parkingAccess, setParkingAccess] = useState<ParkingAccess>("all"),
+    [parkRide, setParkRide] = useState<ParkingFeature>("all"),
+    [hiking, setHiking] = useState<ParkingFeature>("all"),
     [product, setProduct] = useState<VendingProduct | "all">("all"),
     [payment, setPayment] = useState<VendingPayment>("all"),
     [vendAccess, setVendAccess] = useState<VendingAccess>("all"),
@@ -179,23 +188,25 @@ export default function App() {
     );
     if (theme)
       theme.content =
-        site.id === "vend"
-          ? "#993e26"
-          : site.id === "view"
-            ? "#244c5a"
-            : site.id === "sights"
-              ? "#383b75"
-              : site.id === "charge"
-                ? "#2448d8"
-                : site.id === "transit"
-                  ? "#007b7f"
-                  : site.id === "water"
-                    ? "#1459d9"
-                    : site.id === "kebab"
-                      ? "#402b52"
-                      : site.id === "kippe"
-                        ? "#b52d3b"
-                        : "#123f3b";
+        site.id === "park"
+          ? "#23568b"
+          : site.id === "vend"
+            ? "#993e26"
+            : site.id === "view"
+              ? "#244c5a"
+              : site.id === "sights"
+                ? "#383b75"
+                : site.id === "charge"
+                  ? "#2448d8"
+                  : site.id === "transit"
+                    ? "#007b7f"
+                    : site.id === "water"
+                      ? "#1459d9"
+                      : site.id === "kebab"
+                        ? "#402b52"
+                        : site.id === "kippe"
+                          ? "#b52d3b"
+                          : "#123f3b";
   }, [locale, t, coverageCountriesText]);
   const {
     Icon: SiteIcon,
@@ -238,7 +249,7 @@ export default function App() {
     setSelected(null);
     setTruncated(false);
     request<SearchResponse>(
-      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), ...(site.capabilities.openNow ? { openNow: String(openNow) } : {}), ...(site.id === "transit" ? { mode } : {}), ...(site.id === "charge" ? { connector, minPowerKw: String(minPowerKw), chargeAccess } : {}), ...(site.id === "atm" ? { currency, deposit } : {}), ...(site.id === "stay" ? { accommodationType } : {}), ...(site.id === "view" ? { viewType } : {}), ...(site.id === "sights" ? { sightType } : {}), ...(site.id === "vend" ? { product, payment, vendAccess } : {}) })}`,
+      `/api/locations?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), ...(site.capabilities.fee ? { fee } : {}), ...(site.capabilities.sellerType ? { sellerType } : {}), radius: String(radius), ...(site.capabilities.openNow ? { openNow: String(openNow) } : {}), ...(site.id === "transit" ? { mode } : {}), ...(site.id === "charge" ? { connector, minPowerKw: String(minPowerKw), chargeAccess } : {}), ...(site.id === "atm" ? { currency, deposit } : {}), ...(site.id === "stay" ? { accommodationType } : {}), ...(site.id === "view" ? { viewType } : {}), ...(site.id === "sights" ? { sightType } : {}), ...(site.id === "vend" ? { product, payment, vendAccess } : {}), ...(site.id === "park" ? { parkingType, parkingAccess, parkRide, hiking } : {}) })}`,
       c.signal,
     )
       .then((r) => {
@@ -273,6 +284,10 @@ export default function App() {
     accommodationType,
     viewType,
     sightType,
+    parkingType,
+    parkingAccess,
+    parkRide,
+    hiking,
     product,
     payment,
     vendAccess,
@@ -587,6 +602,14 @@ export default function App() {
             <div className="workspace-toolbar">
               <Filters
                 t={t}
+                parkingType={parkingType}
+                onParkingType={setParkingType}
+                parkingAccess={parkingAccess}
+                onParkingAccess={setParkingAccess}
+                parkRide={parkRide}
+                onParkRide={setParkRide}
+                hiking={hiking}
+                onHiking={setHiking}
                 product={product}
                 onProduct={setProduct}
                 payment={payment}

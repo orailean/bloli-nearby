@@ -13,6 +13,7 @@ for (const group of [
   "sites/view/locales",
   "sites/sights/locales",
   "sites/vend/locales",
+  "sites/park/locales",
 ]) {
   test(`${group} has matching translated keys`, () => {
     const dictionaries = ["de", "en", "ro", "hu"].map((locale) =>
@@ -82,5 +83,14 @@ test("Charge has independent mapped-only content and translated connector contro
     assert.equal(t.brandName, "charge");
     assert.ok(t.connector_ccs && t.minimumPower && t.noLiveData);
     assert.notEqual(t.hero, siteDictionaries.transit[lang].hero);
+  }
+});
+
+test("Parking has translated restrictions and explicitly mapped capacity in every locale", () => {
+  for (const locale of ["en", "de", "ro", "hu"] as const) {
+    const t = siteDictionaries.park[locale];
+    assert.equal(t.brandName, "park");
+    for (const key of ["parkCapacity", "parkNote", "parkMaxheight", "parkMaxstay", "parkEntrance", "parkEntranceMaxheight", "parkPoint", "tileError"] as const) assert.ok(t[key]);
+    assert.notEqual(t.hero, siteDictionaries.vend[locale].hero);
   }
 });

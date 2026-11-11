@@ -74,3 +74,7 @@ The guarded `seed:sample` fixture now contains ten categories, with two syntheti
 ## Vend
 
 Use `http://vend.localhost:5173` or the development override `?site=vend`. The shared sample now contains eleven categories, including multi-product/card, coffee/cash and unknown-product vending machines in every country. Use a fresh sample database. Vend supports product, payment, public-access and mapped-hours filters in all four languages; see [Vend classification and deployment](../deployment/vend-site.md).
+
+## Park
+
+Use `http://park.localhost:5173` or `?site=park` with the shared native API/Vite pair. The guarded fixture adds four parking examples per country in a fresh database. Filters cover fees, type, access, Park & Ride, hiking parking and mapped opening hours. Capacity means total mapped spaces. See [Park](../deployment/park-site.md).

@@ -53,6 +53,7 @@ for (const id of [
   "view",
   "sights",
   "vend",
+  "park",
 ] as const) {
   for (const width of [1440, 320, 390, 430]) {
     test(`${id} ${width}px shares search, keeps its category and fits every locale`, async ({
@@ -104,13 +105,16 @@ for (const id of [
         expect(q.get("radius")).toMatch(/^(500|1000|2000|3000|5000)$/);
         expect(q.has("sellerType")).toBe(id === "kippe");
         expect(q.has("fee")).toBe(
-          ["loo", "water", "charge", "atm", "view", "sights"].includes(id),
+          ["loo", "water", "charge", "atm", "view", "sights", "park"].includes(id),
         );
         if (["kebab", "water", "transit"].includes(id))
           expect(q.has("sellerType")).toBe(false);
         if (id === "transit") {
           expect(q.has("openNow")).toBe(false);
           expect(q.has("mode")).toBe(true);
+        }
+        if (id === "park") {
+          for (const key of ["parkingType", "parkingAccess", "parkRide", "hiking"]) expect(q.has(key)).toBe(true);
         }
         if (id === "vend") {
           expect(q.has("product")).toBe(true); expect(q.has("payment")).toBe(true); expect(q.has("vendAccess")).toBe(true);
@@ -139,7 +143,7 @@ for (const id of [
                 ? `Döner Kebab Spezialitäten und vegetarische Küche am langen Straßenbahnhof ${type}`
                 : `Fixture ${type}`,
             fee:
-              id === "atm" ? (["free", "paid", "unknown"] as const)[i] : "free",
+              ["atm", "park"].includes(id) ? (["free", "paid", "unknown"] as const)[i] : "free",
             ...(id === "atm"
               ? {
                   category: "atm",
@@ -205,9 +209,10 @@ for (const id of [
                   refillNetwork: "Refill",
                 }
               : {}),
+            ...(id === "park" ? { category:"parking", parking:{ type:["surface","underground","unknown"][i], capacity:i===0?120:null, disabledCapacity:null, maxstay:null, maxheight:null, surface:null, parkRide:i===0?true:null, hiking:i===1?true:null, entrance:i===0?{lat:53.076,lon:8.808,sourceType:"node",sourceId:"entrance",maxheight:"2.1 m"}:null } } : {}),
             charge: null,
             feeText: null,
-            access: id === "charge" && i === 1 ? "customers" : "public",
+            access: id === "park" && i === 2 ? "unknown" : id === "charge" && i === 1 ? "customers" : "public",
             wheelchair: "unknown",
             openingHours: i === 0 ? "24/7" : null,
             operator: null,
@@ -268,6 +273,7 @@ for (const id of [
               q.get("openNow") !== "true" || item.openingHours === "24/7",
           );
         const filteredItems = items.filter((item) => {
+          if (id === "park") return (q.get("fee") === "all" || item.fee === q.get("fee")) && (q.get("parkingType") === "all" || item.parking?.type === q.get("parkingType")) && (q.get("parkingAccess") === "all" || item.access === q.get("parkingAccess")) && (q.get("parkRide") === "all" || item.parking?.parkRide === true) && (q.get("hiking") === "all" || item.parking?.hiking === true);
           if (id === "atm")
             return (
               (q.get("currency") === "all" ||
@@ -482,6 +488,33 @@ for (const id of [
         await expect(page.locator('.detail-panel a[href="https://example.com"]')).toBeVisible();
         if (id === "view") await expect(page.locator(".detail-panel")).toContainText("1200");
         await page.locator(".tourist-type-control select").selectOption("all");
+      }
+      if (id === "park") {
+        const controls = page.locator(".park-filters select");
+        for (const [index,value] of [[0,"free"],[0,"paid"],[0,"unknown"],[1,"surface"],[1,"underground"],[1,"unknown"],[3,"yes"],[4,"yes"]] as const) {
+          await controls.nth(index).selectOption(value);
+          await expect(page.locator(".result-row")).toHaveCount(1);
+          await controls.nth(index).selectOption("all");
+          await expect(page.locator(".result-row")).toHaveCount(3);
+        }
+        await controls.nth(2).selectOption("customers");
+        await expect(page.locator(".result-row")).toHaveCount(0);
+        await controls.nth(2).selectOption("public");
+        await expect(page.locator(".result-row")).toHaveCount(2);
+        await controls.nth(2).selectOption("unknown");
+        await expect(page.locator(".result-row")).toHaveCount(1);
+        await controls.nth(2).selectOption("all");
+        await page.locator(".result-select").first().click();
+        await expect(page.locator(".detail-panel")).toContainText("Total mapped spaces");
+        await expect(page.locator(".detail-panel")).toContainText("not currently available");
+        await expect(page.locator(".detail-panel")).toContainText("Mapped entrance");
+        await expect(page.locator(".detail-panel dl > div").filter({has:page.locator("dt",{hasText:"Mapped entrance height limit"})})).toContainText("2.1 m");
+        await expect(page.locator(".detail-panel dl > div").filter({has:page.locator("dt",{hasText:"Maximum vehicle height"})})).toContainText("Unknown");
+        await expect(page.locator(".detail-panel .walk-button")).toHaveAttribute("href",/destination=53.076%2C8.808.*travelmode=driving/);
+        await page.locator(".result-select").nth(1).click();
+        await expect(page.locator(".detail-panel")).toContainText("entrance unknown");
+        await expect(page.locator(".detail-panel dt", {hasText:"Mapped entrance height limit"})).toHaveCount(0);
+        await expect(page.locator(".detail-panel .walk-button")).toHaveAttribute("href",/travelmode=driving/);
       }
       if (id === "vend") {
         await page.locator(".vend-filters select").nth(0).selectOption("drinks");

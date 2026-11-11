@@ -77,6 +77,16 @@ try {
       const cross=id==='view'?'sightType=museum':'viewType=tower';
       assert.equal((await request(`${base}/api/locations?${query}&${cross}`)).status,400);
     }
+    if(id==='park'){
+      assert.ok(all.items.every(item=>item.category==='parking'&&item.parking&&!item.hoursAssumed));
+      for(const filter of ['parkingType=surface','parkingAccess=public','parkRide=yes','hiking=yes','fee=unknown']){
+        const response=await request(`${base}/api/locations?${query}&${filter}`);assert.equal(response.status,200);
+        const data=await response.json();
+        assert.ok(data.items.every(item=>filter==='parkingType=surface'?item.parking.type==='surface':filter==='parkingAccess=public'?item.access==='public':filter==='parkRide=yes'?item.parking.parkRide===true:filter==='hiking=yes'?item.parking.hiking===true:item.fee==='unknown'));
+      }
+      assert.equal((await request(`${base}/api/locations?${query}&parkingType=surface&parkingType=underground`)).status,400);
+      assert.equal((await request(`${base}/api/locations?${query}&product=all`)).status,400);
+    }
     if(id==='vend'){
       assert.ok(all.items.every(item=>item.category==='vending' && item.vending && !item.hoursAssumed && !item.sellerType));
       for (const filter of ['product=drinks','payment=card','vendAccess=public']) {
@@ -256,7 +266,7 @@ try {
     await page.locator(".result-select").first().click();
     await expect(page.locator(".detail-panel .walk-button")).toHaveAttribute(
       "href",
-      ["charge","stay"].includes(id) ? /travelmode=driving/ : /travelmode=walking/,
+      ["charge","stay","park"].includes(id) ? /travelmode=driving/ : /travelmode=walking/,
     );
     await expect(page.locator(".search-boundary")).toHaveCount(1);
     if (id === "kippe")

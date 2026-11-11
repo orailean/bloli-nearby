@@ -1,0 +1,13 @@
+# Park
+
+`park.bloli.com` extends the shared finder to explicitly mapped car parks (`amenity=parking`) in DE/RO/AT/HU with English, German, Romanian and Hungarian content. The approved scope uses the existing map/search/detail layout and driving directions.
+
+Filters: fees (all/free/paid/unknown), type (all/surface/underground/multi-storey/other/unknown), access (all/public/customers/unknown), mapped Park & Ride, mapped hiking parking and Open now. SQL filters run before result limits; site-specific filters are rejected on other hosts. Unknown information remains unknown. Private, forbidden, locked, inactive and conditional-access facilities are excluded. Conditional fees remain unknown. Total mapped capacity is never presented as available spaces. Details include mapped disabled-space capacity, maximum stay, height restrictions, surface and operator. Unknown opening hours are excluded by Open now.
+
+Driving directions prefer an explicitly associated vehicle entrance when one is available. Without that association the destination is the mapped car-park point, clearly labelled; no unrelated nearest entrance is inferred. Entrance restrictions are preserved. Parking areas and entrances are not listed as duplicate facilities. Street-side rules tagged on roads and individual parking spaces are outside the first version.
+
+The importer expands its retained-source filter and metadata to twelve categories, validates geometry, measures new category counts and requires `MIN_{DE,RO,AT,HU}_PARKING` before publication. Existing complete snapshots remain accepted before category activation; the omission guard protects all active categories afterward. A new country must have all twelve categories before activation. Local seeding requires a fresh disposable database and supplies its own floors.
+
+Local development: `http://park.localhost:5173` or `http://localhost:5173/?site=park`. No analytics token has been provided, so the Park shell omits the beacon.
+
+Rollout follows the Vend protocol: release tested code through main/private GHCR while retaining the existing eleven-site production gate; create the dedicated Nginx host/certificate; acquire the operation lock, preserve the refresh timer state and a verified backup, measure retained sources, review unchanged original counts, set parking floors to 80% of eligible counts rounded up, hash and publish those exact JSONL artifacts, compare every original membership fingerprint and source metadata, then run public API/browser verification and add Park to permanent deployment gates. Record actual results in the dated protocol. Backup retention remains one verified dump.

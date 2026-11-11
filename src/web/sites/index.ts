@@ -10,10 +10,11 @@ import * as vend from "./vend/index.js";
 import * as sights from "./sights/index.js";
 import * as stay from "./stay/index.js";
 import * as charge from "./charge/index.js";
+import * as park from "./park/index.js";
 const shellSite = document.documentElement.dataset.site;
 export const siteOverride =
   import.meta.env.DEV &&
-  /^(localhost|127\.0\.0\.1|\[::1\]|loo\.localhost|kippe\.localhost|kebab\.localhost|water\.localhost|transit\.localhost|charge\.localhost|atm\.localhost|stay\.localhost|view\.localhost|sights\.localhost|vend\.localhost)$/.test(
+  /^(localhost|127\.0\.0\.1|\[::1\]|loo\.localhost|kippe\.localhost|kebab\.localhost|water\.localhost|transit\.localhost|charge\.localhost|atm\.localhost|stay\.localhost|view\.localhost|sights\.localhost|vend\.localhost|park\.localhost)$/.test(
     location.hostname,
   )
     ? (new URLSearchParams(location.search).get("site") ?? undefined)
@@ -36,4 +37,5 @@ export const sitePresentation = {
   view,
   sights,
   vend,
+  park,
 };

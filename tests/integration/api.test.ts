@@ -1281,7 +1281,7 @@ test(
           type: "MultiPolygon",
           coordinates: [[[[20, 43], [30, 43], [30, 49], [20, 49], [20, 43]]]],
         };
-        const roRows = [
+        const roRows: Array<Record<string, any>> = [
           ...[
             {vending:'cigarettes'},
             {vending:'drinks;snacks', 'payment:visa':'yes', opening_hours:'24/7', access:'public'},
@@ -1329,6 +1329,13 @@ test(
           minimumSettlements: 1,
           minimumRatio: 0.5,
         };
+        roRows.push(...[
+          {parking:'surface',fee:'no'},
+          {parking:'underground',fee:'yes',access:'public',park_ride:'bus',opening_hours:'24/7',hiking:'yes'},
+          {},
+        ].map((tags,i)=>({kind:'parking',sourceType:'node',sourceId:String(81200+i),lat:44.43+i*0.0001,lon:26.1,tags:{amenity:'parking',...tags},version:1})));
+        countryOptions.categories.push('parking');
+        Object.assign(countryOptions,{minimumParking:1});
         const beforeMeasure=(await pool.query("SELECT category,location_count,imported_at FROM country_datasets ORDER BY country_code,category")).rows;
         const jobsBeforeMeasure=(await pool.query('SELECT count(*)::int n FROM import_jobs')).rows[0].n;
         const measured=await importDataset(pool,(async function*(){yield* roRows;})(),{...countryOptions,measureOnly:true,minimumAtms:undefined,minimumAccommodations:undefined});
@@ -1336,14 +1343,16 @@ test(
         assert.deepEqual((await pool.query("SELECT category,location_count,imported_at FROM country_datasets ORDER BY country_code,category")).rows,beforeMeasure);
         assert.equal((await pool.query('SELECT count(*)::int n FROM import_jobs')).rows[0].n,jobsBeforeMeasure);
         // A retained eight-category snapshot can still be measured before new-category rollout.
-        const legacy = await importDataset(pool,(async function*(){yield* roRows.filter(row=>!["view","sights","vending"].includes(row.kind));})(),{...countryOptions,categories:countryOptions.categories.filter(category=>!["view","sights","vending"].includes(category)),measureOnly:true});
+        const legacy = await importDataset(pool,(async function*(){yield* roRows.filter(row=>!["view","sights","vending","parking"].includes(row.kind));})(),{...countryOptions,categories:countryOptions.categories.filter(category=>!["view","sights","vending","parking"].includes(category)),measureOnly:true});
         assert.equal(legacy.views,0);assert.equal(legacy.sights,0);
+        const legacyEleven=await importDataset(pool,(async function*(){yield* roRows.filter(row=>row.kind!=="parking");})(),{...countryOptions,categories:countryOptions.categories.filter(category=>category!=="parking"),measureOnly:true});
+        assert.equal(legacyEleven.parkingFacilities,0);
         await importDataset(pool, (async function* () { yield* roRows; })(), countryOptions);
         await migrate(pool);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='de' AND location_id='node/81001'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='de' AND settlement_id='node/81007'")).rows[0].n, 0);
-        assert.equal((await pool.query("SELECT count(*)::int n FROM country_datasets WHERE country_code='ro'")).rows[0].n, 11);
-        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 16);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_datasets WHERE country_code='ro'")).rows[0].n, 12);
+        assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro'")).rows[0].n, 19);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_location_memberships WHERE country_code='ro' AND location_id='node/81008'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT count(*)::int n FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81009'")).rows[0].n, 0);
         assert.equal((await pool.query("SELECT source_version FROM country_settlement_memberships WHERE country_code='ro' AND settlement_id='node/81007'")).rows[0].source_version, 0);
@@ -1364,6 +1373,13 @@ test(
           assert.equal(response.body.items.length,2);
           assert.ok(response.body.items.every((item:any)=>item.category===site&&item.countryCode==="ro"));
         }
+        const park=(suffix:string)=>get('/api/locations?site=park&lat=44.43&lon=26.1&'+suffix);
+        assert.equal((await park('parkingType=underground&parkRide=yes&hiking=yes&parkingAccess=public&limit=1')).body.items[0].id,'node/81201');
+        assert.deepEqual((await park('fee=unknown')).body.items.map((item:any)=>item.id),['node/81202']);
+        assert.equal((await park('openNow=true')).body.items.length,1);
+        assert.equal((await park('parkingType=surface&parkingType=unknown')).status,400);
+        assert.equal((await get('/api/locations?site=loo&lat=44.43&lon=26.1&parkRide=yes')).status,400);
+        await assert.rejects(importDataset(pool,(async function*(){yield* roRows.filter(row=>row.kind!=='parking');})(),{...countryOptions,categories:countryOptions.categories.filter(category=>category!=='parking')}),/PARTIAL_CATEGORY_IMPORT/);
         const vend = (suffix:string) => get('/api/locations?site=vend&lat=44.43&lon=26.1&'+suffix);
         assert.equal((await vend('product=drinks&payment=card&vendAccess=public&limit=1')).body.items[0].id,'node/81101');
         assert.equal((await vend('product=drinks&payment=cash')).body.items[0].id,'node/81102');

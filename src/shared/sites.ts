@@ -1,4 +1,5 @@
 export type SiteId =
+  | "park"
   | "loo"
   | "kippe"
   | "kebab"
@@ -11,6 +12,7 @@ export type SiteId =
   | "sights"
   | "vend";
 export type Category =
+  | "parking"
   | "toilets"
   | "tobacco"
   | "kebab"
@@ -32,6 +34,14 @@ export interface SiteProfile {
   capabilities: { fee: boolean; sellerType: boolean; openNow: boolean };
 }
 export const sites: Record<SiteId, SiteProfile> = {
+  park: {
+    id: "park",
+    category: "parking",
+    name: "Park",
+    domain: "park.bloli.com",
+    directionsMode: "driving",
+    capabilities: { fee: true, sellerType: false, openNow: true },
+  },
   vend: {
     id: "vend",
     category: "vending",

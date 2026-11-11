@@ -76,6 +76,8 @@ def kinds(tags):
     if tags.get('type') in ('route', 'route_master', 'collection', 'destination_sign') or tags.get('public_transport') in ('stop_area', 'stop_area_group'):
         return []
     result = []
+    if tags.get('amenity') == 'parking':
+        result.append('parking')
     if tags.get('amenity') == 'vending_machine':
         result.append('vending')
     physical_tourism = tags.get('type', '') in ('', 'multipolygon', 'boundary', 'site', 'building', 'bridge', 'artwork', 'multilinestring')
@@ -126,7 +128,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
           **({'coverageSource': boundary_source, 'coverageChecksum': boundary_checksum} if boundary_source else {}),
           **({'countryCode': country_code} if country_code else {}),
           **({'sourceChecksum': source_checksum} if source_checksum else {}),
-          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights', 'vending'], 'transitContextComplete': True})
+          'categories': ['toilets', 'tobacco', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights', 'vending', 'parking'], 'transitContextComplete': True})
     transport_context=TransportContext(context_path,fingerprint)
     def object_kinds(tags,source_type,source_id):
         result=kinds(tags)
@@ -144,7 +146,9 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     transit_relations = {}
     tourism_relations = {}
     tourism_members = {}
-    area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights', 'vending'}
+    parking_entrance_members = {}
+    parking_entrances = {}
+    area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights', 'vending', 'parking'}
 
     class SiteMembers(osmium.SimpleHandler):
         def relation(self, obj):
@@ -164,6 +168,9 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
                     across = [(m.type, m.ref) for m in obj.members if m.role == 'across']
                     members = outlines or across or members
                 tourism_members[obj.id] = members
+            if tags.get('amenity') == 'parking':
+                parking_entrance_members[obj.id] = [('n', m.ref) for m in obj.members if m.type == 'n' and m.role == 'entrance']
+                member_keys.update(parking_entrance_members[obj.id])
             if 'transit' in kinds(tags):
                 transit_relations[obj.id] = tags
             # type=node relations attach features to one mapped point; place them there.
@@ -214,11 +221,16 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             self.count = 0
 
         def write(self, source_type, source_id, tags, point, version=None):
+            entrance = None
+            if source_type == 'relation':
+                candidates = [parking_entrances[key] for key in parking_entrance_members.get(source_id, []) if key in parking_entrances]
+                if candidates:
+                    entrance = sorted(candidates, key=lambda item: int(item['sourceId']))[0]
             for kind in object_kinds(tags, source_type, source_id):
                 if not geometry_only:
                     emit({'kind': kind, 'sourceType': source_type, 'sourceId': str(source_id),
                           'version': version if version is not None else source_versions.get((source_type, source_id)),
-                          'lat': point.y, 'lon': point.x, 'tags': tags, **({'transport':transport_context.get(source_type,str(source_id))} if kind == 'transit' else {})})
+                          'lat': point.y, 'lon': point.x, 'tags': tags, **({'parkingEntrance': entrance} if kind == 'parking' and entrance else {}), **({'transport':transport_context.get(source_type,str(source_id))} if kind == 'transit' else {})})
                 self.count += 1
 
         def node(self, obj):
@@ -226,6 +238,8 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
             source_versions[('node', obj.id)] = obj.version
             if object_kinds(tags,'node',obj.id) or ('n', obj.id) in member_keys:
                 point = shape(json.loads(factory.create_point(obj)))
+                if tags.get('amenity') == 'parking_entrance' and tags.get('access', 'yes') in ('yes', 'public', 'permissive', 'customers', 'designated') and not tags.get('access:conditional') and all(tags.get(key, 'yes') in ('yes', 'public', 'permissive', 'customers', 'designated') and not tags.get(key + ':conditional') for key in ('vehicle', 'motor_vehicle', 'motorcar')) and tags.get('entrance') not in ('exit', 'emergency', 'no') and tags.get('parking_entrance') != 'exit' and tags.get('locked') != 'yes':
+                    parking_entrances[('n', obj.id)] = {'lat': point.y, 'lon': point.x, 'sourceType': 'node', 'sourceId': str(obj.id), **({'maxheight': tags['maxheight']} if tags.get('maxheight') else {})}
                 if ('n', obj.id) in member_keys:
                     member_points[('n', obj.id)] = point
                 if object_kinds(tags,'node',obj.id):
@@ -379,7 +393,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     broken_charge=[key for key in missing if 'charge' in handler.expected[key]]
     if broken_charge:
         raise ValueError(f'Incomplete charge geometries: {len(broken_charge)}; sources: {sorted(broken_charge)[:30]}')
-    for kind in ('atm', 'accommodation', 'view', 'sights', 'vending'):
+    for kind in ('atm', 'accommodation', 'view', 'sights', 'vending', 'parking'):
         broken=[key for key in missing if kind in handler.expected[key]]
         if broken:
             raise ValueError(f'Incomplete {kind} geometries: {len(broken)}; sources: {sorted(broken)[:30]}')
