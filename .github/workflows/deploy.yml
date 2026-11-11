@@ -66,11 +66,10 @@ jobs:
         env:
           DATABASE_URL: postgres://bloli_ci:ci-disposable-only@127.0.0.1:5432/bloli_browser
         run: npm run seed:sample
-      - run: sh scripts/ci-browser-setup.sh chromium webkit
       - name: Browser regressions
         env:
           TEST_DATABASE_URL: postgres://bloli_ci:ci-disposable-only@127.0.0.1:5432/bloli_browser
-        run: npm run test:e2e
+        run: sh scripts/ci-browser-run.sh npm run test:e2e
 
   publish:
     needs: check
@@ -145,7 +144,6 @@ jobs:
         with:
           node-version: '22.22.0'
       - run: npm ci --ignore-scripts
-      - run: sh scripts/ci-browser-setup.sh chromium
       - name: Configure dedicated SSH identity
         env:
           DEPLOY_KEY: ${{ secrets.CONTABO_SSH_PRIVATE_KEY }}
@@ -190,7 +188,7 @@ jobs:
           ssh contabo-deploy "deploy $SOURCE_SHA $API_DIGEST $WEB_DIGEST $IMPORTER_DIGEST"
       - name: Verify all eleven public sites
         id: browser
-        run: node scripts/check-multi-site-production.mjs
+        run: sh scripts/ci-browser-run.sh node scripts/check-multi-site-production.mjs
       - name: Finalize successful release
         if: success()
         run: |
