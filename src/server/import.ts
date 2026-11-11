@@ -343,7 +343,7 @@ export async function importDataset(
        JOIN locations l ON l.id=s.id
        WHERE s.source_version>0 AND s.source_version=c.source_version
          AND ((s.data->'tags'<>l.tags AND NOT (
-           s.id LIKE 'relation/%' AND (s.data->'tags'-'type')=(l.tags-'type') AND (
+           s.id LIKE 'relation/%' AND ((s.data->'tags') - 'type')=(l.tags-'type') AND (
              (NOT (s.data->'tags' ? 'type') AND l.tags->>'type' IN ('multipolygon','boundary')) OR
              (NOT (l.tags ? 'type') AND s.data->'tags'->>'type' IN ('multipolygon','boundary'))
            )
