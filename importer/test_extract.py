@@ -121,3 +121,18 @@ class ExtractTests(unittest.TestCase):
   poly='germany\n1\n 5 47\n 16 47\n 16 56\n 5 56\n 5 47\nEND\n!1\n 6 48\n 7 48\n 7 49\n 6 48\nEND\nEND\n'
   self.assertEqual(len(poly_geojson(poly)['coordinates'][0]),2)
 if __name__=='__main__':unittest.main()
+
+class UnroledBuildingTests(unittest.TestCase):
+ def test_unroled_building_members_supply_fixed_facility_geometry(self):
+  import io, json, tempfile
+  from pathlib import Path
+  from extract import extract
+  xml='''<osm version="0.6"><node id="1" lat="45.5" lon="11.5"/><node id="2" lat="45.501" lon="11.501"/><node id="3" lat="45.5" lon="11.502"/><way id="10"><nd ref="1"/><nd ref="2"/><nd ref="3"/><nd ref="1"/></way><relation id="10401993"><member type="way" ref="10" role=""/><tag k="type" v="building"/><tag k="amenity" v="social_facility"/><tag k="toilets" v="yes"/></relation></osm>'''
+  with tempfile.TemporaryDirectory() as temp:
+   p=Path(temp)/'sample.osm';p.write_text(xml);out=io.StringIO()
+   extract(str(p),{},out,'fixture','2026-11-08T00:00:00Z')
+   rows=[json.loads(line) for line in out.getvalue().splitlines()]
+   facility=next(row for row in rows if row.get('kind')=='facility')
+   self.assertEqual(facility['sourceId'],'10401993')
+   self.assertTrue(45.5 <= facility['lat'] <=45.501)
+   self.assertEqual(rows[-1]['kind'],'complete')

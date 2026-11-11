@@ -179,8 +179,11 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
                 if tags.get('type') == 'building':
                     outlines = [(m.type, m.ref) for m in obj.members
                                 if m.type in ('n', 'w') and m.role == 'outline']
-                    members = outlines or [(m.type, m.ref) for m in obj.members
-                                           if m.type in ('n', 'w') and m.role == 'part']
+                    parts = [(m.type, m.ref) for m in obj.members
+                             if m.type in ('n', 'w') and m.role == 'part']
+                    unroled = [(m.type, m.ref) for m in obj.members
+                               if m.type in ('n', 'w') and not m.role]
+                    members = outlines or parts or unroled
                     building_member_keys.update(members)
                 sites[obj.id] = (tags, members)
                 member_keys.update(members)

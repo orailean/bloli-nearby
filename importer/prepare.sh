@@ -75,14 +75,14 @@ if [ -f "$DATA_DIR/filtered.osm.pbf" ] && [ -f "$DATA_DIR/filtered.source" ] && 
   printf '[filter] Reusing completed filtered snapshot\n'
 else
   rm -f "$DATA_DIR/filtered.source"
-  printf '[filter] Extracting all eleven categories, places and postal boundaries\n'
+  printf '[filter] Extracting all twelve categories, places and postal boundaries\n'
   # This word list is a fixed set of filter arguments, not user input.
   osmium tags-filter "$DATA_DIR/source.osm.pbf" $FILTER_EXPRESSIONS -o "$DATA_DIR/filtered.osm.pbf" --overwrite
   printf '%s\n' "$filter_key" > "$DATA_DIR/filtered.source"
 fi
-printf '[geometry-preflight] Validating all eleven categories and settlements\n'
+printf '[geometry-preflight] Validating all twelve categories and settlements\n'
 python3 /app/importer/extract.py "$DATA_DIR/filtered.osm.pbf" "$DATA_DIR/coverage.poly" --source "$DATA_URL" --transport-context "$DATA_DIR/transit-context.sqlite" --context-fingerprint "$context_key" --boundary-source "$POLY_URL" --boundary-checksum "$boundary_checksum" --country-code "$COUNTRY_CODE" --source-checksum "$expected" --geometry-only
-printf '[geometry] Building complete eleven-category and settlement records\n'
+printf '[geometry] Building complete twelve-category and settlement records\n'
 python3 /app/importer/extract.py "$DATA_DIR/filtered.osm.pbf" "$DATA_DIR/coverage.poly" --source "$DATA_URL" --transport-context "$DATA_DIR/transit-context.sqlite" --context-fingerprint "$context_key" --boundary-source "$POLY_URL" --boundary-checksum "$boundary_checksum" --country-code "$COUNTRY_CODE" --source-checksum "$expected" > "$DATA_DIR/extracted.jsonl.part"
 mv "$DATA_DIR/extracted.jsonl.part" "$DATA_DIR/extracted.jsonl"
 printf '[publish] Source preparation complete\n'
