@@ -146,6 +146,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     transit_relations = {}
     tourism_relations = {}
     tourism_members = {}
+    parking_relations = {}
     parking_entrance_members = {}
     parking_entrances = {}
     area_categories = {'facility', 'seller', 'kebab', 'water', 'transit', 'charge', 'atm', 'accommodation', 'view', 'sights', 'vending', 'parking'}
@@ -169,6 +170,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
                     members = outlines or across or members
                 tourism_members[obj.id] = members
             if tags.get('amenity') == 'parking':
+                parking_relations[obj.id] = tags
                 parking_entrance_members[obj.id] = [('n', m.ref) for m in obj.members if m.type == 'n' and m.role == 'entrance']
                 member_keys.update(parking_entrance_members[obj.id])
             if 'transit' in kinds(tags):
@@ -194,7 +196,7 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     for members in area_relation_members.values():
         member_keys.update(members)
     # Resolve bounded dependencies of fixed passenger/tourist features, never route collections.
-    pending = list(transit_relations) + list(tourism_relations)
+    pending = list(transit_relations) + list(tourism_relations) + list(parking_relations)
     needed_relations = set()
     while pending:
         source_id = pending.pop()
@@ -374,6 +376,14 @@ def _extract(filename, coverage, output, source, dataset_at=None, context_path=N
     for source_id, tags in tourism_relations.items():
         if ('relation', source_id) not in handler.completed:
             point = passenger_member_point(source_id, set(), tourist=True)
+            if point is not None:
+                handler.write('relation', source_id, tags, point)
+                handler.completed.add(('relation', source_id))
+    # Explicit parking relations can group nested floor/site geometry or use
+    # nonstandard type labels. Keep a real member point, never guessed geometry.
+    for source_id, tags in parking_relations.items():
+        if ('relation', source_id) not in handler.completed:
+            point = passenger_member_point(source_id, set())
             if point is not None:
                 handler.write('relation', source_id, tags, point)
                 handler.completed.add(('relation', source_id))

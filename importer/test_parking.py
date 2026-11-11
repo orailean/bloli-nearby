@@ -28,3 +28,12 @@ class ParkingTests(unittest.TestCase):
             path.write_text('<osm version="0.6"><relation id="1"><member type="way" ref="99" role="outer"/><tag k="type" v="multipolygon"/><tag k="amenity" v="parking"/></relation></osm>')
             with self.assertRaisesRegex(ValueError,'Incomplete parking geometries'):
                 extract(str(path),{},io.StringIO(),'sample','2026-10-30T00:00:00Z')
+
+    def test_nested_sites_and_nonstandard_parking_relation_types(self):
+        xml='''<osm version="0.6"><node id="1" lat="40.6" lon="16.6"/><node id="2" lat="40.601" lon="16.601"/><node id="3" lat="40.6" lon="16.602"/><way id="10"><nd ref="1"/><nd ref="2"/><nd ref="3"/><nd ref="1"/></way><relation id="20"><member type="way" ref="10" role="outer"/><tag k="type" v="multipolygon"/></relation><relation id="1908251"><member type="relation" ref="20" role=""/><tag k="type" v="site"/><tag k="amenity" v="parking"/></relation><relation id="14252380"><member type="way" ref="10" role="outer"/><tag k="type" v="Parcheggio"/><tag k="amenity" v="parking"/></relation></osm>'''
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/'sample.osm';path.write_text(xml);out=io.StringIO()
+            extract(str(path),{},out,'sample','2026-11-08T00:00:00Z')
+            rows=[json.loads(line) for line in out.getvalue().splitlines()]
+            self.assertEqual({r['sourceId'] for r in rows if r.get('kind')=='parking'}, {'1908251','14252380'})
+            self.assertEqual(rows[-1]['kind'],'complete')
